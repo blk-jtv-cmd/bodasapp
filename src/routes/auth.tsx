@@ -31,6 +31,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [names, setNames] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -43,7 +44,7 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -52,16 +53,23 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("Cuenta creada. Ya podéis empezar.");
-        navigate({ to: "/panel" });
+        if (data.session) {
+          // La confirmación por correo está desactivada: entran directamente.
+          toast.success("Cuenta creada. Ya podéis empezar.");
+          navigate({ to: "/panel" });
+        } else {
+          // Hay que confirmar el correo antes de entrar.
+          setSentTo(email);
+          setMode("login");
+          setPassword("");
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         navigate({ to: "/panel" });
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Algo no ha salido bien";
-      toast.error(message);
+      toast.error(translateAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -115,6 +123,17 @@ function AuthPage() {
           <span className="h-px flex-1 bg-line" />o<span className="h-px flex-1 bg-line" />
         </div>
 
+        {sentTo && (
+          <div className="mb-6 rounded-2xl bg-clay-soft px-5 py-4 text-sm">
+            <div className="font-display text-lg font-semibold">Revisad vuestro correo</div>
+            <p className="mt-1 text-muted-foreground">
+              Os hemos enviado un enlace a <strong className="text-foreground">{sentTo}</strong> para
+              confirmar la cuenta. Pulsadlo y después entrad aquí con vuestro email y contraseña. Si no
+              lo veis, mirad en la carpeta de spam.
+            </p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === "signup" && (
             <input
@@ -152,7 +171,10 @@ function AuthPage() {
 
         <button
           type="button"
-          onClick={() => setMode(mode === "signup" ? "login" : "signup")}
+          onClick={() => {
+            setMode(mode === "signup" ? "login" : "signup");
+            setSentTo(null);
+          }}
           className="mt-6 text-sm text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground"
         >
           {mode === "signup" ? "Ya tenemos cuenta" : "Aún no tenemos cuenta"}
@@ -160,4 +182,21 @@ function AuthPage() {
       </main>
     </div>
   );
+}
+
+function translateAuthError(err: unknown): string {
+  const message = err instanceof Error ? err.message : "";
+  const m = message.toLowerCase();
+  if (m.includes("invalid login credentials")) return "El email o la contraseña no son correctos.";
+  if (m.includes("email not confirmed"))
+    return "Todavía no habéis confirmado el email. Revisad vuestro correo (y la carpeta de spam).";
+  if (m.includes("already registered") || m.includes("already been registered"))
+    return "Ya existe una cuenta con este email. Pulsad «Ya tenemos cuenta» para entrar.";
+  if (m.includes("password should be at least") || m.includes("weak password"))
+    return "La contraseña es demasiado corta. Usad al menos 6 caracteres.";
+  if (m.includes("rate limit") || m.includes("security purposes"))
+    return "Demasiados intentos seguidos. Esperad un minuto y volved a probar.";
+  if (m.includes("invalid email") || m.includes("unable to validate email"))
+    return "Ese email no parece válido.";
+  return message || "Algo no ha salido bien. Volved a intentarlo.";
 }
