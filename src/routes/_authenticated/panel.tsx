@@ -214,28 +214,51 @@ function PanelPage() {
       setUserId(uid);
       setUserEmail(auth.user?.email ?? null);
 
-      const { data: existing } = await supabase
-        .from("weddings")
-        .select("id,partner_one,partner_two,wedding_date,venue,guest_target,total_budget,plan_active,currency,ceremony_time")
-        .eq("user_id", uid)
-        .maybeSingle();
+      const WEDDING_COLUMNS =
+        "id,partner_one,partner_two,wedding_date,venue,guest_target,total_budget,plan_active,currency,ceremony_time";
 
-      let current = existing as Wedding | null;
+      // Cada cuenta tiene una sola boda. Si por lo que sea hubiera más de una,
+      // nos quedamos con la pagada (o la más antigua) en vez de fallar.
+      const findWedding = async () => {
+        const { data } = await supabase
+          .from("weddings")
+          .select(WEDDING_COLUMNS)
+          .eq("user_id", uid)
+          .order("plan_active", { ascending: false })
+          .order("created_at", { ascending: true })
+          .limit(1);
+        return (data?.[0] as Wedding | undefined) ?? null;
+      };
+
+      let current = await findWedding();
       if (!current) {
+        // "ignoreDuplicates" + la regla de una boda por cuenta en la base de datos evitan
+        // que se creen dos bodas si esta parte se ejecuta dos veces a la vez.
         const { data: created, error } = await supabase
           .from("weddings")
-          .insert({ user_id: uid, partner_one: "", partner_two: "" })
-          .select("id,partner_one,partner_two,wedding_date,venue,guest_target,total_budget,plan_active,currency,ceremony_time")
-          .single();
+          .upsert(
+            { user_id: uid, partner_one: "", partner_two: "" },
+            { onConflict: "user_id", ignoreDuplicates: true },
+          )
+          .select(WEDDING_COLUMNS);
         if (error) {
           toast.error("No hemos podido crear vuestro plan");
           setLoading(false);
           return;
         }
-        current = created as Wedding;
-        await supabase.from("tasks").insert(
-          DEFAULT_TASKS.map((task) => ({ ...task, wedding_id: current!.id, user_id: uid })),
-        );
+        if (created && created.length > 0) {
+          current = created[0] as Wedding;
+          await supabase.from("tasks").insert(
+            DEFAULT_TASKS.map((task) => ({ ...task, wedding_id: current!.id, user_id: uid })),
+          );
+        } else {
+          current = await findWedding();
+        }
+        if (!current) {
+          toast.error("No hemos podido cargar vuestro plan");
+          setLoading(false);
+          return;
+        }
       }
       setWedding(current);
 
