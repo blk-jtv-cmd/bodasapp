@@ -124,6 +124,20 @@ const TABS = [
 
 type TabKey = (typeof TABS)[number][0];
 
+// Secciones que solo se pueden usar después de pagar el plan.
+// (La base de datos también las protege: sin pagar no se puede leer ni guardar nada en ellas.)
+const PAID_TABS: TabKey[] = ["presupuesto", "invitados", "mesas", "proveedores", "cronograma"];
+
+const STRIPE_PAYMENT_LINK = import.meta.env.VITE_STRIPE_PAYMENT_LINK as string | undefined;
+
+function paymentUrl(userId: string, email: string | null) {
+  if (!STRIPE_PAYMENT_LINK) return null;
+  const url = new URL(STRIPE_PAYMENT_LINK);
+  url.searchParams.set("client_reference_id", userId);
+  if (email) url.searchParams.set("prefilled_email", email);
+  return url.toString();
+}
+
 const inputClass =
   "rounded-lg border border-line bg-background px-3 py-2 text-sm outline-none focus:border-clay";
 
@@ -161,6 +175,7 @@ function weddingDateLabel(date: string | null) {
 function PanelPage() {
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [wedding, setWedding] = useState<Wedding | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -197,6 +212,7 @@ function PanelPage() {
       const uid = auth.user?.id;
       if (!uid) return;
       setUserId(uid);
+      setUserEmail(auth.user?.email ?? null);
 
       const { data: existing } = await supabase
         .from("weddings")
@@ -259,6 +275,37 @@ function PanelPage() {
     return daysUntilWedding(wedding?.wedding_date ?? null);
   }, [wedding?.wedding_date]);
 
+  // Al volver de Stripe (?pago=ok), esperamos a que llegue la confirmación del pago.
+  useEffect(() => {
+    if (!wedding || wedding.plan_active) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("pago") !== "ok") return;
+    window.history.replaceState(null, "", window.location.pathname);
+    toast("Confirmando vuestro pago…");
+    let tries = 0;
+    const timer = window.setInterval(async () => {
+      tries += 1;
+      const { data } = await supabase
+        .from("weddings")
+        .select("plan_active")
+        .eq("id", wedding.id)
+        .maybeSingle();
+      if (data?.plan_active) {
+        window.clearInterval(timer);
+        setWedding((w) => (w ? { ...w, plan_active: true } : w));
+        await loadAll(wedding.id);
+        toast.success("¡Pago recibido! Ya tenéis el plan completo.");
+      } else if (tries >= 20) {
+        window.clearInterval(timer);
+        toast.error(
+          "Aún no nos ha llegado la confirmación del pago. Recargad la página en un minuto; si sigue igual, escribidnos.",
+        );
+      }
+    }, 2000);
+    return () => window.clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wedding?.id]);
+
   async function signOut() {
     await supabase.auth.signOut();
     navigate({ to: "/" });
@@ -273,6 +320,8 @@ function PanelPage() {
   }
 
   const ctx = { wedding, userId, reload: () => loadAll(wedding.id) };
+  const payUrl = paymentUrl(userId, userEmail);
+  const locked = !wedding.plan_active && PAID_TABS.includes(tab);
 
   return (
     <div className="min-h-screen bg-background font-body text-foreground">
@@ -306,23 +355,31 @@ function PanelPage() {
               }`}
             >
               {label}
+              {!wedding.plan_active && PAID_TABS.includes(key) && (
+                <span aria-label="Requiere el plan completo" className="ml-1 text-[10px] opacity-60">
+                  🔒
+                </span>
+              )}
             </button>
           ))}
         </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-6 py-10">
-        {!wedding.plan_active && (
+        {!wedding.plan_active && !locked && (
           <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-clay-soft px-6 py-5">
             <div>
-              <div className="font-display text-lg font-semibold">Plan de prueba</div>
+              <div className="font-display text-lg font-semibold">Plan gratuito</div>
               <p className="text-sm text-muted-foreground">
-                Estáis usando el plan completo en modo prueba. El pago único de 27€ se activará en cuanto conectemos el cobro.
+                Tenéis el Resumen y el Checklist. Desbloquead presupuesto, invitados, mesas, proveedores y
+                cronograma con un pago único de 27€, sin suscripciones.
               </p>
             </div>
-            <span className="font-display text-3xl font-semibold">27€</span>
+            <PayButton url={payUrl} />
           </div>
         )}
+
+        {locked && <Paywall url={payUrl} />}
 
         {tab === "resumen" && (
           <Resumen
@@ -336,7 +393,7 @@ function PanelPage() {
           />
         )}
         {tab === "checklist" && <Checklist tasks={tasks} setTasks={setTasks} {...ctx} />}
-        {tab === "presupuesto" && (
+        {!locked && tab === "presupuesto" && (
           <Presupuesto
             expenses={expenses}
             categories={categories}
@@ -356,8 +413,8 @@ function PanelPage() {
             }}
           />
         )}
-        {tab === "invitados" && <Invitados guests={guests} {...ctx} />}
-        {tab === "mesas" && (
+        {!locked && tab === "invitados" && <Invitados guests={guests} {...ctx} />}
+        {!locked && tab === "mesas" && (
           <Mesas
             tables={mesas}
             guests={guests as unknown as MesaGuest[]}
@@ -366,10 +423,10 @@ function PanelPage() {
             reload={ctx.reload}
           />
         )}
-        {tab === "proveedores" && (
+        {!locked && tab === "proveedores" && (
           <Proveedores vendors={vendors} categories={categories} {...ctx} />
         )}
-        {tab === "cronograma" && (
+        {!locked && tab === "cronograma" && (
           <Cronograma
             items={timeline}
             wedding={wedding}
@@ -380,6 +437,41 @@ function PanelPage() {
         )}
         {tab === "ajustes" && <Ajustes wedding={wedding} setWedding={setWedding} />}
       </main>
+    </div>
+  );
+}
+
+function PayButton({ url }: { url: string | null }) {
+  if (!url) {
+    return (
+      <span className="rounded-full bg-foreground/10 px-5 py-2.5 text-sm text-muted-foreground">
+        Pago no disponible todavía
+      </span>
+    );
+  }
+  return (
+    <a
+      href={url}
+      className="whitespace-nowrap rounded-full bg-clay px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground"
+    >
+      Desbloquear por 27€
+    </a>
+  );
+}
+
+function Paywall({ url }: { url: string | null }) {
+  return (
+    <div className="mx-auto max-w-lg rounded-3xl bg-panel px-8 py-12 text-center ring-1 ring-foreground/5">
+      <div className="text-3xl">🔒</div>
+      <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight">Parte del plan completo</h2>
+      <p className="mt-3 text-sm text-muted-foreground">
+        Con un pago único de 27€ tendréis presupuesto, invitados, plano de mesas, proveedores y el
+        cronograma del día. Para siempre, sin suscripciones.
+      </p>
+      <div className="mt-8 flex justify-center">
+        <PayButton url={url} />
+      </div>
+      <p className="mt-4 text-xs text-muted-foreground">Pago seguro con tarjeta a través de Stripe.</p>
     </div>
   );
 }
