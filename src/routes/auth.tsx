@@ -7,16 +7,16 @@ import { BrandLogo, BrandName } from "@/components/brand";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Entrar o crear cuenta — Tu boda en orden" },
+      { title: "Entrar o crear cuenta — Tu Boda en Orden" },
       {
         name: "description",
         content:
-          "Accede a tu plan de Tu boda en orden: checklist, presupuesto, invitados, proveedores y cronograma en un solo panel.",
+          "Accede a tu plan de Tu Boda en Orden: checklist, presupuesto, invitados, proveedores y cronograma en un solo panel.",
       },
-      { property: "og:title", content: "Entrar o crear cuenta — Tu boda en orden" },
+      { property: "og:title", content: "Entrar o crear cuenta — Tu Boda en Orden" },
       {
         property: "og:description",
-        content: "Crea tu cuenta y empieza a organizar tu boda con Tu boda en orden por 27€.",
+        content: "Crea tu cuenta y empieza a organizar tu boda con Tu Boda en Orden por 27€.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

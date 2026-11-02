@@ -26,13 +26,13 @@ import {
 export const Route = createFileRoute("/_authenticated/panel")({
   head: () => ({
     meta: [
-      { title: "Vuestro panel de boda — Tu boda en orden" },
+      { title: "Vuestro panel de boda — Tu Boda en Orden" },
       {
         name: "description",
         content:
           "Gestiona checklist, presupuesto, invitados, proveedores y cronograma de tu boda desde un único panel.",
       },
-      { property: "og:title", content: "Vuestro panel de boda — Tu boda en orden" },
+      { property: "og:title", content: "Vuestro panel de boda — Tu Boda en Orden" },
       {
         property: "og:description",
         content: "Todo lo que hay que tener en cuenta para la boda, en un solo sitio.",

@@ -1,14 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import logo from "@/assets/logo-tu-boda-en-orden.png";
 
-export const BRAND_NAME = "Tu boda en orden";
+export const BRAND_NAME = "Tu Boda en Orden";
 
 /** Nombre de la marca, a la izquierda de la barra superior. */
 export function BrandName({ className = "" }: { className?: string }) {
   return (
     <Link
       to="/"
-      className={`font-display text-lg font-semibold leading-tight tracking-tight sm:text-2xl ${className}`}
+      className={`font-brand text-lg leading-tight sm:text-2xl ${className}`}
     >
       {BRAND_NAME}
     </Link>

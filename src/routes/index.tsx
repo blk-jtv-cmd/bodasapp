@@ -6,13 +6,13 @@ import { BrandLogo, BrandName, BRAND_NAME } from "@/components/brand";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Tu boda en orden — Organiza tu boda completa por 27€" },
+      { title: "Tu Boda en Orden — Organiza tu boda completa por 27€" },
       {
         name: "description",
         content:
           "Checklist, presupuesto, invitados, proveedores y cronograma de tu boda en un solo plan. Un pago único de 27€, sin suscripciones.",
       },
-      { property: "og:title", content: "Tu boda en orden — Organiza tu boda completa por 27€" },
+      { property: "og:title", content: "Tu Boda en Orden — Organiza tu boda completa por 27€" },
       {
         property: "og:description",
         content:
@@ -341,7 +341,7 @@ function Index() {
       {/* Footer */}
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 md:flex-row">
-          <span className="font-display text-xl font-semibold tracking-tight">{BRAND_NAME}</span>
+          <span className="font-brand text-xl">{BRAND_NAME}</span>
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
             Un plan, una boda, 27€
           </span>

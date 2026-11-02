@@ -38,6 +38,7 @@
 
 @theme {
   --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-brand: "Radley", Georgia, serif;
   --font-body: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
   --ease-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
