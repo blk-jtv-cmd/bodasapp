@@ -394,8 +394,8 @@ function PanelPage() {
             <div>
               <div className="font-display text-lg font-semibold">Plan gratuito</div>
               <p className="text-sm text-muted-foreground">
-                Tenéis el Resumen y el Checklist. Desbloquead presupuesto, invitados, mesas, proveedores y
-                cronograma con un pago único de 27€, sin suscripciones.
+                Tenéis el Resumen y el Checklist. Desbloquead presupuesto, invitados, mesas, proveedores,
+                cronograma y la plantilla en Excel con un pago único de 27€, sin suscripciones.
               </p>
             </div>
             <PayButton url={payUrl} />
@@ -404,6 +404,7 @@ function PanelPage() {
 
         {locked && <Paywall url={payUrl} />}
 
+        {tab === "resumen" && wedding.plan_active && <ExcelDownload />}
         {tab === "resumen" && (
           <Resumen
             wedding={wedding}
@@ -464,6 +465,47 @@ function PanelPage() {
   );
 }
 
+// Plantilla en Excel: se guarda en Supabase Storage (carpeta privada "descargas")
+// y solo pueden descargarla las cuentas con el plan pagado.
+const TEMPLATE_BUCKET = "descargas";
+const TEMPLATE_FILE = "plantilla-tu-boda-en-orden.xlsx";
+
+function ExcelDownload() {
+  const [loading, setLoading] = useState(false);
+
+  async function download() {
+    setLoading(true);
+    const { data, error } = await supabase.storage
+      .from(TEMPLATE_BUCKET)
+      .createSignedUrl(TEMPLATE_FILE, 60, { download: "Plantilla Tu Boda en Orden.xlsx" });
+    setLoading(false);
+    if (error || !data?.signedUrl) {
+      toast.error("No hemos podido preparar la descarga. Volved a intentarlo en un momento.");
+      return;
+    }
+    window.location.href = data.signedUrl;
+  }
+
+  return (
+    <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-panel px-6 py-5 ring-1 ring-foreground/5">
+      <div>
+        <div className="font-display text-lg font-semibold">¿Preferís trabajar en Excel?</div>
+        <p className="text-sm text-muted-foreground">
+          Descargad nuestra plantilla completa para usarla en Excel, Numbers o Google Sheets.
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={download}
+        disabled={loading}
+        className="whitespace-nowrap rounded-full border border-line bg-background px-5 py-2.5 text-sm font-medium transition-colors hover:border-clay-ink hover:text-clay-ink disabled:opacity-60"
+      >
+        {loading ? "Preparando…" : "Descargar plantilla Excel"}
+      </button>
+    </div>
+  );
+}
+
 function PayButton({ url }: { url: string | null }) {
   if (!url) {
     return (
@@ -488,8 +530,8 @@ function Paywall({ url }: { url: string | null }) {
       <div className="text-3xl">🔒</div>
       <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight">Parte del plan completo</h2>
       <p className="mt-3 text-sm text-muted-foreground">
-        Con un pago único de 27€ tendréis presupuesto, invitados, plano de mesas, proveedores y el
-        cronograma del día. Para siempre, sin suscripciones.
+        Con un pago único de 27€ tendréis presupuesto, invitados, plano de mesas, proveedores, el
+        cronograma del día y la plantilla en Excel para descargar. Para siempre, sin suscripciones.
       </p>
       <div className="mt-8 flex justify-center">
         <PayButton url={url} />
