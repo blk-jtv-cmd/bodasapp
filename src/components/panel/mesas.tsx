@@ -24,7 +24,7 @@ export type MesaGuest = {
 };
 
 const inputClass =
-  "rounded-lg border border-line bg-background px-3 py-2 text-sm outline-none focus:border-clay";
+  "rounded-lg border border-line bg-background px-3 py-2 text-sm outline-none focus:border-clay-ink";
 
 const RSVP_LABEL: Record<string, string> = {
   pendiente: "Pendiente",
@@ -63,7 +63,7 @@ function MesasGuide() {
         className="flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left transition-colors hover:bg-clay-soft/40"
       >
         <span className="flex items-center gap-2.5">
-          <Sparkles className="size-4 text-clay" />
+          <Sparkles className="size-4 text-clay-ink" />
           <span className="font-display text-sm font-semibold">Cómo organizar las mesas</span>
         </span>
         <ChevronDown
@@ -81,7 +81,7 @@ function MesasGuide() {
                 className="relative rounded-xl bg-background p-4 ring-1 ring-foreground/5"
               >
                 <div className="mb-2 flex items-center gap-2">
-                  <span className="flex size-7 items-center justify-center rounded-full bg-clay-soft font-mono text-[10px] font-semibold text-clay">
+                  <span className="flex size-7 items-center justify-center rounded-full bg-clay-soft font-mono text-[10px] font-semibold text-clay-ink">
                     {i + 1}
                   </span>
                   <step.icon className="size-4 text-muted-foreground" />
@@ -210,7 +210,7 @@ function TableView({
             {seatCount}/{table.capacity}
           </span>
           {isFull && (
-            <span className="mt-0.5 font-mono text-[9px] uppercase text-clay">Llena</span>
+            <span className="mt-0.5 font-mono text-[9px] uppercase text-clay-ink">Llena</span>
           )}
         </div>
       </div>
@@ -431,7 +431,7 @@ export function Mesas({
         </div>
         <button
           onClick={() => setAddingTable((v) => !v)}
-          className="flex items-center gap-2 rounded-full bg-clay px-5 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground"
+          className="flex items-center gap-2 rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background"
         >
           <Plus className="size-4" /> Mesa
         </button>
@@ -478,7 +478,7 @@ export function Mesas({
               <option value="rect">Rectangular</option>
             </select>
           </label>
-          <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-background hover:bg-foreground">
+          <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground hover:bg-clay-ink hover:text-background">
             Crear
           </button>
           <button

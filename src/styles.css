@@ -34,6 +34,7 @@
   --color-line: var(--line);
   --color-clay: var(--clay);
   --color-clay-soft: var(--clay-soft);
+  --color-clay-ink: var(--clay-ink);
 }
 
 @theme {
@@ -54,7 +55,7 @@
   --card-foreground: oklch(0.24 0.02 55);
   --popover: oklch(0.982 0.015 88);
   --popover-foreground: oklch(0.24 0.02 55);
-  --primary: oklch(0.53 0.14 32);
+  --primary: oklch(0.56 0.11 2);
   --primary-foreground: oklch(0.97 0.02 88);
   --secondary: oklch(0.94 0.02 80);
   --secondary-foreground: oklch(0.24 0.02 55);
@@ -66,10 +67,13 @@
   --destructive-foreground: oklch(0.984 0.003 247.858);
   --border: oklch(0.24 0.02 55 / 0.12);
   --input: oklch(0.24 0.02 55 / 0.12);
-  --ring: oklch(0.53 0.14 32);
+  --ring: oklch(0.56 0.11 2);
   --line: oklch(0.24 0.02 55 / 0.12);
-  --clay: oklch(0.53 0.14 32);
-  --clay-soft: oklch(0.53 0.14 32 / 0.08);
+  /* Rosa pastel (como el corazón del logo): fondos, botones y gráficos */
+  --clay: oklch(0.85 0.065 8);
+  --clay-soft: oklch(0.95 0.025 8);
+  /* Rosa más intenso para textos y bordes, para que se lean bien */
+  --clay-ink: oklch(0.56 0.11 2);
 }
 
 @keyframes rise {
@@ -96,6 +100,6 @@
 
   ::selection {
     background-color: var(--color-clay);
-    color: var(--color-background);
+    color: var(--color-foreground);
   }
 }

@@ -109,7 +109,7 @@ function Index() {
           </nav>
           <Link
             to="/auth"
-            className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-clay"
+            className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-clay-ink"
           >
             Empezar
           </Link>
@@ -121,14 +121,14 @@ function Index() {
       <section className="relative">
         <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 pb-10 pt-16 lg:grid-cols-[1.05fr_1fr]">
           <div>
-            <div className="mb-6 font-mono text-[11px] uppercase tracking-[0.28em] text-clay">
+            <div className="mb-6 font-mono text-[11px] uppercase tracking-[0.28em] text-clay-ink">
               Para los novios · Todo en un solo plan
             </div>
             <h1
               className="text-balance font-display text-6xl leading-[0.95] tracking-tight md:text-7xl"
               style={{ animation: "rise 700ms var(--ease-soft) both" }}
             >
-              La boda, <em className="italic text-clay">ordenada</em>
+              La boda, <em className="italic text-clay-ink">ordenada</em>
               <br />
               desde el primer día.
             </h1>
@@ -145,7 +145,7 @@ function Index() {
             >
               <Link
                 to="/auth"
-                className="inline-flex items-center gap-2 rounded-full bg-clay px-6 py-3 font-medium text-background transition-colors hover:bg-foreground"
+                className="inline-flex items-center gap-2 rounded-full bg-clay px-6 py-3 font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background"
               >
                 Empezar mi plan · 27€
               </Link>
@@ -176,7 +176,7 @@ function Index() {
                 <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                   Panel · Elena &amp; Marcos
                 </span>
-                <span className="font-mono text-[10px] text-clay">Día −142</span>
+                <span className="font-mono text-[10px] text-clay-ink">Día −142</span>
               </div>
               <div className="mb-4 grid grid-cols-2 gap-3">
                 <div className="rounded-xl bg-clay-soft p-3">
@@ -251,7 +251,7 @@ function Index() {
         <div className="grid gap-px overflow-hidden rounded-2xl bg-line ring-1 ring-foreground/5 md:grid-cols-3">
           {features.map((f) => (
             <div key={f.num} className="bg-panel p-7">
-              <div className="mb-4 font-mono text-[10px] uppercase tracking-[0.2em] text-clay">
+              <div className="mb-4 font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">
                 {f.num} — {f.tag}
               </div>
               <h3 className="font-display text-2xl font-semibold">{f.title}</h3>
@@ -264,7 +264,7 @@ function Index() {
       {/* Testimonial */}
       <section id="historias" className="scroll-mt-20 border-t border-line bg-clay-soft/40">
         <div className="mx-auto max-w-4xl px-6 py-20 text-center">
-          <div className="mb-8 font-mono text-[10px] uppercase tracking-[0.25em] text-clay">
+          <div className="mb-8 font-mono text-[10px] uppercase tracking-[0.25em] text-clay-ink">
             (c) Historias reales
           </div>
           <blockquote className="text-balance font-display text-3xl italic leading-tight md:text-[2.6rem]">
@@ -313,7 +313,7 @@ function Index() {
               </div>
               <Link
                 to="/auth"
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-clay px-6 py-3.5 font-medium text-background transition-colors hover:bg-background hover:text-foreground"
+                className="mt-8 inline-flex items-center gap-2 rounded-full bg-clay px-6 py-3.5 font-medium text-foreground transition-colors hover:bg-background hover:text-foreground"
               >
                 Crear mi plan ahora
               </Link>

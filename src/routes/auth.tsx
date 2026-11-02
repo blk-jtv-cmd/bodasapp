@@ -28,7 +28,7 @@ export const Route = createFileRoute("/auth")({
 type Mode = "signup" | "login" | "forgot" | "reset";
 
 const inputCls =
-  "w-full rounded-xl border border-line bg-panel px-4 py-3 text-sm outline-none focus:border-clay";
+  "w-full rounded-xl border border-line bg-panel px-4 py-3 text-sm outline-none focus:border-clay-ink";
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -243,7 +243,7 @@ function AuthPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-full bg-clay px-5 py-3 font-medium text-background transition-colors hover:bg-foreground disabled:opacity-60"
+            className="w-full rounded-full bg-clay px-5 py-3 font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background disabled:opacity-60"
           >
             {loading ? "Un momento…" : submitLabel[mode]}
           </button>

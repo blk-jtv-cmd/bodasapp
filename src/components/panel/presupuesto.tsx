@@ -42,7 +42,7 @@ export const DEFAULT_EXPENSE_CATEGORIES = [
 ];
 
 const inputClass =
-  "rounded-lg border border-line bg-background px-3 py-2 text-sm outline-none focus:border-clay";
+  "rounded-lg border border-line bg-background px-3 py-2 text-sm outline-none focus:border-clay-ink";
 
 function euro(n: number, currency: string = "EUR") {
   return formatMoney(n, currency);
@@ -56,7 +56,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "go
       </div>
       <div
         className={`mt-2 font-display text-3xl font-semibold ${
-          tone === "bad" ? "text-destructive" : tone === "good" ? "text-clay" : ""
+          tone === "bad" ? "text-destructive" : tone === "good" ? "text-clay-ink" : ""
         }`}
       >
         {value}
@@ -85,7 +85,7 @@ function AmountCell({
         setDraft(null);
         if (n !== Number(value)) await onSave(n);
       }}
-      className="w-24 rounded-md border border-transparent bg-transparent px-2 py-1 text-right text-sm outline-none hover:border-line focus:border-clay focus:bg-background"
+      className="w-24 rounded-md border border-transparent bg-transparent px-2 py-1 text-right text-sm outline-none hover:border-line focus:border-clay-ink focus:bg-background"
     />
   );
 }
@@ -109,7 +109,7 @@ function NoteCell({
         setDraft(null);
         if (next !== (value ?? "")) await onSave(next);
       }}
-      className="w-48 rounded-md border border-transparent bg-transparent px-2 py-1 text-sm outline-none placeholder:text-muted-foreground/60 hover:border-line focus:border-clay focus:bg-background"
+      className="w-48 rounded-md border border-transparent bg-transparent px-2 py-1 text-sm outline-none placeholder:text-muted-foreground/60 hover:border-line focus:border-clay-ink focus:bg-background"
     />
   );
 }
@@ -272,7 +272,7 @@ export function Presupuesto({
                 setBudgetDraft(null);
                 if (n !== available) await onBudgetChange(n);
               }}
-              className="w-40 rounded-md border border-transparent bg-transparent font-display text-3xl font-semibold outline-none hover:border-line focus:border-clay focus:bg-background"
+              className="w-40 rounded-md border border-transparent bg-transparent font-display text-3xl font-semibold outline-none hover:border-line focus:border-clay-ink focus:bg-background"
             />
             <span className="font-display text-2xl font-semibold">{currencySymbol(cur)}</span>
           </div>
@@ -298,7 +298,7 @@ export function Presupuesto({
           placeholder="Nueva categoría"
           className={`${inputClass} min-w-[220px]`}
         />
-        <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground">
+        <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background">
           Añadir categoría
         </button>
       </form>
@@ -369,7 +369,7 @@ export function Presupuesto({
                               <select
                                 value={x.category}
                                 onChange={(e) => updateRow(x.id, { category: e.target.value })}
-                                className="rounded-md border border-transparent bg-transparent py-1 text-sm text-muted-foreground outline-none hover:border-line focus:border-clay"
+                                className="rounded-md border border-transparent bg-transparent py-1 text-sm text-muted-foreground outline-none hover:border-line focus:border-clay-ink"
                               >
                                 {categoryNames.map((n) => (
                                   <option key={n} value={n}>
@@ -470,7 +470,7 @@ export function Presupuesto({
                                 placeholder="Notas (opcional)"
                                 className={`${inputClass} min-w-[240px]`}
                               />
-                              <button className="rounded-full bg-clay px-4 py-2 text-xs font-medium text-background hover:bg-foreground">
+                              <button className="rounded-full bg-clay px-4 py-2 text-xs font-medium text-foreground hover:bg-clay-ink hover:text-background">
                                 Añadir
                               </button>
                               <button

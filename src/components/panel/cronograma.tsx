@@ -11,10 +11,10 @@ type Wedding = {
 };
 
 const inputClass =
-  "rounded-lg border border-line bg-background px-3 py-2 text-sm outline-none focus:border-clay";
+  "rounded-lg border border-line bg-background px-3 py-2 text-sm outline-none focus:border-clay-ink";
 
 const timeBtn =
-  "rounded-lg border border-line bg-background px-3 py-2 text-sm outline-none focus:border-clay";
+  "rounded-lg border border-line bg-background px-3 py-2 text-sm outline-none focus:border-clay-ink";
 
 /** Ordena "HH:MM" como minutos del día. Devuelve null si no parsea. */
 function toMinutes(label: string): number | null {
@@ -50,7 +50,7 @@ function CeremonyPicker({
   return (
     <div className="flex flex-wrap items-center gap-3">
       <div className="flex items-center gap-2">
-        <Clock className="size-4 text-clay" />
+        <Clock className="size-4 text-clay-ink" />
         <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
           Hora de la ceremonia
         </span>
@@ -150,7 +150,7 @@ function EventRow({
             />
             <button
               onClick={save}
-              className="rounded-full bg-clay px-4 py-1.5 text-xs font-medium text-background hover:bg-foreground"
+              className="rounded-full bg-clay px-4 py-1.5 text-xs font-medium text-foreground hover:bg-clay-ink hover:text-background"
             >
               Guardar
             </button>
@@ -170,7 +170,7 @@ function EventRow({
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <span
               className={`font-mono text-xs ${
-                isCeremony ? "font-semibold text-clay" : "text-muted-foreground"
+                isCeremony ? "font-semibold text-clay-ink" : "text-muted-foreground"
               }`}
             >
               {prettyTime(item.time_label)}
@@ -204,7 +204,7 @@ function EventRow({
           </div>
         )}
         {isCeremony && !editing && (
-          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.15em] text-clay">
+          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.15em] text-clay-ink">
             Ceremonia
           </p>
         )}
@@ -375,7 +375,7 @@ export function Cronograma({
               className={inputClass}
             />
           </label>
-          <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-background hover:bg-foreground">
+          <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground hover:bg-clay-ink hover:text-background">
             Añadir
           </button>
           <button
@@ -397,7 +397,7 @@ export function Cronograma({
           </p>
           <button
             onClick={() => setAdding(true)}
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-clay px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground"
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-clay px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background"
           >
             <Plus className="size-4" /> Añadir primer momento
           </button>
@@ -407,7 +407,7 @@ export function Cronograma({
           {!adding && (
             <button
               onClick={() => setAdding(true)}
-              className="mb-8 inline-flex items-center gap-2 rounded-full border border-line bg-background px-5 py-2 text-sm font-medium text-foreground transition-colors hover:border-clay hover:text-clay"
+              className="mb-8 inline-flex items-center gap-2 rounded-full border border-line bg-background px-5 py-2 text-sm font-medium text-foreground transition-colors hover:border-clay hover:text-clay-ink"
             >
               <Plus className="size-4" /> Añadir momento
             </button>

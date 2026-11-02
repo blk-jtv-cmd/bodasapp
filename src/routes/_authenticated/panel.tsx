@@ -140,7 +140,7 @@ function paymentUrl(userId: string, email: string | null) {
 }
 
 const inputClass =
-  "rounded-lg border border-line bg-background px-3 py-2 text-sm outline-none focus:border-clay";
+  "rounded-lg border border-line bg-background px-3 py-2 text-sm outline-none focus:border-clay-ink";
 
 function money(n: number, currency: string = "EUR") {
   return formatMoney(n, currency);
@@ -475,7 +475,7 @@ function PayButton({ url }: { url: string | null }) {
   return (
     <a
       href={url}
-      className="whitespace-nowrap rounded-full bg-clay px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground"
+      className="whitespace-nowrap rounded-full bg-clay px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background"
     >
       Desbloquear por 27€
     </a>
@@ -575,7 +575,7 @@ function Resumen({
     <div className="space-y-8">
       <section className="grid gap-8 border-y border-line py-8 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:py-10">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-clay">Vuestro espacio</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">Vuestro espacio</p>
           <h1 className="mt-3 max-w-3xl font-display text-4xl font-semibold leading-none sm:text-5xl">
             Bienvenidos, {firstName} y {secondName}
           </h1>
@@ -618,7 +618,7 @@ function Resumen({
                   type="button"
                   onClick={() => void completar(t)}
                   aria-label={`Marcar "${t.title}" como hecha`}
-                  className="size-4 shrink-0 rounded-full border border-clay/60 transition hover:border-clay hover:bg-clay/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-clay"
+                  className="size-4 shrink-0 rounded-full border border-clay/60 transition hover:border-clay hover:bg-clay/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-clay-ink"
                 />
                 {t.title}
                 <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
@@ -734,7 +734,7 @@ function Checklist({
 
       <div className="mb-8 rounded-2xl bg-panel px-5 py-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-clay">Progreso</span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">Progreso</span>
           <span className="text-sm text-muted-foreground">
             {completed} de {total} tareas · <span className="font-medium text-foreground">{percent}%</span>
           </span>
@@ -761,7 +761,7 @@ function Checklist({
             </option>
           ))}
         </select>
-        <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-background hover:bg-foreground">
+        <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground hover:bg-clay-ink hover:text-background">
           Añadir
         </button>
       </form>
@@ -773,7 +773,7 @@ function Checklist({
             onClick={() => setFilter(f.key)}
             className={`rounded-full px-4 py-1.5 text-xs transition-colors ${
               filter === f.key
-                ? "bg-clay text-background"
+                ? "bg-clay text-foreground"
                 : "bg-panel text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -788,7 +788,7 @@ function Checklist({
         )}
         {orderedGroups.map(([group, items]) => (
           <div key={group}>
-            <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-clay">{group}</div>
+            <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">{group}</div>
             <ul className="space-y-2">
               {items.map((t) => (
                 <li key={t.id} className="flex items-center gap-3 rounded-lg bg-panel px-4 py-3 text-sm">
@@ -796,7 +796,7 @@ function Checklist({
                     type="checkbox"
                     checked={t.done}
                     onChange={() => toggle(t)}
-                    className="size-4 accent-clay"
+                    className="size-4 accent-clay-ink"
                   />
                   <span className={t.done ? "text-muted-foreground line-through" : ""}>{t.title}</span>
                   <button
@@ -922,7 +922,7 @@ function Invitados({
           placeholder="Notas (opcional)"
           className={`${inputClass} min-w-[200px] flex-1`}
         />
-        <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-background hover:bg-foreground">
+        <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground hover:bg-clay-ink hover:text-background">
           Añadir
         </button>
       </form>
@@ -944,7 +944,7 @@ function Invitados({
                 await supabase.from("guests").update({ notes: next }).eq("id", g.id);
                 await reload();
               }}
-              className="w-48 rounded-md border border-transparent bg-transparent px-2 py-1 text-sm outline-none placeholder:text-muted-foreground/60 hover:border-line focus:border-clay focus:bg-background"
+              className="w-48 rounded-md border border-transparent bg-transparent px-2 py-1 text-sm outline-none placeholder:text-muted-foreground/60 hover:border-line focus:border-clay-ink focus:bg-background"
             />
             <select
               value={g.rsvp}
@@ -1274,7 +1274,7 @@ function Proveedores({
           placeholder="Notas"
           className={`${inputClass} sm:col-span-2`}
         />
-        <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-background hover:bg-foreground">
+        <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground hover:bg-clay-ink hover:text-background">
           Añadir proveedor
         </button>
       </form>
@@ -1299,7 +1299,7 @@ function Proveedores({
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="font-display text-xl font-semibold">{v.name}</div>
-                  <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-clay">{v.service}</div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-clay-ink">{v.service}</div>
                 </div>
                 <div className="font-display text-lg">{money(Number(v.price), wedding.currency)}</div>
               </div>
@@ -1320,7 +1320,7 @@ function Proveedores({
                       const n = Number(e.target.value.replace(",", ".")) || 0;
                       if (n !== Number(v.deposit_paid)) await update(v.id, { deposit_paid: n });
                     }}
-                    className="rounded-md border border-line bg-background px-2 py-1 text-sm outline-none focus:border-clay"
+                    className="rounded-md border border-line bg-background px-2 py-1 text-sm outline-none focus:border-clay-ink"
                   />
                 </label>
                 <div className="flex flex-col gap-1">
@@ -1340,7 +1340,7 @@ function Proveedores({
                   const next = e.target.value;
                   if (next !== (v.notes ?? "")) await update(v.id, { notes: next });
                 }}
-                className="mt-3 w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-sm outline-none placeholder:text-muted-foreground/60 hover:border-line focus:border-clay focus:bg-background"
+                className="mt-3 w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-sm outline-none placeholder:text-muted-foreground/60 hover:border-line focus:border-clay-ink focus:bg-background"
               />
 
               <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -1528,7 +1528,7 @@ function Ajustes({
         </label>
         <button
           disabled={saving}
-          className="rounded-full bg-clay px-6 py-3 font-medium text-background hover:bg-foreground disabled:opacity-60"
+          className="rounded-full bg-clay px-6 py-3 font-medium text-foreground hover:bg-clay-ink hover:text-background disabled:opacity-60"
         >
           {saving ? "Guardando…" : "Guardar"}
         </button>
