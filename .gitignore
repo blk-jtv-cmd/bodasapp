@@ -30,3 +30,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Claves y configuración local (nunca subir a GitHub)
+.env
+.env.*
+!.env.example
