@@ -238,7 +238,7 @@ function PanelPage() {
         const { data: created, error } = await supabase
           .from("weddings")
           .upsert(
-            { user_id: uid, partner_one: "", partner_two: "" },
+            { user_id: uid, partner_one: "", partner_two: "", guest_target: 0, total_budget: 0 },
             { onConflict: "user_id", ignoreDuplicates: true },
           )
           .select(WEDDING_COLUMNS);
@@ -882,7 +882,9 @@ function Invitados({
     <div>
       <SectionHeader
         title="Invitados"
-        subtitle={`${guests.length} en la lista · ${totalSeats} plazas · objetivo ${wedding.guest_target}`}
+        subtitle={`${guests.length} en la lista · ${totalSeats} plazas${
+          Number(wedding.guest_target) ? ` · objetivo ${wedding.guest_target}` : ""
+        }`}
       />
       <form onSubmit={add} className="mb-8 flex flex-wrap gap-3">
         <input
@@ -1424,6 +1426,16 @@ function Proveedores({
   );
 }
 
+/** Convierte "1.500,50", "1500.5" o "1 500" en número. Vacío o no válido = 0. */
+function parseAmount(value: string): number {
+  let v = value.trim().replace(/\s/g, "");
+  if (!v) return 0;
+  if (v.includes(",")) v = v.replace(/\./g, "").replace(",", ".");
+  else if (/^\d{1,3}(\.\d{3})+$/.test(v)) v = v.replace(/\./g, ""); // "1.500" = mil quinientos
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
 function Ajustes({
   wedding,
   setWedding,
@@ -1436,8 +1448,9 @@ function Ajustes({
     partner_two: wedding.partner_two,
     wedding_date: wedding.wedding_date ?? "",
     venue: wedding.venue ?? "",
-    guest_target: String(wedding.guest_target),
-    total_budget: String(wedding.total_budget),
+    // 0 = sin rellenar: se muestra la casilla vacía con su texto de ayuda.
+    guest_target: Number(wedding.guest_target) ? String(wedding.guest_target) : "",
+    total_budget: Number(wedding.total_budget) ? String(wedding.total_budget) : "",
     currency: wedding.currency,
   });
   const [saving, setSaving] = useState(false);
@@ -1450,8 +1463,8 @@ function Ajustes({
       partner_two: form.partner_two,
       wedding_date: form.wedding_date || null,
       venue: form.venue,
-      guest_target: Number(form.guest_target) || 0,
-      total_budget: Number(form.total_budget) || 0,
+      guest_target: Math.round(parseAmount(form.guest_target)),
+      total_budget: parseAmount(form.total_budget),
       currency: form.currency,
     };
     const { error } = await supabase.from("weddings").update(payload).eq("id", wedding.id);
