@@ -14,9 +14,13 @@ type MenuItem = {
   people: number;
   covers_restrictions: boolean;
   notes: string;
+  courses: Course[] | null;
 };
 
-const MOMENTS = ["Aperitivo", "Entrante", "Principal", "Postre", "Bebida", "Barra libre", "Otro"];
+type Course = { course: string; dish: string };
+
+const MOMENTS = ["Aperitivo", "Menú", "Bebida", "Barra libre", "Otro"];
+const COURSES = ["Entrante", "Primer plato", "Pescado", "Carne", "Principal", "Sorbete", "Postre", "Otro"];
 const RESTRICTIONS = ["Estándar", "Vegetariano", "Vegano", "Sin gluten", "Infantil"];
 
 function Label({ children }: { children: React.ReactNode }) {
@@ -24,6 +28,61 @@ function Label({ children }: { children: React.ReactNode }) {
     <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
       {children}
     </span>
+  );
+}
+
+/** Platos que incluye un menú cerrado (entrante, principal, postre…). */
+function Courses({ courses, onSave }: { courses: Course[]; onSave: (c: Course[]) => void }) {
+  const update = (i: number, values: Partial<Course>) =>
+    onSave(courses.map((c, idx) => (idx === i ? { ...c, ...values } : c)));
+  const nextCourse = () => {
+    const used = courses.map((c) => c.course);
+    return ["Entrante", "Principal", "Postre"].find((c) => !used.includes(c)) ?? "Otro";
+  };
+
+  return (
+    <div className="mt-4 rounded-xl bg-background/60 p-4 ring-1 ring-foreground/5">
+      <Label>Platos incluidos en el menú</Label>
+      <div className="mt-2 space-y-2">
+        {courses.length === 0 && (
+          <p className="text-sm text-muted-foreground">Añadid los platos que incluye este menú.</p>
+        )}
+        {courses.map((c, i) => (
+          <div key={i} className="flex flex-wrap items-center gap-2">
+            <select
+              value={c.course}
+              onChange={(e) => update(i, { course: e.target.value })}
+              className={`${fieldClass} w-36`}
+            >
+              {(COURSES.includes(c.course) ? COURSES : [c.course, ...COURSES]).map((o) => (
+                <option key={o}>{o}</option>
+              ))}
+            </select>
+            <TextField
+              value={c.dish}
+              onSave={(dish) => update(i, { dish })}
+              placeholder="Plato"
+              className="min-w-[12rem] flex-1"
+            />
+            <button
+              type="button"
+              onClick={() => onSave(courses.filter((_, idx) => idx !== i))}
+              className="text-muted-foreground transition-colors hover:text-destructive"
+              aria-label="Quitar plato"
+            >
+              <Trash2 className="size-4" />
+            </button>
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => onSave([...courses, { course: nextCourse(), dish: "" }])}
+        className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-clay-ink hover:underline"
+      >
+        <Plus className="size-4" /> Añadir plato al menú
+      </button>
+    </div>
   );
 }
 
@@ -58,15 +117,15 @@ export function Menu({
         <div>
           <h2 className="font-display text-3xl tracking-tight">Menú y catering</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Cada plato con su precio por persona. El total se calcula solo.
+            Aperitivo, menús cerrados con sus platos, bebida y barra libre. El total se calcula solo.
           </p>
         </div>
         <button
           type="button"
-          onClick={() => add({ moment: "Principal" }, userId)}
+          onClick={() => add({ moment: "Menú", courses: [] }, userId)}
           className="inline-flex items-center gap-2 rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background"
         >
-          <Plus className="size-4" /> Añadir plato
+          <Plus className="size-4" /> Añadir
         </button>
       </div>
 
@@ -91,14 +150,18 @@ export function Menu({
                       onChange={(e) => patch(r.id, { moment: e.target.value })}
                       className={fieldClass}
                     >
-                      {MOMENTS.map((o) => (
+                      {(MOMENTS.includes(r.moment) ? MOMENTS : [r.moment, ...MOMENTS]).map((o) => (
                         <option key={o}>{o}</option>
                       ))}
                     </select>
                   </label>
                   <label className="flex flex-col gap-1">
-                    <Label>Plato / producto</Label>
-                    <TextField value={r.dish} onSave={(dish) => patch(r.id, { dish })} placeholder="Ej.: Solomillo con reducción de Pedro Ximénez" />
+                    <Label>{r.moment === "Menú" ? "Nombre del menú" : "Plato / producto"}</Label>
+                    <TextField
+                      value={r.dish}
+                      onSave={(dish) => patch(r.id, { dish })}
+                      placeholder={r.moment === "Menú" ? "Ej.: Menú Gran Gala" : "Ej.: Jamón ibérico y croquetas"}
+                    />
                   </label>
                   <label className="flex flex-col gap-1">
                     <Label>Restricciones</Label>
@@ -113,6 +176,13 @@ export function Menu({
                     </select>
                   </label>
                 </div>
+
+                {r.moment === "Menú" && (
+                  <Courses
+                    courses={r.courses ?? []}
+                    onSave={(courses) => patch(r.id, { courses })}
+                  />
+                )}
 
                 <div className="mt-3 grid gap-3 sm:grid-cols-2 md:grid-cols-[1fr_9rem_8rem_9rem]">
                   <label className="flex flex-col gap-1">
@@ -158,10 +228,10 @@ export function Menu({
                   <button
                     type="button"
                     onClick={() => {
-                      if (window.confirm(`¿Borrar ${r.dish || "este plato"}?`)) remove(r.id);
+                      if (window.confirm(`¿Borrar ${r.dish || "esta línea"}?`)) remove(r.id);
                     }}
                     className="py-2 text-muted-foreground transition-colors hover:text-destructive"
-                    aria-label="Borrar plato"
+                    aria-label="Borrar"
                   >
                     <Trash2 className="size-4" />
                   </button>

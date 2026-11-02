@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS public.menu_items (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   wedding_id uuid NOT NULL REFERENCES public.weddings(id) ON DELETE CASCADE,
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  moment text NOT NULL DEFAULT 'Principal',
+  moment text NOT NULL DEFAULT 'Menú',
   dish text NOT NULL DEFAULT '',
   restriction text NOT NULL DEFAULT 'Estándar',
   vendor text NOT NULL DEFAULT '',
@@ -34,8 +34,12 @@ CREATE TABLE IF NOT EXISTS public.menu_items (
   people integer NOT NULL DEFAULT 0,
   covers_restrictions boolean NOT NULL DEFAULT false,
   notes text NOT NULL DEFAULT '',
+  -- Platos de un menú cerrado: [{"course": "Entrante", "dish": "..."}]
+  courses jsonb NOT NULL DEFAULT '[]'::jsonb,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE public.menu_items ADD COLUMN IF NOT EXISTS courses jsonb NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE public.menu_items ALTER COLUMN moment SET DEFAULT 'Menú';
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.venues, public.menu_items TO authenticated;
 GRANT ALL ON public.venues, public.menu_items TO service_role;
