@@ -24,20 +24,54 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+type Mode = "signup" | "login" | "forgot" | "reset";
+
+const inputCls =
+  "w-full rounded-xl border border-line bg-panel px-4 py-3 text-sm outline-none focus:border-clay";
+
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signup" | "login">("signup");
+  const [mode, setMode] = useState<Mode>("signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [names, setNames] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sentTo, setSentTo] = useState<string | null>(null);
+  // Aviso de "revisad vuestro correo": por confirmación de cuenta o por cambio de contraseña.
+  const [notice, setNotice] = useState<{ kind: "confirm" | "reset"; email: string } | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/panel" });
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const isRecovery =
+      hash.get("type") === "recovery" ||
+      new URLSearchParams(window.location.search).get("reset") === "1";
+
+    // Enlace caducado o ya usado.
+    if (hash.get("error_description")) {
+      toast.error("El enlace ha caducado o ya se ha usado. Pedid uno nuevo.");
+      window.history.replaceState(null, "", window.location.pathname);
+      setMode("login");
+      return;
+    }
+
+    if (isRecovery) setMode("reset");
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") setMode("reset");
     });
+
+    // Leer la sesión también procesa los enlaces de los correos (#access_token=...).
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session && !isRecovery) navigate({ to: "/panel" });
+    });
+
+    return () => sub.subscription.unsubscribe();
   }, [navigate]);
+
+  function switchMode(next: Mode) {
+    setMode(next);
+    setNotice(null);
+    setPassword("");
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,13 +93,26 @@ function AuthPage() {
           navigate({ to: "/panel" });
         } else {
           // Hay que confirmar el correo antes de entrar.
-          setSentTo(email);
+          setNotice({ kind: "confirm", email });
           setMode("login");
           setPassword("");
         }
-      } else {
+      } else if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        navigate({ to: "/panel" });
+      } else if (mode === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth?reset=1`,
+        });
+        if (error) throw error;
+        setNotice({ kind: "reset", email });
+        setMode("login");
+      } else {
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+        toast.success("Contraseña cambiada. ¡Bienvenidos de nuevo!");
+        window.history.replaceState(null, "", window.location.pathname);
         navigate({ to: "/panel" });
       }
     } catch (err) {
@@ -88,6 +135,22 @@ function AuthPage() {
     }
   }
 
+  const titles: Record<Mode, [string, string]> = {
+    signup: ["Crea vuestro plan", "Una cuenta para los dos novios, con todo guardado."],
+    login: ["Volved a vuestro plan", "Entrad y seguid donde lo dejasteis."],
+    forgot: [
+      "¿Habéis olvidado la contraseña?",
+      "Escribid vuestro email y os enviaremos un enlace para crear una nueva.",
+    ],
+    reset: ["Elegid una contraseña nueva", "Escribidla y entraréis directamente a vuestro plan."],
+  };
+  const submitLabel: Record<Mode, string> = {
+    signup: "Crear cuenta",
+    login: "Entrar",
+    forgot: "Enviar enlace",
+    reset: "Guardar contraseña",
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-background font-body text-foreground">
       <header className="border-b border-line">
@@ -102,34 +165,35 @@ function AuthPage() {
       </header>
 
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-16">
-        <h1 className="text-balance font-display text-4xl tracking-tight">
-          {mode === "signup" ? "Crea vuestro plan" : "Volved a vuestro plan"}
-        </h1>
-        <p className="mt-3 text-sm text-muted-foreground">
-          {mode === "signup"
-            ? "Una cuenta para los dos novios, con todo guardado."
-            : "Entrad y seguid donde lo dejasteis."}
-        </p>
+        <h1 className="text-balance font-display text-4xl tracking-tight">{titles[mode][0]}</h1>
+        <p className="mt-3 text-sm text-muted-foreground">{titles[mode][1]}</p>
 
-        <button
-          type="button"
-          onClick={handleGoogle}
-          className="mt-8 w-full rounded-full border border-line bg-panel px-5 py-3 text-sm font-medium transition-colors hover:bg-clay-soft"
-        >
-          Continuar con Google
-        </button>
+        {(mode === "signup" || mode === "login") && (
+          <>
+            <button
+              type="button"
+              onClick={handleGoogle}
+              className="mt-8 w-full rounded-full border border-line bg-panel px-5 py-3 text-sm font-medium transition-colors hover:bg-clay-soft"
+            >
+              Continuar con Google
+            </button>
 
-        <div className="my-6 flex items-center gap-4 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-          <span className="h-px flex-1 bg-line" />o<span className="h-px flex-1 bg-line" />
-        </div>
+            <div className="my-6 flex items-center gap-4 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              <span className="h-px flex-1 bg-line" />o<span className="h-px flex-1 bg-line" />
+            </div>
+          </>
+        )}
+        {(mode === "forgot" || mode === "reset") && <div className="mt-8" />}
 
-        {sentTo && (
+        {notice && (
           <div className="mb-6 rounded-2xl bg-clay-soft px-5 py-4 text-sm">
             <div className="font-display text-lg font-semibold">Revisad vuestro correo</div>
             <p className="mt-1 text-muted-foreground">
-              Os hemos enviado un enlace a <strong className="text-foreground">{sentTo}</strong> para
-              confirmar la cuenta. Pulsadlo y después entrad aquí con vuestro email y contraseña. Si no
-              lo veis, mirad en la carpeta de spam.
+              Os hemos enviado un enlace a <strong className="text-foreground">{notice.email}</strong>
+              {notice.kind === "confirm"
+                ? " para confirmar la cuenta. Pulsadlo y después entrad aquí con vuestro email y contraseña."
+                : " para crear una contraseña nueva. Abridlo en este mismo dispositivo."}{" "}
+              Si no lo veis, mirad en la carpeta de spam.
             </p>
           </div>
         )}
@@ -140,45 +204,64 @@ function AuthPage() {
               value={names}
               onChange={(e) => setNames(e.target.value)}
               placeholder="Vuestros nombres"
-              className="w-full rounded-xl border border-line bg-panel px-4 py-3 text-sm outline-none focus:border-clay"
+              className={inputCls}
             />
           )}
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            className="w-full rounded-xl border border-line bg-panel px-4 py-3 text-sm outline-none focus:border-clay"
-          />
-          <input
-            type="password"
-            required
-            minLength={6}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Contraseña"
-            className="w-full rounded-xl border border-line bg-panel px-4 py-3 text-sm outline-none focus:border-clay"
-          />
+          {mode !== "reset" && (
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              className={inputCls}
+            />
+          )}
+          {mode !== "forgot" && (
+            <input
+              type="password"
+              required
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder={mode === "reset" ? "Contraseña nueva (mínimo 6 caracteres)" : "Contraseña"}
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              className={inputCls}
+            />
+          )}
+          {mode === "login" && (
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => switchMode("forgot")}
+                className="text-xs text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground"
+              >
+                ¿Habéis olvidado la contraseña?
+              </button>
+            </div>
+          )}
           <button
             type="submit"
             disabled={loading}
             className="w-full rounded-full bg-clay px-5 py-3 font-medium text-background transition-colors hover:bg-foreground disabled:opacity-60"
           >
-            {loading ? "Un momento…" : mode === "signup" ? "Crear cuenta" : "Entrar"}
+            {loading ? "Un momento…" : submitLabel[mode]}
           </button>
         </form>
 
-        <button
-          type="button"
-          onClick={() => {
-            setMode(mode === "signup" ? "login" : "signup");
-            setSentTo(null);
-          }}
-          className="mt-6 text-sm text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground"
-        >
-          {mode === "signup" ? "Ya tenemos cuenta" : "Aún no tenemos cuenta"}
-        </button>
+        {mode !== "reset" && (
+          <button
+            type="button"
+            onClick={() => switchMode(mode === "signup" ? "login" : mode === "login" ? "signup" : "login")}
+            className="mt-6 text-sm text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground"
+          >
+            {mode === "signup"
+              ? "Ya tenemos cuenta"
+              : mode === "login"
+                ? "Aún no tenemos cuenta"
+                : "Volver a entrar"}
+          </button>
+        )}
       </main>
     </div>
   );
@@ -196,6 +279,10 @@ function translateAuthError(err: unknown): string {
     return "La contraseña es demasiado corta. Usad al menos 6 caracteres.";
   if (m.includes("rate limit") || m.includes("security purposes"))
     return "Demasiados intentos seguidos. Esperad un minuto y volved a probar.";
+  if (m.includes("same password") || m.includes("different from the old"))
+    return "La contraseña nueva tiene que ser distinta de la anterior.";
+  if (m.includes("session") && m.includes("missing"))
+    return "El enlace ha caducado. Pedid uno nuevo desde «¿Habéis olvidado la contraseña?».";
   if (m.includes("invalid email") || m.includes("unable to validate email"))
     return "Ese email no parece válido.";
   return message || "Algo no ha salido bien. Volved a intentarlo.";
