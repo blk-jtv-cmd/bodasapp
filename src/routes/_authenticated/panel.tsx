@@ -1,7 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { BrandLogo, BrandName } from "@/components/brand";
 import {
   Presupuesto,
   DEFAULT_EXPENSE_CATEGORIES,
@@ -25,13 +26,13 @@ import {
 export const Route = createFileRoute("/_authenticated/panel")({
   head: () => ({
     meta: [
-      { title: "Vuestro panel de boda — Coro" },
+      { title: "Vuestro panel de boda — Tu boda en orden" },
       {
         name: "description",
         content:
           "Gestiona checklist, presupuesto, invitados, proveedores y cronograma de tu boda desde un único panel.",
       },
-      { property: "og:title", content: "Vuestro panel de boda — Coro" },
+      { property: "og:title", content: "Vuestro panel de boda — Tu boda en orden" },
       {
         property: "og:description",
         content: "Todo lo que hay que tener en cuenta para la boda, en un solo sitio.",
@@ -349,11 +350,10 @@ function PanelPage() {
   return (
     <div className="min-h-screen bg-background font-body text-foreground">
       <header className="sticky top-0 z-30 border-b border-line bg-background/90 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link to="/" className="font-display text-2xl font-semibold tracking-tight">
-            Coro
-          </Link>
-          <div className="flex items-center gap-5">
+        <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 py-2">
+          <BrandName className="justify-self-start" />
+          <BrandLogo />
+          <div className="flex items-center gap-5 justify-self-end">
             <span className="hidden font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground sm:inline">
               {wedding.partner_one || "Novia"} &amp; {wedding.partner_two || "Novio"}
               {daysLeft !== null && ` · Día ${daysLeft >= 0 ? `−${daysLeft}` : `+${Math.abs(daysLeft)}`}`}

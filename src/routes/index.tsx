@@ -1,17 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import bridePortrait from "@/assets/bride-portrait.jpg";
+import { BrandLogo, BrandName, BRAND_NAME } from "@/components/brand";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Coro — Organiza tu boda completa por 27€" },
+      { title: "Tu boda en orden — Organiza tu boda completa por 27€" },
       {
         name: "description",
         content:
           "Checklist, presupuesto, invitados, proveedores y cronograma de tu boda en un solo plan. Un pago único de 27€, sin suscripciones.",
       },
-      { property: "og:title", content: "Coro — Organiza tu boda completa por 27€" },
+      { property: "og:title", content: "Tu boda en orden — Organiza tu boda completa por 27€" },
       {
         property: "og:description",
         content:
@@ -86,14 +87,16 @@ function Index() {
     <div className="min-h-screen bg-background font-body text-foreground antialiased">
       {/* Nav */}
       <header className="sticky top-0 z-30 border-b border-line bg-background/85 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-baseline gap-2">
-            <span className="font-display text-2xl font-semibold tracking-tight">Coro</span>
-            <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+        <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 py-2">
+          <div className="flex min-w-0 flex-col justify-self-start">
+            <BrandName />
+            <span className="hidden font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground sm:inline">
               Plan · 27€
             </span>
           </div>
-          <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
+          <BrandLogo />
+          <div className="flex items-center gap-8 justify-self-end">
+          <nav className="hidden items-center gap-6 text-sm text-muted-foreground lg:flex">
             <a href="#metodo" className="transition-colors hover:text-foreground">
               Método
             </a>
@@ -110,6 +113,7 @@ function Index() {
           >
             Empezar
           </Link>
+          </div>
         </div>
       </header>
 
@@ -337,7 +341,7 @@ function Index() {
       {/* Footer */}
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 md:flex-row">
-          <span className="font-display text-xl font-semibold tracking-tight">Coro</span>
+          <span className="font-display text-xl font-semibold tracking-tight">{BRAND_NAME}</span>
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
             Un plan, una boda, 27€
           </span>
