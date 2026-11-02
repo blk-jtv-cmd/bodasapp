@@ -10,6 +10,8 @@ import {
 } from "@/components/panel/presupuesto";
 import { Mesas, type MesaTable, type MesaGuest } from "@/components/panel/mesas";
 import { Cronograma } from "@/components/panel/cronograma";
+import { Fincas } from "@/components/panel/fincas";
+import { Menu } from "@/components/panel/menu";
 import { CURRENCIES, formatMoney, currencySymbol } from "@/lib/currency";
 import {
   Bar,
@@ -116,8 +118,10 @@ const TABS = [
   ["resumen", "Resumen"],
   ["checklist", "Checklist"],
   ["presupuesto", "Presupuesto"],
+  ["fincas", "Fincas"],
   ["invitados", "Invitados"],
   ["mesas", "Mesas"],
+  ["menu", "Menú"],
   ["proveedores", "Proveedores"],
   ["cronograma", "Cronograma"],
   ["ajustes", "Ajustes"],
@@ -127,7 +131,15 @@ type TabKey = (typeof TABS)[number][0];
 
 // Secciones que solo se pueden usar después de pagar el plan.
 // (La base de datos también las protege: sin pagar no se puede leer ni guardar nada en ellas.)
-const PAID_TABS: TabKey[] = ["presupuesto", "invitados", "mesas", "proveedores", "cronograma"];
+const PAID_TABS: TabKey[] = [
+  "presupuesto",
+  "fincas",
+  "invitados",
+  "mesas",
+  "menu",
+  "proveedores",
+  "cronograma",
+];
 
 const STRIPE_PAYMENT_LINK = import.meta.env.VITE_STRIPE_PAYMENT_LINK as string | undefined;
 
@@ -394,7 +406,7 @@ function PanelPage() {
             <div>
               <div className="font-display text-lg font-semibold">Plan gratuito</div>
               <p className="text-sm text-muted-foreground">
-                Tenéis el Resumen y el Checklist. Desbloquead presupuesto, invitados, mesas, proveedores,
+                Tenéis el Resumen y el Checklist. Desbloquead presupuesto, fincas, invitados, mesas, menú, proveedores,
                 cronograma y la plantilla en Excel con un pago único de 27€, sin suscripciones.
               </p>
             </div>
@@ -436,6 +448,12 @@ function PanelPage() {
               setWedding({ ...wedding, total_budget: n });
             }}
           />
+        )}
+        {!locked && tab === "fincas" && (
+          <Fincas weddingId={wedding.id} userId={userId} currency={wedding.currency} />
+        )}
+        {!locked && tab === "menu" && (
+          <Menu weddingId={wedding.id} userId={userId} currency={wedding.currency} />
         )}
         {!locked && tab === "invitados" && <Invitados guests={guests} {...ctx} />}
         {!locked && tab === "mesas" && (
@@ -530,7 +548,8 @@ function Paywall({ url }: { url: string | null }) {
       <div className="text-3xl">🔒</div>
       <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight">Parte del plan completo</h2>
       <p className="mt-3 text-sm text-muted-foreground">
-        Con un pago único de 27€ tendréis presupuesto, invitados, plano de mesas, proveedores, el
+        Con un pago único de 27€ tendréis presupuesto, comparador de fincas, invitados, plano de mesas,
+        menú, proveedores, el
         cronograma del día y la plantilla en Excel para descargar. Para siempre, sin suscripciones.
       </p>
       <div className="mt-8 flex justify-center">
