@@ -11,14 +11,14 @@ type Wedding = {
 };
 
 const inputClass =
-  "rounded-lg border border-line bg-background px-3 py-2 text-sm outline-none focus:border-clay";
+  "rounded-lg border border-line bg-background px-3 py-2 text-sm outline-none focus:border-clay-ink";
 
 const timeBtn =
-  "rounded-lg border border-line bg-background px-3 py-2 text-sm outline-none focus:border-clay";
+  "rounded-lg border border-line bg-background px-3 py-2 text-sm outline-none focus:border-clay-ink";
 
-/** Ordena "HH:MM" como minutos del día. Devuelve null si no parsea. */
+/** Ordena "HH:MM" (o "HH:MM:SS") como minutos del día. Devuelve null si no parsea. */
 function toMinutes(label: string): number | null {
-  const m = /^(\d{1,2}):(\d{2})$/.exec(label.trim());
+  const m = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(label.trim());
   if (!m) return null;
   const h = Number(m[1]);
   const min = Number(m[2]);
@@ -27,7 +27,7 @@ function toMinutes(label: string): number | null {
 }
 
 function prettyTime(label: string): string {
-  const m = /^(\d{1,2}):(\d{2})$/.exec(label.trim());
+  const m = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(label.trim());
   if (!m) return label;
   const h = m[1].padStart(2, "0");
   const min = m[2];
@@ -41,16 +41,16 @@ function CeremonyPicker({
   value: string | null;
   onChange: (v: string | null) => void;
 }) {
-  const [local, setLocal] = useState(value ?? "");
+  const [local, setLocal] = useState(value ? prettyTime(value) : "");
 
   useEffect(() => {
-    setLocal(value ?? "");
+    setLocal(value ? prettyTime(value) : "");
   }, [value]);
 
   return (
     <div className="flex flex-wrap items-center gap-3">
       <div className="flex items-center gap-2">
-        <Clock className="size-4 text-clay" />
+        <Clock className="size-4 text-clay-ink" />
         <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
           Hora de la ceremonia
         </span>
@@ -150,7 +150,7 @@ function EventRow({
             />
             <button
               onClick={save}
-              className="rounded-full bg-clay px-4 py-1.5 text-xs font-medium text-background hover:bg-foreground"
+              className="rounded-full bg-clay px-4 py-1.5 text-xs font-medium text-foreground hover:bg-clay-ink hover:text-background"
             >
               Guardar
             </button>
@@ -170,7 +170,7 @@ function EventRow({
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <span
               className={`font-mono text-xs ${
-                isCeremony ? "font-semibold text-clay" : "text-muted-foreground"
+                isCeremony ? "font-semibold text-clay-ink" : "text-muted-foreground"
               }`}
             >
               {prettyTime(item.time_label)}
@@ -204,7 +204,7 @@ function EventRow({
           </div>
         )}
         {isCeremony && !editing && (
-          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.15em] text-clay">
+          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.15em] text-clay-ink">
             Ceremonia
           </p>
         )}
@@ -212,6 +212,28 @@ function EventRow({
     </li>
   );
 }
+
+function CeremonyRow({ time, isLast }: { time: string; isLast: boolean }) {
+  return (
+    <li className="relative flex gap-5 sm:gap-6">
+      <div className="relative flex flex-col items-center">
+        <span className="mt-1 size-3 shrink-0 rounded-full bg-clay ring-4 ring-background" />
+        {!isLast && <span className="mt-1 w-px flex-1 bg-line" />}
+      </div>
+      <div className="-mt-0.5 flex-1 pb-8">
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span className="font-mono text-xs font-semibold text-clay-ink">{prettyTime(time)}</span>
+          <span className="font-display text-base font-semibold text-foreground">Ceremonia</span>
+        </div>
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          La hora se cambia arriba, en «Hora de la ceremonia».
+        </p>
+      </div>
+    </li>
+  );
+}
+
+type Row = { kind: "item"; item: TimelineItem; min: number | null } | { kind: "ceremony"; time: string; min: number | null };
 
 export function Cronograma({
   items,
@@ -234,18 +256,26 @@ export function Cronograma({
     [wedding.ceremony_time],
   );
 
-  const sorted = useMemo(
-    () =>
-      [...items].sort((a, b) => {
-        const ta = toMinutes(a.time_label);
-        const tb = toMinutes(b.time_label);
-        if (ta === null && tb === null) return 0;
-        if (ta === null) return 1;
-        if (tb === null) return -1;
-        return ta - tb;
-      }),
-    [items],
-  );
+  // Si hay hora de ceremonia y ningún momento se llama "ceremonia", la mostramos
+  // en la línea temporal como un momento más, en su sitio según la hora.
+  const rows = useMemo<Row[]>(() => {
+    const list: Row[] = items.map((item) => ({
+      kind: "item",
+      item,
+      min: toMinutes(item.time_label),
+    }));
+    const hasCeremonyItem = items.some((i) => /ceremonia/i.test(i.title));
+    if (wedding.ceremony_time && !hasCeremonyItem) {
+      list.push({ kind: "ceremony", time: wedding.ceremony_time, min: ceremonyMin });
+    }
+    return list.sort((a, b) => {
+      if (a.min === null && b.min === null) return 0;
+      if (a.min === null) return 1;
+      if (b.min === null) return -1;
+      if (a.min === b.min) return a.kind === "ceremony" ? -1 : b.kind === "ceremony" ? 1 : 0;
+      return a.min - b.min;
+    });
+  }, [items, wedding.ceremony_time, ceremonyMin]);
 
   async function saveCeremonyTime(v: string | null) {
     const previousTime = wedding.ceremony_time;
@@ -319,7 +349,7 @@ export function Cronograma({
     await reload();
   }
 
-  const isEmpty = sorted.length === 0;
+  const isEmpty = rows.length === 0;
 
   return (
     <div className="max-w-2xl">
@@ -375,7 +405,7 @@ export function Cronograma({
               className={inputClass}
             />
           </label>
-          <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-background hover:bg-foreground">
+          <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground hover:bg-clay-ink hover:text-background">
             Añadir
           </button>
           <button
@@ -397,7 +427,7 @@ export function Cronograma({
           </p>
           <button
             onClick={() => setAdding(true)}
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-clay px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground"
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-clay px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background"
           >
             <Plus className="size-4" /> Añadir primer momento
           </button>
@@ -407,7 +437,7 @@ export function Cronograma({
           {!adding && (
             <button
               onClick={() => setAdding(true)}
-              className="mb-8 inline-flex items-center gap-2 rounded-full border border-line bg-background px-5 py-2 text-sm font-medium text-foreground transition-colors hover:border-clay hover:text-clay"
+              className="mb-8 inline-flex items-center gap-2 rounded-full border border-line bg-background px-5 py-2 text-sm font-medium text-foreground transition-colors hover:border-clay hover:text-clay-ink"
             >
               <Plus className="size-4" /> Añadir momento
             </button>
@@ -415,16 +445,21 @@ export function Cronograma({
 
           {/* Línea temporal */}
           <ol className="relative">
-            {sorted.map((item, idx) => {
-              const itemMin = toMinutes(item.time_label);
+            {rows.map((row, idx) => {
+              const isLast = idx === rows.length - 1;
+              if (row.kind === "ceremony") {
+                return <CeremonyRow key="ceremonia" time={row.time} isLast={isLast} />;
+              }
+              const { item } = row;
               const isCeremony =
-                ceremonyMin !== null && itemMin !== null && itemMin === ceremonyMin;
+                /ceremonia/i.test(item.title) ||
+                (ceremonyMin !== null && row.min !== null && row.min === ceremonyMin);
               return (
                 <EventRow
                   key={item.id}
                   item={item}
                   isCeremony={isCeremony}
-                  isLast={idx === sorted.length - 1}
+                  isLast={isLast}
                   onEdit={(patch) => updateItem(item.id, patch)}
                   onDelete={() => deleteItem(item.id)}
                 />

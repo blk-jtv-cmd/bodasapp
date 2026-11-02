@@ -1,21 +1,22 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { BrandLogo, BrandName } from "@/components/brand";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Entrar o crear cuenta — Coro" },
+      { title: "Entrar o crear cuenta — Tu Boda en Orden" },
       {
         name: "description",
         content:
-          "Accede a tu plan de boda de Coro: checklist, presupuesto, invitados, proveedores y cronograma en un solo panel.",
+          "Accede a tu plan de Tu Boda en Orden: checklist, presupuesto, invitados, proveedores y cronograma en un solo panel.",
       },
-      { property: "og:title", content: "Entrar o crear cuenta — Coro" },
+      { property: "og:title", content: "Entrar o crear cuenta — Tu Boda en Orden" },
       {
         property: "og:description",
-        content: "Crea tu cuenta y empieza a organizar tu boda con Coro por 27€.",
+        content: "Crea tu cuenta y empieza a organizar tu boda con Tu Boda en Orden por 27€.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -27,7 +28,7 @@ export const Route = createFileRoute("/auth")({
 type Mode = "signup" | "login" | "forgot" | "reset";
 
 const inputCls =
-  "w-full rounded-xl border border-line bg-panel px-4 py-3 text-sm outline-none focus:border-clay";
+  "w-full rounded-xl border border-line bg-panel px-4 py-3 text-sm outline-none focus:border-clay-ink";
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -154,11 +155,10 @@ function AuthPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background font-body text-foreground">
       <header className="border-b border-line">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link to="/" className="font-display text-2xl font-semibold tracking-tight">
-            Coro
-          </Link>
-          <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+        <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 py-2">
+          <BrandName className="justify-self-start" />
+          <BrandLogo />
+          <span className="justify-self-end font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
             Plan · 27€
           </span>
         </div>
@@ -243,7 +243,7 @@ function AuthPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-full bg-clay px-5 py-3 font-medium text-background transition-colors hover:bg-foreground disabled:opacity-60"
+            className="w-full rounded-full bg-clay px-5 py-3 font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background disabled:opacity-60"
           >
             {loading ? "Un momento…" : submitLabel[mode]}
           </button>
