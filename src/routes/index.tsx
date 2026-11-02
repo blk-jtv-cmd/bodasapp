@@ -341,7 +341,7 @@ function Index() {
       {/* Footer */}
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 md:flex-row">
-          <span className="font-brand text-xl">{BRAND_NAME}</span>
+          <span className="font-brand text-4xl leading-none">{BRAND_NAME}</span>
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
             Un plan, una boda, 27€
           </span>
