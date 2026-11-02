@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect } from "react";
 import bridePortrait from "@/assets/bride-portrait.jpg";
 
 export const Route = createFileRoute("/")({
@@ -72,6 +73,15 @@ const included = [
 ];
 
 function Index() {
+  // Los enlaces de los correos (confirmar, enlace mágico, contraseña) pueden llegar aquí
+  // con la sesión en la dirección (#access_token=...). Los pasamos a /auth, que sabe leerlos.
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes("access_token") || hash.includes("error_description")) {
+      window.location.replace(`/auth${hash}`);
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-background font-body text-foreground antialiased">
       {/* Nav */}
