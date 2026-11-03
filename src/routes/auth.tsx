@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { BrandLogo, BrandName } from "@/components/brand";
+import { LanguageSwitcher } from "@/i18n/switcher";
+import { t as tr, useI18n } from "@/i18n";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -31,6 +33,7 @@ const inputCls =
   "w-full rounded-xl border border-line bg-panel px-4 py-3 text-sm outline-none focus:border-clay-ink";
 
 function AuthPage() {
+  const { t: tr } = useI18n();
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("signup");
   const [email, setEmail] = useState("");
@@ -48,7 +51,7 @@ function AuthPage() {
 
     // Enlace caducado o ya usado.
     if (hash.get("error_description")) {
-      toast.error("El enlace ha caducado o ya se ha usado. Pedid uno nuevo.");
+      toast.error(tr("El enlace ha caducado o ya se ha usado. Pedid uno nuevo."));
       window.history.replaceState(null, "", window.location.pathname);
       setMode("login");
       return;
@@ -90,7 +93,7 @@ function AuthPage() {
         if (error) throw error;
         if (data.session) {
           // La confirmación por correo está desactivada: entran directamente.
-          toast.success("Cuenta creada. Ya podéis empezar.");
+          toast.success(tr("Cuenta creada. Ya podéis empezar."));
           navigate({ to: "/panel" });
         } else {
           // Hay que confirmar el correo antes de entrar.
@@ -112,7 +115,7 @@ function AuthPage() {
       } else {
         const { error } = await supabase.auth.updateUser({ password });
         if (error) throw error;
-        toast.success("Contraseña cambiada. ¡Bienvenidos de nuevo!");
+        toast.success(tr("Contraseña cambiada. ¡Bienvenidos de nuevo!"));
         window.history.replaceState(null, "", window.location.pathname);
         navigate({ to: "/panel" });
       }
@@ -131,7 +134,7 @@ function AuthPage() {
       },
     });
     if (error) {
-      toast.error("No hemos podido entrar con Google");
+      toast.error(tr("No hemos podido entrar con Google"));
       return;
     }
   }
@@ -158,15 +161,18 @@ function AuthPage() {
         <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 py-2">
           <BrandName className="justify-self-start" />
           <BrandLogo />
-          <span className="justify-self-end font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-            Plan · 37€
-          </span>
+          <div className="flex items-center gap-3 justify-self-end">
+            <span className="hidden font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground sm:inline">
+              {tr("Plan · 37€")}
+            </span>
+            <LanguageSwitcher />
+          </div>
         </div>
       </header>
 
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-16">
-        <h1 className="text-balance font-display text-4xl tracking-tight">{titles[mode][0]}</h1>
-        <p className="mt-3 text-sm text-muted-foreground">{titles[mode][1]}</p>
+        <h1 className="text-balance font-display text-4xl tracking-tight">{tr(titles[mode][0])}</h1>
+        <p className="mt-3 text-sm text-muted-foreground">{tr(titles[mode][1])}</p>
 
         {(mode === "signup" || mode === "login") && (
           <>
@@ -175,11 +181,11 @@ function AuthPage() {
               onClick={handleGoogle}
               className="mt-8 w-full rounded-full border border-line bg-panel px-5 py-3 text-sm font-medium transition-colors hover:bg-clay-soft"
             >
-              Continuar con Google
+              {tr("Continuar con Google")}
             </button>
 
             <div className="my-6 flex items-center gap-4 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              <span className="h-px flex-1 bg-line" />o<span className="h-px flex-1 bg-line" />
+              <span className="h-px flex-1 bg-line" />{tr("o")}<span className="h-px flex-1 bg-line" />
             </div>
           </>
         )}
@@ -187,13 +193,24 @@ function AuthPage() {
 
         {notice && (
           <div className="mb-6 rounded-2xl bg-clay-soft px-5 py-4 text-sm">
-            <div className="font-display text-lg font-semibold">Revisad vuestro correo</div>
+            <div className="font-display text-lg font-semibold">{tr("Revisad vuestro correo")}</div>
             <p className="mt-1 text-muted-foreground">
-              Os hemos enviado un enlace a <strong className="text-foreground">{notice.email}</strong>
-              {notice.kind === "confirm"
-                ? " para confirmar la cuenta. Pulsadlo y después entrad aquí con vuestro email y contraseña."
-                : " para crear una contraseña nueva. Abridlo en este mismo dispositivo."}{" "}
-              Si no lo veis, mirad en la carpeta de spam.
+              {(() => {
+                // El email va en negrita en mitad de la frase, sea cual sea el idioma.
+                const [before, after = ""] = tr(
+                  notice.kind === "confirm"
+                    ? "Os hemos enviado un enlace a {email} para confirmar la cuenta. Pulsadlo y después entrad aquí con vuestro email y contraseña."
+                    : "Os hemos enviado un enlace a {email} para crear una contraseña nueva. Abridlo en este mismo dispositivo.",
+                ).split("{email}");
+                return (
+                  <>
+                    {before}
+                    <strong className="text-foreground">{notice.email}</strong>
+                    {after}
+                  </>
+                );
+              })()}{" "}
+              {tr("Si no lo veis, mirad en la carpeta de spam.")}
             </p>
           </div>
         )}
@@ -203,7 +220,7 @@ function AuthPage() {
             <input
               value={names}
               onChange={(e) => setNames(e.target.value)}
-              placeholder="Vuestros nombres"
+              placeholder={tr("Vuestros nombres")}
               className={inputCls}
             />
           )}
@@ -213,7 +230,7 @@ function AuthPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
+              placeholder={tr("Email")}
               className={inputCls}
             />
           )}
@@ -224,7 +241,7 @@ function AuthPage() {
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder={mode === "reset" ? "Contraseña nueva (mínimo 6 caracteres)" : "Contraseña"}
+              placeholder={mode === "reset" ? tr("Contraseña nueva (mínimo 6 caracteres)") : tr("Contraseña")}
               autoComplete={mode === "login" ? "current-password" : "new-password"}
               className={inputCls}
             />
@@ -236,7 +253,7 @@ function AuthPage() {
                 onClick={() => switchMode("forgot")}
                 className="text-xs text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground"
               >
-                ¿Habéis olvidado la contraseña?
+                {tr("¿Habéis olvidado la contraseña?")}
               </button>
             </div>
           )}
@@ -245,7 +262,7 @@ function AuthPage() {
             disabled={loading}
             className="w-full rounded-full bg-clay px-5 py-3 font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background disabled:opacity-60"
           >
-            {loading ? "Un momento…" : submitLabel[mode]}
+            {loading ? tr("Un momento…") : tr(submitLabel[mode])}
           </button>
         </form>
 
@@ -256,10 +273,10 @@ function AuthPage() {
             className="mt-6 text-sm text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground"
           >
             {mode === "signup"
-              ? "Ya tenemos cuenta"
+              ? tr("Ya tenemos cuenta")
               : mode === "login"
-                ? "Aún no tenemos cuenta"
-                : "Volver a entrar"}
+                ? tr("Aún no tenemos cuenta")
+                : tr("Volver a entrar")}
           </button>
         )}
       </main>
@@ -270,20 +287,20 @@ function AuthPage() {
 function translateAuthError(err: unknown): string {
   const message = err instanceof Error ? err.message : "";
   const m = message.toLowerCase();
-  if (m.includes("invalid login credentials")) return "El email o la contraseña no son correctos.";
+  if (m.includes("invalid login credentials")) return tr("El email o la contraseña no son correctos.");
   if (m.includes("email not confirmed"))
-    return "Todavía no habéis confirmado el email. Revisad vuestro correo (y la carpeta de spam).";
+    return tr("Todavía no habéis confirmado el email. Revisad vuestro correo (y la carpeta de spam).");
   if (m.includes("already registered") || m.includes("already been registered"))
-    return "Ya existe una cuenta con este email. Pulsad «Ya tenemos cuenta» para entrar.";
+    return tr("Ya existe una cuenta con este email. Pulsad «Ya tenemos cuenta» para entrar.");
   if (m.includes("password should be at least") || m.includes("weak password"))
-    return "La contraseña es demasiado corta. Usad al menos 6 caracteres.";
+    return tr("La contraseña es demasiado corta. Usad al menos 6 caracteres.");
   if (m.includes("rate limit") || m.includes("security purposes"))
-    return "Demasiados intentos seguidos. Esperad un minuto y volved a probar.";
+    return tr("Demasiados intentos seguidos. Esperad un minuto y volved a probar.");
   if (m.includes("same password") || m.includes("different from the old"))
-    return "La contraseña nueva tiene que ser distinta de la anterior.";
+    return tr("La contraseña nueva tiene que ser distinta de la anterior.");
   if (m.includes("session") && m.includes("missing"))
-    return "El enlace ha caducado. Pedid uno nuevo desde «¿Habéis olvidado la contraseña?».";
+    return tr("El enlace ha caducado. Pedid uno nuevo desde «¿Habéis olvidado la contraseña?».");
   if (m.includes("invalid email") || m.includes("unable to validate email"))
-    return "Ese email no parece válido.";
-  return message || "Algo no ha salido bien. Volved a intentarlo.";
+    return tr("Ese email no parece válido.");
+  return message || tr("Algo no ha salido bien. Volved a intentarlo.");
 }

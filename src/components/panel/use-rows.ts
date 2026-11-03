@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { t as tr } from "@/i18n";
 
 type Row = { id: string };
 
@@ -18,7 +19,7 @@ export function useWeddingRows<T extends Row>(table: "venues" | "menu_items", we
       .select("*")
       .eq("wedding_id", weddingId)
       .order("created_at");
-    if (error) toast.error("No hemos podido cargar los datos");
+    if (error) toast.error(tr("No hemos podido cargar los datos"));
     setRows((data as unknown as T[]) ?? []);
     setLoading(false);
   }, [table, weddingId]);
@@ -34,7 +35,7 @@ export function useWeddingRows<T extends Row>(table: "venues" | "menu_items", we
       .select("*")
       .single();
     if (error || !data) {
-      toast.error("No se ha podido añadir");
+      toast.error(tr("No se ha podido añadir"));
       return;
     }
     setRows((r) => [...r, data as unknown as T]);
@@ -44,7 +45,7 @@ export function useWeddingRows<T extends Row>(table: "venues" | "menu_items", we
     setRows((r) => r.map((row) => (row.id === id ? { ...row, ...values } : row)));
     const { error } = await supabase.from(table).update(values as never).eq("id", id);
     if (error) {
-      toast.error("No se ha podido guardar");
+      toast.error(tr("No se ha podido guardar"));
       load();
     }
   }
@@ -54,7 +55,7 @@ export function useWeddingRows<T extends Row>(table: "venues" | "menu_items", we
     setRows((r) => r.filter((row) => row.id !== id));
     const { error } = await supabase.from(table).delete().eq("id", id);
     if (error) {
-      toast.error("No se ha podido borrar");
+      toast.error(tr("No se ha podido borrar"));
       setRows(previous);
     }
   }

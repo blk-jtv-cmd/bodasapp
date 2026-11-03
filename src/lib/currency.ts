@@ -39,3 +39,15 @@ export function formatMoney(amount: number, currency: string) {
 export function currencySymbol(currency: string) {
   return getCurrencyMeta(currency).symbol;
 }
+
+/** Nombre de la moneda en el idioma de la web (p. ej. "Swedish Krona (kr)"). */
+export function currencyLabel(code: string, lang: string) {
+  const meta = getCurrencyMeta(code);
+  try {
+    const name = new Intl.DisplayNames([lang], { type: "currency" }).of(meta.code);
+    if (name) return `${name.charAt(0).toUpperCase()}${name.slice(1)} (${meta.symbol})`;
+  } catch {
+    /* navegador sin Intl.DisplayNames */
+  }
+  return meta.label;
+}

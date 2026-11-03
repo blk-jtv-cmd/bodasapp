@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { locale, t as tr, useI18n } from "@/i18n";
 
 const eyebrow = "mb-4 font-mono text-[11px] uppercase tracking-[0.25em] text-clay-ink";
 const h2 = "text-balance font-display text-4xl tracking-tight md:text-5xl";
@@ -9,7 +10,7 @@ const chip = (active: boolean) =>
   }`;
 
 const euros = (n: number) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(
+  new Intl.NumberFormat(locale(), { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(
     Math.round(n / 10) * 10,
   );
 
@@ -29,31 +30,30 @@ const QUESTIONS = [
 ];
 
 export function MentalLoad() {
+  const { t: tr } = useI18n();
   return (
     <section className="border-t border-line">
       <div className="mx-auto max-w-6xl px-6 py-20">
         <div className="max-w-2xl">
-          <div className={eyebrow}>(a) La boda en tu cabeza</div>
-          <h2 className={h2}>Organizar una boda no es solo hacer cosas. Es acordarte de todo.</h2>
+          <div className={eyebrow}>{tr("(a) La boda en tu cabeza")}</div>
+          <h2 className={h2}>{tr("Organizar una boda no es solo hacer cosas. Es acordarte de todo.")}</h2>
           <p className="mt-4 text-pretty text-muted-foreground">
-            Presupuestos en el WhatsApp, pagos en una libreta, invitados sin confirmar… y cada respuesta
-            abre una pregunta nueva.
+            {tr("Presupuestos en el WhatsApp, pagos en una libreta, invitados sin confirmar… y cada respuesta abre una pregunta nueva.")}
           </p>
         </div>
         <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {QUESTIONS.map((q) => (
             <div key={q} className="rounded-xl bg-panel px-5 py-4 font-display text-lg italic ring-1 ring-foreground/5">
-              {q}
+              {tr(q)}
             </div>
           ))}
         </div>
         <div className="mt-10 max-w-2xl rounded-2xl bg-clay-soft px-6 py-5">
           <p className="font-display text-2xl leading-snug">
-            No eres desorganizada. Es que la boda está repartida en mil sitios que no se hablan entre sí.
+            {tr("No eres desorganizada. Es que la boda está repartida en mil sitios que no se hablan entre sí.")}
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Tu Boda en Orden lo junta todo en un solo lugar, para que veas qué está hecho, qué falta y qué
-            toca ahora.
+            {tr("Tu Boda en Orden lo junta todo en un solo lugar, para que veas qué está hecho, qué falta y qué toca ahora.")}
           </p>
         </div>
       </div>
@@ -83,6 +83,7 @@ const SPLIT: [string, number][] = [
 ];
 
 export function BudgetCalculator() {
+  const { t: tr } = useI18n();
   const [guests, setGuests] = useState(100);
   const [style, setStyle] = useState<(typeof STYLES)[number]["key"]>("clasica");
   const perGuest = STYLES.find((s) => s.key === style)!.perGuest;
@@ -92,16 +93,15 @@ export function BudgetCalculator() {
     <section id="pruebalo" className="scroll-mt-24 border-t border-line bg-clay-soft/40">
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-20 lg:grid-cols-[1fr_1.15fr]">
         <div>
-          <div className={eyebrow}>(b) Pruébalo · Presupuesto</div>
-          <h2 className={h2}>¿Cuánto puede costar vuestra boda?</h2>
+          <div className={eyebrow}>{tr("(b) Pruébalo · Presupuesto")}</div>
+          <h2 className={h2}>{tr("¿Cuánto puede costar vuestra boda?")}</h2>
           <p className="mt-4 text-pretty text-muted-foreground">
-            Mueve el número de invitados y elige el estilo. Te damos una primera idea y cómo suele
-            repartirse.
+            {tr("Mueve el número de invitados y elige el estilo. Te damos una primera idea y cómo suele repartirse.")}
           </p>
           <div className="mt-8 space-y-6">
             <label className="block">
               <div className="mb-2 flex items-baseline justify-between">
-                <span className="text-sm font-medium">Invitados</span>
+                <span className="text-sm font-medium">{tr("Invitados")}</span>
                 <span className="font-display text-3xl font-semibold">{guests}</span>
               </div>
               <input
@@ -115,11 +115,11 @@ export function BudgetCalculator() {
               />
             </label>
             <div>
-              <div className="mb-2 text-sm font-medium">Estilo de boda</div>
+              <div className="mb-2 text-sm font-medium">{tr("Estilo de boda")}</div>
               <div className="flex flex-wrap gap-2">
                 {STYLES.map((s) => (
                   <button key={s.key} type="button" onClick={() => setStyle(s.key)} className={chip(style === s.key)}>
-                    {s.label}
+                    {tr(s.label)}
                   </button>
                 ))}
               </div>
@@ -131,17 +131,17 @@ export function BudgetCalculator() {
           <div className="flex flex-wrap items-end justify-between gap-2">
             <div>
               <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                Presupuesto orientativo
+                {tr("Presupuesto orientativo")}
               </div>
               <div className="mt-1 font-display text-5xl font-semibold">{euros(total)}</div>
             </div>
-            <div className="text-sm text-muted-foreground">≈ {euros(perGuest)} por invitado</div>
+            <div className="text-sm text-muted-foreground">{tr("≈ {amount} por invitado", { amount: euros(perGuest) })}</div>
           </div>
           <ul className="mt-6 space-y-2.5">
             {SPLIT.map(([name, pct]) => (
               <li key={name}>
                 <div className="flex justify-between text-sm">
-                  <span>{name}</span>
+                  <span>{tr(name)}</span>
                   <span className="font-medium">{euros(total * pct)}</span>
                 </div>
                 <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-clay-soft">
@@ -151,8 +151,7 @@ export function BudgetCalculator() {
             ))}
           </ul>
           <p className="mt-6 text-xs text-muted-foreground">
-            Cifras orientativas: cambian mucho según la ciudad, la fecha y vuestras prioridades. Dentro de la
-            app llevaréis el presupuesto real, partida a partida.
+            {tr("Cifras orientativas: cambian mucho según la ciudad, la fecha y vuestras prioridades. Dentro de la app llevaréis el presupuesto real, partida a partida.")}
           </p>
         </div>
       </div>
@@ -173,6 +172,7 @@ const SAMPLE_TASKS = [
 ] as const;
 
 export function ChecklistDemo() {
+  const { t: tr } = useI18n();
   const [done, setDone] = useState<boolean[]>(SAMPLE_TASKS.map(() => false));
   const count = done.filter(Boolean).length;
   const pct = Math.round((count / SAMPLE_TASKS.length) * 100);
@@ -181,18 +181,18 @@ export function ChecklistDemo() {
     <section className="border-t border-line">
       <div className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-20 lg:grid-cols-2">
         <div className="lg:order-2">
-          <div className={eyebrow}>Pruébalo · Checklist</div>
-          <h2 className={h2}>¿Cuántas de estas tenéis ya?</h2>
+          <div className={eyebrow}>{tr("Pruébalo · Checklist")}</div>
+          <h2 className={h2}>{tr("¿Cuántas de estas tenéis ya?")}</h2>
           <p className="mt-4 text-pretty text-muted-foreground">
-            Marca las que ya estén hechas y mira cómo avanza. Dentro tenéis el checklist completo por etapas,
-            con responsable y notas en cada tarea.
+            {tr("Marca las que ya estén hechas y mira cómo avanza. Dentro tenéis el checklist completo por etapas, con responsable y notas en cada tarea.")}
           </p>
         </div>
         <div className={card}>
           <div className="mb-5 flex items-baseline justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">Progreso</span>
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">{tr("Progreso")}</span>
             <span className="text-sm text-muted-foreground">
-              {count} de {SAMPLE_TASKS.length} · <span className="font-medium text-foreground">{pct}%</span>
+              {tr("{done} de {total}", { done: count, total: SAMPLE_TASKS.length })} ·{" "}
+              <span className="font-medium text-foreground">{pct}%</span>
             </span>
           </div>
           <div className="mb-6 h-2 overflow-hidden rounded-full bg-clay-soft">
@@ -208,16 +208,16 @@ export function ChecklistDemo() {
                     onChange={() => setDone(done.map((d, j) => (j === i ? !d : d)))}
                     className="size-4 accent-clay-ink"
                   />
-                  <span className={done[i] ? "text-muted-foreground line-through" : ""}>{task}</span>
+                  <span className={done[i] ? "text-muted-foreground line-through" : ""}>{tr(task)}</span>
                   <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-                    {when}
+                    {tr(when)}
                   </span>
                 </label>
               </li>
             ))}
           </ul>
           {count === SAMPLE_TASKS.length && (
-            <p className="mt-4 text-center font-display text-lg text-clay-ink">¡Qué bien vais! 🎉</p>
+            <p className="mt-4 text-center font-display text-lg text-clay-ink">{tr("¡Qué bien vais! 🎉")}</p>
           )}
         </div>
       </div>
@@ -248,6 +248,7 @@ function shift(time: string, minutes: number) {
 }
 
 export function TimelineDemo() {
+  const { t: tr } = useI18n();
   const [time, setTime] = useState("17:00");
   const meal = Number(time.split(":")[0]) < 15 ? "Comida" : "Cena";
 
@@ -255,16 +256,15 @@ export function TimelineDemo() {
     <section className="border-t border-line bg-clay-soft/40">
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-20 lg:grid-cols-[1fr_1.1fr]">
         <div>
-          <div className={eyebrow}>Pruébalo · El gran día</div>
-          <h2 className={h2}>La ceremonia es a las {time}. ¿Y todo lo demás?</h2>
+          <div className={eyebrow}>{tr("Pruébalo · El gran día")}</div>
+          <h2 className={h2}>{tr("La ceremonia es a las {time}. ¿Y todo lo demás?", { time })}</h2>
           <p className="mt-4 text-pretty text-muted-foreground">
-            Elige la hora y mira cómo se reorganiza el día. En la app lo ajustáis a vuestra boda, con
-            responsables para cada momento.
+            {tr("Elige la hora y mira cómo se reorganiza el día. En la app lo ajustáis a vuestra boda, con responsables para cada momento.")}
           </p>
           <div className="mt-8 flex flex-wrap gap-2">
             {CEREMONY_TIMES.map((t) => (
               <button key={t} type="button" onClick={() => setTime(t)} className={chip(time === t)}>
-                Ceremonia {t}
+                {tr("Ceremonia {time}", { time: t })}
               </button>
             ))}
           </div>
@@ -284,10 +284,10 @@ export function TimelineDemo() {
                       {shift(time, offset)}
                     </span>
                     <span className={`font-display ${isCeremony ? "text-lg font-semibold" : "text-base"}`}>
-                      {title === "__BANQUETE__" ? `${meal} y discursos` : title}
+                      {title === "__BANQUETE__" ? tr("{meal} y discursos", { meal: tr(meal) }) : tr(title)}
                     </span>
                   </div>
-                  <div className="text-xs text-muted-foreground">{who}</div>
+                  <div className="text-xs text-muted-foreground">{tr(who)}</div>
                 </div>
               </li>
             );
@@ -321,6 +321,7 @@ const EXTRAS: { kind: Extra; label: string; x: number; y: number }[] = [
 const MAX_TABLES = 15;
 
 export function SeatingDemo() {
+  const { t: tr } = useI18n();
   const [items, setItems] = useState<Item[]>(INITIAL_ITEMS);
   const area = useRef<HTMLDivElement>(null);
   const dragging = useRef<string | null>(null);
@@ -374,8 +375,8 @@ export function SeatingDemo() {
               const label = isTable
                 ? String(tableNumber)
                 : it.kind === "principal"
-                  ? "Mesa principal"
-                  : EXTRAS.find((e) => e.kind === it.kind)!.label;
+                  ? tr("Mesa principal")
+                  : tr(EXTRAS.find((e) => e.kind === it.kind)!.label);
               const shape =
                 it.kind === "principal"
                   ? "rounded-full bg-background px-6 py-2.5 text-xs font-semibold ring-2 ring-clay-ink whitespace-nowrap"
@@ -388,7 +389,7 @@ export function SeatingDemo() {
                 <button
                   key={it.id}
                   type="button"
-                  aria-label={isTable ? `Mesa ${label}` : label}
+                  aria-label={isTable ? tr("Mesa {n}", { n: label }) : label}
                   onPointerDown={(e) => {
                     dragging.current = it.id;
                     area.current?.setPointerCapture?.(e.pointerId);
@@ -401,7 +402,7 @@ export function SeatingDemo() {
               );
             })}
             <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs text-muted-foreground">
-              ☝️ Arrastra para colocar
+              {tr("☝️ Arrastra para colocar")}
             </div>
           </div>
 
@@ -412,12 +413,12 @@ export function SeatingDemo() {
               disabled={tables.length >= MAX_TABLES}
               className="rounded-full bg-clay px-4 py-2 text-sm font-medium transition-colors hover:bg-clay-ink hover:text-background disabled:opacity-50"
             >
-              + Añadir mesa
+              {tr("+ Añadir mesa")}
             </button>
             {EXTRAS.map((e) => (
               <button key={e.kind} type="button" onClick={() => toggleExtra(e.kind)} className={chip(has(e.kind))}>
                 {has(e.kind) ? "✓ " : "+ "}
-                {e.label}
+                {tr(e.label)}
               </button>
             ))}
             <button
@@ -425,19 +426,18 @@ export function SeatingDemo() {
               onClick={() => setItems(INITIAL_ITEMS)}
               className="ml-auto text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
             >
-              Empezar de nuevo
+              {tr("Empezar de nuevo")}
             </button>
           </div>
         </div>
         <div>
-          <div className={eyebrow}>Pruébalo · Plano de mesas</div>
-          <h2 className={h2}>¿Cómo colocaríais el salón?</h2>
+          <div className={eyebrow}>{tr("Pruébalo · Plano de mesas")}</div>
+          <h2 className={h2}>{tr("¿Cómo colocaríais el salón?")}</h2>
           <p className="mt-4 text-pretty text-muted-foreground">
-            Mueve la mesa principal, añade mesas, pon la pista, el DJ o el bar si los vais a tener y muévelo todo a tu gusto. En la
-            app colocáis las mesas reales, sentáis a cada invitado y veis quién se ha quedado sin sitio.
+            {tr("Mueve la mesa principal, añade mesas, pon la pista, el DJ o el bar si los vais a tener y muévelo todo a tu gusto. En la app colocáis las mesas reales, sentáis a cada invitado y veis quién se ha quedado sin sitio.")}
           </p>
           <p className="mt-3 text-sm text-muted-foreground">
-            {tables.length} {tables.length === 1 ? "mesa" : "mesas"}
+            {tables.length === 1 ? tr("1 mesa") : tr("{n} mesas", { n: tables.length })}
           </p>
         </div>
       </div>
@@ -471,19 +471,20 @@ const FAQ: [string, string][] = [
 ];
 
 export function Faq() {
+  const { t: tr } = useI18n();
   return (
     <section id="preguntas" className="scroll-mt-24 border-t border-line">
       <div className="mx-auto max-w-3xl px-6 py-20">
-        <div className={eyebrow}>(d) Preguntas frecuentes</div>
-        <h2 className={h2}>Lo que suelen preguntarnos</h2>
+        <div className={eyebrow}>{tr("(d) Preguntas frecuentes")}</div>
+        <h2 className={h2}>{tr("Lo que suelen preguntarnos")}</h2>
         <div className="mt-10 divide-y divide-line rounded-2xl bg-panel ring-1 ring-foreground/5">
           {FAQ.map(([q, a]) => (
             <details key={q} className="group px-6 py-5">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-display text-lg font-semibold">
-                {q}
+                {tr(q)}
                 <span className="text-clay-ink transition-transform group-open:rotate-45">+</span>
               </summary>
-              <p className="mt-3 text-sm text-muted-foreground">{a}</p>
+              <p className="mt-3 text-sm text-muted-foreground">{tr(a)}</p>
             </details>
           ))}
         </div>

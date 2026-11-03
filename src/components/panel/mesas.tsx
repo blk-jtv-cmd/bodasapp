@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ChevronDown, GripVertical, Move, Plus, Settings2, Sparkles, Trash2, UserPlus, Users, X } from "lucide-react";
+import { t as tr, useI18n } from "@/i18n";
 
 export type MesaTable = {
   id: string;
@@ -55,6 +56,7 @@ const GUIDE_STEPS = [
 ] as const;
 
 function MesasGuide() {
+  const { t: tr } = useI18n();
   const [open, setOpen] = useState(true);
   return (
     <div className="mb-6 overflow-hidden rounded-2xl border border-line bg-panel/60 ring-1 ring-foreground/5">
@@ -64,7 +66,7 @@ function MesasGuide() {
       >
         <span className="flex items-center gap-2.5">
           <Sparkles className="size-4 text-clay-ink" />
-          <span className="font-display text-sm font-semibold">Cómo organizar las mesas</span>
+          <span className="font-display text-sm font-semibold">{tr("Cómo organizar las mesas")}</span>
         </span>
         <ChevronDown
           className={`size-4 text-muted-foreground transition-transform duration-300 ${open ? "rotate-180" : ""}`}
@@ -86,8 +88,8 @@ function MesasGuide() {
                   </span>
                   <step.icon className="size-4 text-muted-foreground" />
                 </div>
-                <h3 className="font-display text-sm font-semibold leading-snug">{step.title}</h3>
-                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{step.text}</p>
+                <h3 className="font-display text-sm font-semibold leading-snug">{tr(step.title)}</h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{tr(step.text)}</p>
               </div>
             ))}
           </div>
@@ -154,6 +156,7 @@ function TableView({
   onDrop: (e: React.DragEvent) => void;
   onClick: () => void;
 }) {
+  const { t: tr } = useI18n();
   const seatCount = seated.reduce((s, g) => s + 1 + g.companions, 0);
   const isFull = seatCount >= table.capacity;
   const isRound = table.shape === "round";
@@ -210,7 +213,7 @@ function TableView({
             {seatCount}/{table.capacity}
           </span>
           {isFull && (
-            <span className="mt-0.5 font-mono text-[9px] uppercase text-clay-ink">Llena</span>
+            <span className="mt-0.5 font-mono text-[9px] uppercase text-clay-ink">{tr("Llena")}</span>
           )}
         </div>
       </div>
@@ -231,6 +234,7 @@ export function Mesas({
   userId: string;
   reload: () => Promise<void>;
 }) {
+  const { t: tr } = useI18n();
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [dragOverTableId, setDragOverTableId] = useState<string | null>(null);
   const [addingTable, setAddingTable] = useState(false);
@@ -267,7 +271,7 @@ export function Mesas({
 
   async function addTable(e: React.FormEvent) {
     e.preventDefault();
-    const name = newTableName.trim() || `Mesa ${tables.length + 1}`;
+    const name = newTableName.trim() || tr("Mesa {n}", { n: tables.length + 1 });
     const capacity = Math.max(1, Number(newTableCapacity) || 8);
     const { error } = await supabase.from("wedding_tables").insert({
       wedding_id: wedding.id,
@@ -280,7 +284,7 @@ export function Mesas({
       pos_y: 50 + (tables.length % 3) * 60,
     });
     if (error) {
-      toast.error("No se ha podido crear la mesa");
+      toast.error(tr("No se ha podido crear la mesa"));
       return;
     }
     setNewTableName("");
@@ -292,7 +296,7 @@ export function Mesas({
   async function updateTable(id: string, patch: Partial<MesaTable>) {
     const { error } = await supabase.from("wedding_tables").update(patch).eq("id", id);
     if (error) {
-      toast.error("No se ha podido guardar");
+      toast.error(tr("No se ha podido guardar"));
       return;
     }
     await reload();
@@ -305,7 +309,7 @@ export function Mesas({
     }
     const { error } = await supabase.from("wedding_tables").delete().eq("id", id);
     if (error) {
-      toast.error("No se ha podido borrar la mesa");
+      toast.error(tr("No se ha podido borrar la mesa"));
       return;
     }
     setSelectedTableId(null);
@@ -323,7 +327,7 @@ export function Mesas({
       .update({ table_number: tableId, seat_order: seatOrder })
       .eq("id", guestId);
     if (error) {
-      toast.error("No se ha podido asignar");
+      toast.error(tr("No se ha podido asignar"));
       return;
     }
     await reload();
@@ -349,7 +353,7 @@ export function Mesas({
     const totalSeats = current.reduce((s, g) => s + 1 + g.companions, 0);
     const guest = guests.find((g) => g.id === guestId);
     if (guest && totalSeats + 1 + guest.companions > table.capacity) {
-      toast.error(`Esta mesa está llena (capacidad ${table.capacity})`);
+      toast.error(tr("Esta mesa está llena (capacidad {n})", { n: table.capacity }));
       return;
     }
     void seatGuest(guestId, tableId);
@@ -424,16 +428,16 @@ export function Mesas({
     <div>
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-semibold">Mesas</h1>
+          <h1 className="font-display text-3xl font-semibold">{tr("Mesas")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {tables.length} mesas · {totalSeats} plazas · {seatedCount} invitados sentados
+            {tr("{a} mesas · {b} plazas · {c} invitados sentados", { a: tables.length, b: totalSeats, c: seatedCount })}
           </p>
         </div>
         <button
           onClick={() => setAddingTable((v) => !v)}
           className="flex items-center gap-2 rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background"
         >
-          <Plus className="size-4" /> Mesa
+          <Plus className="size-4" /> {tr("Mesa")}
         </button>
       </div>
 
@@ -444,18 +448,18 @@ export function Mesas({
         >
           <label className="flex flex-col gap-1">
             <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              Nombre
+              {tr("Nombre")}
             </span>
             <input
               value={newTableName}
               onChange={(e) => setNewTableName(e.target.value)}
-              placeholder={`Mesa ${tables.length + 1}`}
+              placeholder={tr("Mesa {n}", { n: tables.length + 1 })}
               className={`${inputClass} w-40`}
             />
           </label>
           <label className="flex flex-col gap-1">
             <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              Plazas
+              {tr("Plazas")}
             </span>
             <input
               type="number"
@@ -467,26 +471,26 @@ export function Mesas({
           </label>
           <label className="flex flex-col gap-1">
             <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              Forma
+              {tr("Forma")}
             </span>
             <select
               value={newTableShape}
               onChange={(e) => setNewTableShape(e.target.value as "round" | "rect")}
               className={inputClass}
             >
-              <option value="round">Redonda</option>
-              <option value="rect">Rectangular</option>
+              <option value="round">{tr("Redonda")}</option>
+              <option value="rect">{tr("Rectangular")}</option>
             </select>
           </label>
           <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground hover:bg-clay-ink hover:text-background">
-            Crear
+            {tr("Crear")}
           </button>
           <button
             type="button"
             onClick={() => setAddingTable(false)}
             className="text-sm text-muted-foreground hover:text-foreground"
           >
-            Cancelar
+            {tr("Cancelar")}
           </button>
         </form>
       )}
@@ -513,7 +517,7 @@ export function Mesas({
             <div className="flex h-full min-h-[480px] flex-col items-center justify-center text-center">
               <Users className="mb-3 size-10 text-muted-foreground/40" />
               <p className="text-sm text-muted-foreground">
-                Cread vuestra primera mesa para empezar a colocar invitados.
+                {tr("Cread vuestra primera mesa para empezar a colocar invitados.")}
               </p>
             </div>
           )}
@@ -565,7 +569,7 @@ export function Mesas({
               <div className="mb-4 flex gap-3">
                 <label className="flex flex-1 flex-col gap-1">
                   <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                    Nombre
+                    {tr("Nombre")}
                   </span>
                   <input
                     defaultValue={selectedTable.name}
@@ -579,7 +583,7 @@ export function Mesas({
                 </label>
                 <label className="flex w-20 flex-col gap-1">
                   <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                    Plazas
+                    {tr("Plazas")}
                   </span>
                   <input
                     type="number"
@@ -598,7 +602,7 @@ export function Mesas({
               <div className="mb-4">
                 <label className="flex flex-col gap-1">
                   <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                    Forma
+                    {tr("Forma")}
                   </span>
                   <select
                     defaultValue={selectedTable.shape}
@@ -609,8 +613,8 @@ export function Mesas({
                     }}
                     className={inputClass}
                   >
-                    <option value="round">Redonda</option>
-                    <option value="rect">Rectangular</option>
+                    <option value="round">{tr("Redonda")}</option>
+                    <option value="rect">{tr("Rectangular")}</option>
                   </select>
                 </label>
               </div>
@@ -618,11 +622,11 @@ export function Mesas({
               <div className="mb-4">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                    Sentados ({selectedGuests.length})
+                    {tr("Sentados ({n})", { n: selectedGuests.length })}
                   </span>
                   {selectedGuests.length > 1 && (
                     <span className="font-mono text-[9px] text-muted-foreground">
-                      Arrastrad para reordenar
+                      {tr("Arrastrad para reordenar")}
                     </span>
                   )}
                 </div>
@@ -662,7 +666,7 @@ export function Mesas({
                       <button
                         onClick={() => seatGuest(g.id, null)}
                         className="text-muted-foreground hover:text-foreground"
-                        title="Quitar de la mesa"
+                        title={tr("Quitar de la mesa")}
                       >
                         <X className="size-3.5" />
                       </button>
@@ -670,7 +674,7 @@ export function Mesas({
                   ))}
                   {selectedGuests.length === 0 && (
                     <li className="rounded-lg bg-background px-3 py-3 text-center text-xs text-muted-foreground">
-                      Arrastrad invitados aquí
+                      {tr("Arrastrad invitados aquí")}
                     </li>
                   )}
                 </ul>
@@ -680,7 +684,7 @@ export function Mesas({
                 onClick={() => deleteTable(selectedTable.id)}
                 className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive"
               >
-                <Trash2 className="size-3.5" /> Borrar mesa
+                <Trash2 className="size-3.5" /> {tr("Borrar mesa")}
               </button>
             </div>
           )}
@@ -693,9 +697,9 @@ export function Mesas({
             onDrop={handleGuestDropToUnseated}
             className="rounded-2xl bg-panel p-5 ring-1 ring-foreground/5"
           >
-            <h3 className="mb-1 font-display text-lg font-semibold">Sin asignar</h3>
+            <h3 className="mb-1 font-display text-lg font-semibold">{tr("Sin asignar")}</h3>
             <p className="mb-3 text-xs text-muted-foreground">
-              Arrastrad a una mesa del salón
+              {tr("Arrastrad a una mesa del salón")}
             </p>
             <ul className="space-y-1">
               {unseatedGuests.map((g) => (
@@ -715,13 +719,13 @@ export function Mesas({
                     </span>
                   )}
                   <span className="font-mono text-[9px] uppercase text-muted-foreground">
-                    {RSVP_LABEL[g.rsvp] ?? g.rsvp}
+                    {tr(RSVP_LABEL[g.rsvp] ?? g.rsvp)}
                   </span>
                 </li>
               ))}
               {unseatedGuests.length === 0 && (
                 <li className="rounded-lg bg-background px-3 py-3 text-center text-xs text-muted-foreground">
-                  Todos sentados
+                  {tr("Todos sentados")}
                 </li>
               )}
             </ul>

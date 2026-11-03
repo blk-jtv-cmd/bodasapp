@@ -14,6 +14,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { t as tr, useI18n } from "@/i18n";
 
 export type BudgetExpense = {
   id: string;
@@ -97,11 +98,12 @@ function NoteCell({
   value: string;
   onSave: (v: string) => Promise<void>;
 }) {
+  const { t: tr } = useI18n();
   const [draft, setDraft] = useState<string | null>(null);
   return (
     <input
       value={draft ?? value ?? ""}
-      placeholder="Añadir nota"
+      placeholder={tr("Añadir nota")}
       onChange={(e) => setDraft(e.target.value)}
       onBlur={async () => {
         if (draft === null) return;
@@ -129,6 +131,7 @@ export function Presupuesto({
   reload: () => Promise<void>;
   onBudgetChange: (n: number) => Promise<void>;
 }) {
+  const { t: tr, lang } = useI18n();
   const [newCategory, setNewCategory] = useState("");
   const [addingIn, setAddingIn] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -172,13 +175,13 @@ export function Presupuesto({
       byCategory
         .filter((c) => c.actual > 0 || c.paid > 0)
         .map((c) => ({
-          name: c.name,
+          name: tr(c.name),
           Pagado: c.paid,
           Pendiente: Math.max(c.actual - c.paid, 0),
           total: c.actual,
         }))
         .sort((a, b) => b.total - a.total),
-    [byCategory],
+    [byCategory, lang],
   );
 
   async function addCategory(e: React.FormEvent) {
@@ -186,7 +189,7 @@ export function Presupuesto({
     const name = newCategory.trim();
     if (!name) return;
     if (categoryNames.some((c) => c.toLowerCase() === name.toLowerCase())) {
-      toast.error("Esa categoría ya existe");
+      toast.error(tr("Esa categoría ya existe"));
       return;
     }
     const { error } = await supabase.from("expense_categories").insert({
@@ -196,7 +199,7 @@ export function Presupuesto({
       sort_order: categories.length + 1,
     });
     if (error) {
-      toast.error("No se ha podido crear la categoría");
+      toast.error(tr("No se ha podido crear la categoría"));
       return;
     }
     setNewCategory("");
@@ -223,7 +226,7 @@ export function Presupuesto({
       paid: 0,
     });
     if (error) {
-      toast.error("No se ha podido guardar");
+      toast.error(tr("No se ha podido guardar"));
       return;
     }
     await reload();
@@ -241,7 +244,7 @@ export function Presupuesto({
   ) {
     const { error } = await supabase.from("expenses").update(patch).eq("id", id);
     if (error) {
-      toast.error("No se ha podido guardar");
+      toast.error(tr("No se ha podido guardar"));
       return;
     }
     await reload();
@@ -250,16 +253,16 @@ export function Presupuesto({
   return (
     <div>
       <div className="mb-8">
-        <h1 className="font-display text-3xl font-semibold">Presupuesto</h1>
+        <h1 className="font-display text-3xl font-semibold">{tr("Presupuesto")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Lo que tenéis, lo que cuesta y lo que queda por pagar.
+          {tr("Lo que tenéis, lo que cuesta y lo que queda por pagar.")}
         </p>
       </div>
 
       <div className="mb-4 grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl bg-panel p-6 ring-1 ring-foreground/5">
           <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-            Total disponible
+            {tr("Total disponible")}
           </div>
           <div className="mt-2 flex items-baseline gap-1">
             <input
@@ -277,29 +280,29 @@ export function Presupuesto({
             <span className="font-display text-2xl font-semibold">{currencySymbol(cur)}</span>
           </div>
         </div>
-        <Stat label="Total estimado" value={euro(totals.planned, cur)} />
+        <Stat label={tr("Total estimado")} value={euro(totals.planned, cur)} />
         <Stat
-          label="Diferencia"
+          label={tr("Diferencia")}
           value={euro(difference, cur)}
           tone={difference < 0 ? "bad" : "good"}
         />
       </div>
 
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
-        <Stat label="Gasto real" value={euro(totals.actual, cur)} />
-        <Stat label="Pagado" value={euro(totals.paid, cur)} />
-        <Stat label="Pendiente" value={euro(totals.pending, cur)} />
+        <Stat label={tr("Gasto real")} value={euro(totals.actual, cur)} />
+        <Stat label={tr("Pagado")} value={euro(totals.paid, cur)} />
+        <Stat label={tr("Pendiente")} value={euro(totals.pending, cur)} />
       </div>
 
       <form onSubmit={addCategory} className="mb-6 flex flex-wrap gap-3">
         <input
           value={newCategory}
           onChange={(e) => setNewCategory(e.target.value)}
-          placeholder="Nueva categoría"
+          placeholder={tr("Nueva categoría")}
           className={`${inputClass} min-w-[220px]`}
         />
         <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background">
-          Añadir categoría
+          {tr("Añadir categoría")}
         </button>
       </form>
 
@@ -323,21 +326,21 @@ export function Presupuesto({
                   >
                     ▸
                   </span>
-                  <span className="font-display text-xl font-semibold">{cat.name}</span>
+                  <span className="font-display text-xl font-semibold">{tr(cat.name)}</span>
                   <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                    {cat.rows.length} {cat.rows.length === 1 ? "partida" : "partidas"}
+                    {cat.rows.length === 1 ? tr("1 partida") : tr("{n} partidas", { n: cat.rows.length })}
                   </span>
                 </button>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span>Previsto {euro(cat.planned, cur)}</span>
-                  <span>Real {euro(cat.actual, cur)}</span>
-                  <span>Pagado {euro(cat.paid, cur)}</span>
+                  <span>{tr("Previsto")} {euro(cat.planned, cur)}</span>
+                  <span>{tr("Real")} {euro(cat.actual, cur)}</span>
+                  <span>{tr("Pagado")} {euro(cat.paid, cur)}</span>
                   {cat.rows.length === 0 && categories.some((c) => c.name === cat.name) && (
                     <button
                       onClick={() => removeCategory(cat.name)}
                       className="text-xs hover:text-destructive"
                     >
-                      Borrar
+                      {tr("Borrar")}
                     </button>
                   )}
                 </div>
@@ -348,14 +351,14 @@ export function Presupuesto({
                   <table className="w-full min-w-[820px] text-sm">
                     <thead className="bg-panel text-left font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
                       <tr>
-                        <th className="px-4 py-3">Concepto</th>
-                        <th className="px-4 py-3">Categoría</th>
-                        <th className="px-4 py-3 text-right">Previsto</th>
-                        <th className="px-4 py-3 text-right">Gasto real</th>
-                        <th className="px-4 py-3 text-right">Pagado</th>
-                        <th className="px-4 py-3 text-right">Pendiente</th>
-                        <th className="px-4 py-3 text-right">% del total</th>
-                        <th className="px-4 py-3">Notas</th>
+                        <th className="px-4 py-3">{tr("Concepto")}</th>
+                        <th className="px-4 py-3">{tr("Categoría")}</th>
+                        <th className="px-4 py-3 text-right">{tr("Previsto")}</th>
+                        <th className="px-4 py-3 text-right">{tr("Gasto real")}</th>
+                        <th className="px-4 py-3 text-right">{tr("Pagado")}</th>
+                        <th className="px-4 py-3 text-right">{tr("Pendiente")}</th>
+                        <th className="px-4 py-3 text-right">{tr("% del total")}</th>
+                        <th className="px-4 py-3">{tr("Notas")}</th>
                         <th className="px-4 py-3" />
                       </tr>
                     </thead>
@@ -373,7 +376,7 @@ export function Presupuesto({
                               >
                                 {categoryNames.map((n) => (
                                   <option key={n} value={n}>
-                                    {n}
+                                    {tr(n)}
                                   </option>
                                 ))}
                               </select>
@@ -420,7 +423,7 @@ export function Presupuesto({
                                 }}
                                 className="text-xs text-muted-foreground hover:text-destructive"
                               >
-                                Borrar
+                                {tr("Borrar")}
                               </button>
                             </td>
                           </tr>
@@ -430,7 +433,7 @@ export function Presupuesto({
                       {cat.rows.length > 0 && (
                         <tr className="border-t border-line bg-panel font-medium">
                           <td className="px-4 py-2" colSpan={2}>
-                            Subtotal
+                            {tr("Subtotal")}
                           </td>
                           <td className="px-4 py-2 text-right">{euro(cat.planned, cur)}</td>
                           <td className="px-4 py-2 text-right">{euro(cat.actual, cur)}</td>
@@ -462,23 +465,23 @@ export function Presupuesto({
                               <input
                                 name="concept"
                                 autoFocus
-                                placeholder="Concepto"
+                                placeholder={tr("Concepto")}
                                 className={`${inputClass} min-w-[220px]`}
                               />
                               <input
                                 name="notes"
-                                placeholder="Notas (opcional)"
+                                placeholder={tr("Notas (opcional)")}
                                 className={`${inputClass} min-w-[240px]`}
                               />
                               <button className="rounded-full bg-clay px-4 py-2 text-xs font-medium text-foreground hover:bg-clay-ink hover:text-background">
-                                Añadir
+                                {tr("Añadir")}
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setAddingIn(null)}
                                 className="text-xs text-muted-foreground hover:text-foreground"
                               >
-                                Cerrar
+                                {tr("Cerrar")}
                               </button>
                             </form>
                           ) : (
@@ -486,7 +489,7 @@ export function Presupuesto({
                               onClick={() => setAddingIn(cat.name)}
                               className="text-xs text-muted-foreground hover:text-foreground"
                             >
-                              + Añadir partida
+                              {tr("+ Añadir partida")}
                             </button>
                           )}
                         </td>
@@ -502,14 +505,14 @@ export function Presupuesto({
 
       <section className="mt-10 grid gap-6 lg:grid-cols-[320px_1fr]">
         <div className="rounded-2xl bg-panel p-6 ring-1 ring-foreground/5">
-          <h2 className="font-display text-xl font-semibold">Pagado vs pendiente</h2>
+          <h2 className="font-display text-xl font-semibold">{tr("Pagado vs pendiente")}</h2>
           <div className="relative mt-4 h-[240px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={[
-                    { name: "Pagado", value: totals.paid },
-                    { name: "Pendiente", value: Math.max(totals.pending, 0) },
+                    { name: tr("Pagado"), value: totals.paid },
+                    { name: tr("Pendiente"), value: Math.max(totals.pending, 0) },
                   ]}
                   dataKey="value"
                   innerRadius={70}
@@ -533,7 +536,7 @@ export function Presupuesto({
             </ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
               <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                Gasto real
+                {tr("Gasto real")}
               </span>
               <span className="font-display text-2xl font-semibold">{euro(totals.actual, cur)}</span>
             </div>
@@ -541,13 +544,13 @@ export function Presupuesto({
           <div className="mt-4 space-y-2 text-sm">
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <span className="size-3 rounded-full bg-clay" /> Pagado
+                <span className="size-3 rounded-full bg-clay" /> {tr("Pagado")}
               </span>
               <span>{euro(totals.paid, cur)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <span className="size-3 rounded-full bg-clay-soft ring-1 ring-clay/30" /> Pendiente
+                <span className="size-3 rounded-full bg-clay-soft ring-1 ring-clay/30" /> {tr("Pendiente")}
               </span>
               <span>{euro(Math.max(totals.pending, 0), cur)}</span>
             </div>
@@ -555,10 +558,10 @@ export function Presupuesto({
         </div>
 
         <div className="rounded-2xl bg-panel p-6 ring-1 ring-foreground/5">
-          <h2 className="font-display text-xl font-semibold">Por categoría</h2>
+          <h2 className="font-display text-xl font-semibold">{tr("Por categoría")}</h2>
           {chartData.length === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">
-              Apuntad gastos reales para ver el desglose.
+              {tr("Apuntad gastos reales para ver el desglose.")}
             </p>
           ) : (
             <div className="mt-4" style={{ height: Math.max(240, chartData.length * 42) }}>

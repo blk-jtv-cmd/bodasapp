@@ -3,6 +3,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { currencySymbol, formatMoney } from "@/lib/currency";
 import { useWeddingRows } from "./use-rows";
 import { NumberField, TextField, fieldClass } from "./fields";
+import { t as tr, useI18n } from "@/i18n";
 
 type MenuItem = {
   id: string;
@@ -33,6 +34,7 @@ function Label({ children }: { children: React.ReactNode }) {
 
 /** Platos que incluye un menú cerrado (entrante, principal, postre…). */
 function Courses({ courses, onSave }: { courses: Course[]; onSave: (c: Course[]) => void }) {
+  const { t: tr } = useI18n();
   const update = (i: number, values: Partial<Course>) =>
     onSave(courses.map((c, idx) => (idx === i ? { ...c, ...values } : c)));
   const nextCourse = () => {
@@ -42,10 +44,10 @@ function Courses({ courses, onSave }: { courses: Course[]; onSave: (c: Course[])
 
   return (
     <div className="mt-4 rounded-xl bg-background/60 p-4 ring-1 ring-foreground/5">
-      <Label>Platos incluidos en el menú</Label>
+      <Label>{tr("Platos incluidos en el menú")}</Label>
       <div className="mt-2 space-y-2">
         {courses.length === 0 && (
-          <p className="text-sm text-muted-foreground">Añadid los platos que incluye este menú.</p>
+          <p className="text-sm text-muted-foreground">{tr("Añadid los platos que incluye este menú.")}</p>
         )}
         {courses.map((c, i) => (
           <div key={i} className="flex flex-wrap items-center gap-2">
@@ -55,20 +57,20 @@ function Courses({ courses, onSave }: { courses: Course[]; onSave: (c: Course[])
               className={`${fieldClass} w-36`}
             >
               {(COURSES.includes(c.course) ? COURSES : [c.course, ...COURSES]).map((o) => (
-                <option key={o}>{o}</option>
+                <option key={o} value={o}>{tr(o)}</option>
               ))}
             </select>
             <TextField
               value={c.dish}
               onSave={(dish) => update(i, { dish })}
-              placeholder="Plato"
+              placeholder={tr("Plato")}
               className="min-w-[12rem] flex-1"
             />
             <button
               type="button"
               onClick={() => onSave(courses.filter((_, idx) => idx !== i))}
               className="text-muted-foreground transition-colors hover:text-destructive"
-              aria-label="Quitar plato"
+              aria-label={tr("Quitar plato")}
             >
               <Trash2 className="size-4" />
             </button>
@@ -80,7 +82,7 @@ function Courses({ courses, onSave }: { courses: Course[]; onSave: (c: Course[])
         onClick={() => onSave([...courses, { course: nextCourse(), dish: "" }])}
         className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-clay-ink hover:underline"
       >
-        <Plus className="size-4" /> Añadir plato al menú
+        <Plus className="size-4" /> {tr("Añadir plato al menú")}
       </button>
     </div>
   );
@@ -95,6 +97,7 @@ export function Menu({
   userId: string;
   currency: string;
 }) {
+  const { t: tr } = useI18n();
   const { rows, loading, add, patch, remove } = useWeddingRows<MenuItem>("menu_items", weddingId);
 
   const lineTotal = (r: MenuItem) => Number(r.price_per_person) * Number(r.people);
@@ -115,9 +118,9 @@ export function Menu({
     <div>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="font-display text-3xl tracking-tight">Menú y catering</h2>
+          <h2 className="font-display text-3xl tracking-tight">{tr("Menú y catering")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Aperitivo, menús cerrados con sus platos, bebida y barra libre. El total se calcula solo.
+            {tr("Aperitivo, menús cerrados con sus platos, bebida y barra libre. El total se calcula solo.")}
           </p>
         </div>
         <button
@@ -125,16 +128,15 @@ export function Menu({
           onClick={() => add({ moment: "Menú", courses: [] }, userId)}
           className="inline-flex items-center gap-2 rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background"
         >
-          <Plus className="size-4" /> Añadir
+          <Plus className="size-4" /> {tr("Añadir")}
         </button>
       </div>
 
       {loading ? null : rows.length === 0 ? (
         <div className="rounded-2xl bg-panel px-6 py-14 text-center ring-1 ring-foreground/5">
-          <h3 className="font-display text-2xl font-semibold">Vuestro menú está vacío</h3>
+          <h3 className="font-display text-2xl font-semibold">{tr("Vuestro menú está vacío")}</h3>
           <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
-            Añadid el aperitivo, los platos, el postre y las bebidas para tener el coste del catering
-            controlado.
+            {tr("Añadid el aperitivo, los platos, el postre y las bebidas para tener el coste del catering controlado.")}
           </p>
         </div>
       ) : (
@@ -144,34 +146,34 @@ export function Menu({
               <div key={r.id} className="rounded-2xl bg-panel p-5 ring-1 ring-foreground/5">
                 <div className="grid gap-3 md:grid-cols-[10rem_1fr_10rem]">
                   <label className="flex flex-col gap-1">
-                    <Label>Momento</Label>
+                    <Label>{tr("Momento")}</Label>
                     <select
                       value={r.moment}
                       onChange={(e) => patch(r.id, { moment: e.target.value })}
                       className={fieldClass}
                     >
                       {(MOMENTS.includes(r.moment) ? MOMENTS : [r.moment, ...MOMENTS]).map((o) => (
-                        <option key={o}>{o}</option>
+                        <option key={o} value={o}>{tr(o)}</option>
                       ))}
                     </select>
                   </label>
                   <label className="flex flex-col gap-1">
-                    <Label>{r.moment === "Menú" ? "Nombre del menú" : "Plato / producto"}</Label>
+                    <Label>{r.moment === "Menú" ? tr("Nombre del menú") : tr("Plato / producto")}</Label>
                     <TextField
                       value={r.dish}
                       onSave={(dish) => patch(r.id, { dish })}
-                      placeholder={r.moment === "Menú" ? "Ej.: Menú Gran Gala" : "Ej.: Jamón ibérico y croquetas"}
+                      placeholder={r.moment === "Menú" ? tr("Ej.: Menú Gran Gala") : tr("Ej.: Jamón ibérico y croquetas")}
                     />
                   </label>
                   <label className="flex flex-col gap-1">
-                    <Label>Restricciones</Label>
+                    <Label>{tr("Restricciones")}</Label>
                     <select
                       value={r.restriction}
                       onChange={(e) => patch(r.id, { restriction: e.target.value })}
                       className={fieldClass}
                     >
                       {RESTRICTIONS.map((o) => (
-                        <option key={o}>{o}</option>
+                        <option key={o} value={o}>{tr(o)}</option>
                       ))}
                     </select>
                   </label>
@@ -186,11 +188,11 @@ export function Menu({
 
                 <div className="mt-3 grid gap-3 sm:grid-cols-2 md:grid-cols-[1fr_9rem_8rem_9rem]">
                   <label className="flex flex-col gap-1">
-                    <Label>Proveedor</Label>
-                    <TextField value={r.vendor} onSave={(vendor) => patch(r.id, { vendor })} placeholder="Catering" />
+                    <Label>{tr("Proveedor")}</Label>
+                    <TextField value={r.vendor} onSave={(vendor) => patch(r.id, { vendor })} placeholder={tr("Catering")} />
                   </label>
                   <label className="flex flex-col gap-1">
-                    <Label>Precio x persona</Label>
+                    <Label>{tr("Precio x persona")}</Label>
                     <NumberField
                       value={r.price_per_person}
                       onSave={(price_per_person) => patch(r.id, { price_per_person })}
@@ -198,11 +200,11 @@ export function Menu({
                     />
                   </label>
                   <label className="flex flex-col gap-1">
-                    <Label>Nº personas</Label>
+                    <Label>{tr("Nº personas")}</Label>
                     <NumberField value={r.people} onSave={(people) => patch(r.id, { people })} placeholder="0" integer />
                   </label>
                   <div className="flex flex-col gap-1">
-                    <Label>Total</Label>
+                    <Label>{tr("Total")}</Label>
                     <div className="px-1 py-2 font-display text-xl font-semibold">
                       {lineTotal(r) ? formatMoney(lineTotal(r), currency) : "—"}
                     </div>
@@ -217,21 +219,21 @@ export function Menu({
                       onChange={(e) => patch(r.id, { covers_restrictions: e.target.checked })}
                       className="size-4 accent-clay-ink"
                     />
-                    Cubre restricciones
+                    {tr("Cubre restricciones")}
                   </label>
                   <TextField
                     value={r.notes}
                     onSave={(notes) => patch(r.id, { notes })}
-                    placeholder="Notas"
+                    placeholder={tr("Notas")}
                     className="min-w-[12rem] flex-1"
                   />
                   <button
                     type="button"
                     onClick={() => {
-                      if (window.confirm(`¿Borrar ${r.dish || "esta línea"}?`)) remove(r.id);
+                      if (window.confirm(r.dish ? tr("¿Borrar {name}?", { name: r.dish }) : tr("¿Borrar esta línea?"))) remove(r.id);
                     }}
                     className="py-2 text-muted-foreground transition-colors hover:text-destructive"
-                    aria-label="Borrar"
+                    aria-label={tr("Borrar")}
                   >
                     <Trash2 className="size-4" />
                   </button>
@@ -242,7 +244,7 @@ export function Menu({
 
           <div className="mt-6 flex items-center justify-between rounded-2xl bg-clay-soft px-6 py-5">
             <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-              Total catering
+              {tr("Total catering")}
             </span>
             <span className="font-display text-3xl font-semibold">{formatMoney(total, currency)}</span>
           </div>
