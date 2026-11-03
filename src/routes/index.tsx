@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { BrandLogo, BrandName, BRAND_NAME } from "@/components/brand";
 import { LanguageSwitcher } from "@/i18n/switcher";
+import { LegalLinks } from "@/components/legal-links";
 import {
   BudgetCalculator,
   ChecklistDemo,
@@ -332,6 +333,9 @@ function Index() {
           >
             {tr("Empezar")}
           </Link>
+        </div>
+        <div className="mx-auto max-w-6xl px-6 pb-8">
+          <LegalLinks className="justify-center md:justify-start" />
         </div>
       </footer>
     </div>

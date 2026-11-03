@@ -27,6 +27,7 @@ import {
 } from "recharts";
 import { locale, t as tr, useI18n } from "@/i18n";
 import { LanguageSwitcher } from "@/i18n/switcher";
+import { LegalLinks, withLegalLinks } from "@/components/legal-links";
 
 export const Route = createFileRoute("/_authenticated/panel")({
   head: () => ({
@@ -488,6 +489,9 @@ function PanelPage() {
         )}
         {tab === "ajustes" && <Ajustes wedding={wedding} setWedding={setWedding} />}
       </main>
+      <footer className="mx-auto max-w-6xl px-6 pb-10">
+        <LegalLinks />
+      </footer>
     </div>
   );
 }
@@ -536,6 +540,8 @@ function ExcelDownload() {
 
 function PayButton({ url }: { url: string | null }) {
   const { t: tr } = useI18n();
+  // Renuncia expresa al desistimiento (contenido digital): obligatoria antes de pagar.
+  const [accepted, setAccepted] = useState(false);
   if (!url) {
     return (
       <span className="rounded-full bg-foreground/10 px-5 py-2.5 text-sm text-muted-foreground">
@@ -543,13 +549,36 @@ function PayButton({ url }: { url: string | null }) {
       </span>
     );
   }
+  const buttonClass =
+    "whitespace-nowrap rounded-full bg-clay px-5 py-2.5 text-sm font-medium text-foreground transition-colors";
   return (
-    <a
-      href={url}
-      className="whitespace-nowrap rounded-full bg-clay px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background"
-    >
-      {tr("Desbloquear por 37€")}
-    </a>
+    <div className="flex max-w-sm flex-col items-start gap-3">
+      <label className="flex cursor-pointer items-start gap-2 text-left text-xs leading-5 text-muted-foreground">
+        <input
+          type="checkbox"
+          checked={accepted}
+          onChange={(e) => setAccepted(e.target.checked)}
+          className="mt-0.5 size-4 shrink-0 accent-clay-ink"
+        />
+        <span>
+          {withLegalLinks(
+            tr(
+              "Quiero acceder al plan completo de inmediato y acepto que, por ello, pierdo el derecho de desistimiento. He leído las {terms}.",
+            ),
+            tr,
+          )}
+        </span>
+      </label>
+      {accepted ? (
+        <a href={url} className={`${buttonClass} hover:bg-clay-ink hover:text-background`}>
+          {tr("Desbloquear por 37€")}
+        </a>
+      ) : (
+        <button type="button" disabled className={`${buttonClass} cursor-not-allowed opacity-50`}>
+          {tr("Desbloquear por 37€")}
+        </button>
+      )}
+    </div>
   );
 }
 

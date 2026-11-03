@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { BrandLogo, BrandName } from "@/components/brand";
 import { LanguageSwitcher } from "@/i18n/switcher";
+import { LegalLinks, withLegalLinks } from "@/components/legal-links";
 import { t as tr, useI18n } from "@/i18n";
 
 export const Route = createFileRoute("/auth")({
@@ -266,6 +267,12 @@ function AuthPage() {
           </button>
         </form>
 
+        {mode === "signup" && (
+          <p className="mt-4 text-xs leading-5 text-muted-foreground">
+            {withLegalLinks(tr("Al crear la cuenta aceptáis las {terms} y la {privacy}."), tr)}
+          </p>
+        )}
+
         {mode !== "reset" && (
           <button
             type="button"
@@ -280,6 +287,9 @@ function AuthPage() {
           </button>
         )}
       </main>
+      <footer className="mx-auto w-full max-w-md px-6 pb-8">
+        <LegalLinks />
+      </footer>
     </div>
   );
 }
