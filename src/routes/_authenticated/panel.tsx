@@ -412,7 +412,7 @@ function PanelPage() {
               <div className="font-display text-lg font-semibold">Plan gratuito</div>
               <p className="text-sm text-muted-foreground">
                 Tenéis el Resumen y el Checklist. Desbloquead presupuesto, fincas, invitados, mesas, menú, proveedores,
-                cronograma y la plantilla en Excel con un pago único de 27€, sin suscripciones.
+                cronograma y la plantilla en Excel con un pago único de 37€, sin suscripciones.
               </p>
             </div>
             <PayButton url={payUrl} />
@@ -542,7 +542,7 @@ function PayButton({ url }: { url: string | null }) {
       href={url}
       className="whitespace-nowrap rounded-full bg-clay px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background"
     >
-      Desbloquear por 27€
+      Desbloquear por 37€
     </a>
   );
 }
@@ -553,7 +553,7 @@ function Paywall({ url }: { url: string | null }) {
       <div className="text-3xl">🔒</div>
       <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight">Parte del plan completo</h2>
       <p className="mt-3 text-sm text-muted-foreground">
-        Con un pago único de 27€ tendréis presupuesto, comparador de fincas, invitados, plano de mesas,
+        Con un pago único de 37€ tendréis presupuesto, comparador de fincas, invitados, plano de mesas,
         menú, proveedores, el
         cronograma del día y la plantilla en Excel para descargar. Para siempre, sin suscripciones.
       </p>

@@ -16,7 +16,7 @@ export const Route = createFileRoute("/auth")({
       { property: "og:title", content: "Entrar o crear cuenta — Tu Boda en Orden" },
       {
         property: "og:description",
-        content: "Crea tu cuenta y empieza a organizar tu boda con Tu Boda en Orden por 27€.",
+        content: "Crea tu cuenta y empieza a organizar tu boda con Tu Boda en Orden por 37€.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -159,7 +159,7 @@ function AuthPage() {
           <BrandName className="justify-self-start" />
           <BrandLogo />
           <span className="justify-self-end font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-            Plan · 27€
+            Plan · 37€
           </span>
         </div>
       </header>

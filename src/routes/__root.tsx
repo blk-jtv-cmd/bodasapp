@@ -78,14 +78,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Tu Boda en Orden — Organiza tu boda completa por 27€" },
+      { title: "Tu Boda en Orden — Organiza tu boda completa por 37€" },
       {
         name: "description",
         content:
-          "Checklist, presupuesto, invitados, proveedores y cronograma de tu boda en un solo plan. Pago único de 27€.",
+          "Checklist, presupuesto, invitados, proveedores y cronograma de tu boda en un solo plan. Pago único de 37€.",
       },
       { name: "author", content: "Tu Boda en Orden" },
-      { property: "og:title", content: "Tu Boda en Orden — Organiza tu boda completa por 27€" },
+      { property: "og:title", content: "Tu Boda en Orden — Organiza tu boda completa por 37€" },
       {
         property: "og:description",
         content:
