@@ -1,22 +1,29 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
-import bridePortrait from "@/assets/bride-portrait.jpg";
 import { BrandLogo, BrandName, BRAND_NAME } from "@/components/brand";
+import {
+  BudgetCalculator,
+  ChecklistDemo,
+  Faq,
+  MentalLoad,
+  SeatingDemo,
+  TimelineDemo,
+} from "@/components/landing/interactivos";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Tu Boda en Orden — Organiza tu boda completa por 27€" },
+      { title: "Tu Boda en Orden — Organiza tu boda completa por 37€" },
       {
         name: "description",
         content:
-          "Checklist, presupuesto, invitados, proveedores y cronograma de tu boda en un solo plan. Un pago único de 27€, sin suscripciones.",
+          "Checklist, presupuesto, invitados, proveedores y cronograma de tu boda en un solo plan. Un pago único de 37€, sin suscripciones.",
       },
-      { property: "og:title", content: "Tu Boda en Orden — Organiza tu boda completa por 27€" },
+      { property: "og:title", content: "Tu Boda en Orden — Organiza tu boda completa por 37€" },
       {
         property: "og:description",
         content:
-          "Todo lo que los novios deben tener en cuenta, ordenado desde el primer día. Pago único de 27€.",
+          "Todo lo que los novios deben tener en cuenta, ordenado desde el primer día. Pago único de 37€.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -25,52 +32,28 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
+// Solo lo que la app hace de verdad.
 const features = [
-  {
-    num: "01",
-    tag: "Checklist",
-    title: "Checklist vivo",
-    text: "Tareas por mes que se reordenan solas según la fecha real.",
-  },
-  {
-    num: "02",
-    tag: "Presupuesto",
-    title: "Presupuesto claro",
-    text: "Gasto real frente a lo previsto, sin sorpresas el último día.",
-  },
-  {
-    num: "03",
-    tag: "Invitados",
-    title: "Lista de invitados",
-    text: "Confirmados, pendientes y mesa asignada de un vistazo.",
-  },
-  {
-    num: "04",
-    tag: "Proveedores",
-    title: "Proveedores",
-    text: "Contactos, presupuestos y estados en una sola ficha.",
-  },
-  {
-    num: "05",
-    tag: "Cronograma",
-    title: "Cronograma",
-    text: "La semana del evento, minuto a minuto, sin pánico.",
-  },
-  {
-    num: "06",
-    tag: "Invitaciones",
-    title: "Invitaciones",
-    text: "Modelos elegantes y respuesta de cada invitado al instante.",
-  },
+  { num: "01", tag: "Checklist", title: "Checklist por etapas", text: "Desde 12 meses antes hasta el gran día, con responsable y notas en cada tarea." },
+  { num: "02", tag: "Presupuesto", title: "Presupuesto claro", text: "Estimado, gasto real, pagado y pendiente por partidas, sin sorpresas." },
+  { num: "03", tag: "Fincas", title: "Comparador de fincas", text: "Precio, capacidad, extras, pros y contras de cada lugar, uno al lado del otro." },
+  { num: "04", tag: "Invitados", title: "Invitados y mesas", text: "Confirmaciones, acompañantes y un plano de mesas donde sentar a cada invitado." },
+  { num: "05", tag: "Menú", title: "Menú y catering", text: "Menús cerrados con sus platos, bebida y barra libre, con el total calculado." },
+  { num: "06", tag: "Proveedores", title: "Proveedores", text: "Contacto, precio, señal pagada, contrato y estado de cada proveedor." },
+  { num: "07", tag: "Cronograma", title: "El gran día, hora a hora", text: "Desde la peluquería hasta el primer baile, con quién se encarga de qué." },
+  { num: "08", tag: "Excel", title: "Plantilla en Excel", text: "Nuestro planificador completo para descargar, por si preferís la hoja de cálculo." },
+  { num: "09", tag: "Móvil", title: "En el móvil y el ordenador", text: "Es una web: entráis desde cualquier dispositivo, sin instalar nada." },
 ];
 
 const included = [
-  "Checklist y presupuesto ilimitados",
-  "Lista de invitados con respuesta",
+  "Checklist completo por etapas",
+  "Presupuesto detallado por partidas",
+  "Comparador de fincas",
+  "Lista de invitados y plano de mesas",
+  "Menú y catering",
   "Fichas de proveedores",
   "Cronograma del gran día",
-  "Plantillas de invitación",
-  "Acceso para los dos novios",
+  "Plantilla en Excel descargable",
 ];
 
 function Index() {
@@ -91,20 +74,20 @@ function Index() {
           <div className="flex min-w-0 flex-col justify-self-start">
             <BrandName />
             <span className="hidden font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground sm:inline">
-              Plan · 27€
+              Plan · 37€
             </span>
           </div>
           <BrandLogo />
           <div className="flex items-center gap-8 justify-self-end">
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground lg:flex">
-            <a href="#metodo" className="transition-colors hover:text-foreground">
-              Método
-            </a>
             <a href="#funciones" className="transition-colors hover:text-foreground">
               Funciones
             </a>
-            <a href="#historias" className="transition-colors hover:text-foreground">
-              Historias
+            <a href="#pruebalo" className="transition-colors hover:text-foreground">
+              Pruébalo
+            </a>
+            <a href="#precio" className="transition-colors hover:text-foreground">
+              Precio
             </a>
           </nav>
           <Link
@@ -147,10 +130,10 @@ function Index() {
                 to="/auth"
                 className="inline-flex items-center gap-2 rounded-full bg-clay px-6 py-3 font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background"
               >
-                Empezar mi plan · 27€
+                Empezar mi plan · 37€
               </Link>
               <a
-                href="#metodo"
+                href="#pruebalo"
                 className="text-sm font-medium text-foreground underline decoration-clay/40 underline-offset-4 transition-colors hover:decoration-clay"
               >
                 Ver cómo funciona
@@ -160,9 +143,9 @@ function Index() {
               className="mt-8 flex items-center gap-6 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground"
               style={{ animation: "rise 700ms var(--ease-soft) both", animationDelay: "320ms" }}
             >
-              <span>Precio único</span>
+              <span>Pago único</span>
               <span className="h-px w-6 bg-line" />
-              <span>Cancela cuando quieras</span>
+              <span>Plantilla Excel incluida</span>
             </div>
           </div>
 
@@ -221,7 +204,7 @@ function Index() {
               <div className="font-mono text-[9px] uppercase tracking-[0.2em] opacity-60">
                 Este mes
               </div>
-              <div className="font-display text-xl font-semibold">− 340€ plan</div>
+              <div className="font-display text-xl font-semibold">3 tareas pendientes</div>
             </div>
           </div>
         </div>
@@ -230,22 +213,23 @@ function Index() {
       {/* Divider index */}
       <div className="border-t border-line">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3 font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-          <span>(a) El método</span>
-          <span>(b) Funciones</span>
-          <span>(c) Historias</span>
-          <span>(d) Precio</span>
+          <span>(a) La boda en tu cabeza</span>
+          <span className="hidden sm:inline">(b) Pruébalo</span>
+          <span className="hidden sm:inline">(c) Precio</span>
+          <span>(d) Preguntas</span>
         </div>
       </div>
 
+      <MentalLoad />
+
       {/* Features */}
       <section id="funciones" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20">
-        <div id="metodo" className="mb-12 max-w-xl scroll-mt-24">
+        <div className="mb-12 max-w-xl">
           <h2 className="text-balance font-display text-4xl tracking-tight md:text-5xl">
-            Todo lo que deben tener en cuenta, en orden.
+            Todo lo que hay que tener en cuenta, en orden.
           </h2>
           <p className="mt-4 text-pretty text-muted-foreground">
-            Cada pestaña del plan, pensada para que nada se escape entre la propuesta y el gran
-            día.
+            Cada sección pensada para que nada se escape entre la pedida y el gran día.
           </p>
         </div>
         <div className="grid gap-px overflow-hidden rounded-2xl bg-line ring-1 ring-foreground/5 md:grid-cols-3">
@@ -261,37 +245,31 @@ function Index() {
         </div>
       </section>
 
-      {/* Testimonial */}
-      <section id="historias" className="scroll-mt-20 border-t border-line bg-clay-soft/40">
+      <BudgetCalculator />
+      <ChecklistDemo />
+      <TimelineDemo />
+      <SeatingDemo />
+
+      {/* Excel */}
+      <section className="border-t border-line bg-clay-soft/40">
         <div className="mx-auto max-w-4xl px-6 py-20 text-center">
-          <div className="mb-8 font-mono text-[10px] uppercase tracking-[0.25em] text-clay-ink">
-            (c) Historias reales
+          <div className="mb-4 font-mono text-[11px] uppercase tracking-[0.25em] text-clay-ink">
+            ¿Te gusta más el Excel?
           </div>
-          <blockquote className="text-balance font-display text-3xl italic leading-tight md:text-[2.6rem]">
-            «Estuvimos tranquilas. El plan lo tenía todo y nosotras solo teníamos que disfrutar —
-            ni una sola duda la semana anterior.»
-          </blockquote>
-          <div className="mt-8 flex items-center justify-center gap-3">
-            <div className="flex items-center gap-3">
-              <img
-                src={bridePortrait}
-                alt="Retrato de una novia sonriendo"
-                className="size-11 rounded-full object-cover outline-1 -outline-offset-1 outline-foreground/5"
-              />
-              <div className="text-left">
-                <div className="text-sm font-medium">Lucía &amp; Jorge</div>
-                <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                  Boda · 2024
-                </div>
-              </div>
-            </div>
-            <div className="h-8 w-px bg-line" />
-            <div className="text-left">
-              <div className="text-sm font-medium">Marta &amp; Adrià</div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                Rural · 2024
-              </div>
-            </div>
+          <h2 className="text-balance font-display text-4xl tracking-tight md:text-5xl">
+            También te llevas la plantilla en Excel.
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-pretty text-muted-foreground">
+            Con el plan descargáis nuestro planificador completo en hoja de cálculo: presupuesto,
+            proveedores, fincas, invitados, mesas, menú, checklist y horario del día. Para usarlo en Excel,
+            Numbers o Google Sheets cuando os apetezca.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            {["Excel", "Numbers", "Google Sheets"].map((t) => (
+              <span key={t} className="rounded-full bg-panel px-4 py-2 ring-1 ring-line">
+                {t}
+              </span>
+            ))}
           </div>
         </div>
       </section>
@@ -302,14 +280,14 @@ function Index() {
           <div className="grid lg:grid-cols-[1fr_1.1fr]">
             <div className="p-10 lg:p-14">
               <div className="mb-6 font-mono text-[10px] uppercase tracking-[0.25em] text-background/50">
-                (d) El precio
+                (c) El precio
               </div>
               <div className="flex items-end gap-2">
-                <span className="font-display text-[6rem] font-semibold leading-none">27</span>
+                <span className="font-display text-[6rem] font-semibold leading-none">37</span>
                 <span className="mb-3 font-display text-4xl">€</span>
               </div>
               <div className="mt-2 text-sm text-background/70">
-                Un solo pago. Sin cuotas, sin letra pequeña.
+                Un solo pago. Sin suscripciones ni cuotas.
               </div>
               <Link
                 to="/auth"
@@ -318,7 +296,7 @@ function Index() {
                 Crear mi plan ahora
               </Link>
               <div className="mt-6 font-mono text-[10px] uppercase tracking-[0.18em] text-background/50">
-                Cancela cuando quieras
+                Pruébala gratis · paga solo si te convence
               </div>
             </div>
             <div className="border-t border-background/15 p-10 lg:border-l lg:border-t-0 lg:p-14">
@@ -338,12 +316,14 @@ function Index() {
         </div>
       </section>
 
+      <Faq />
+
       {/* Footer */}
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 md:flex-row">
           <span className="font-brand text-4xl leading-none">{BRAND_NAME}</span>
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-            Un plan, una boda, 27€
+            Un plan, una boda, 37€
           </span>
           <Link
             to="/auth"
