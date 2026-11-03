@@ -302,15 +302,16 @@ export function TimelineDemo() {
 /* 6 · Mini plano de mesas: solo mesas; pista, DJ y bar opcionales    */
 /* ---------------------------------------------------------------- */
 type Extra = "pista" | "dj" | "bar";
-type Item = { id: string; kind: "mesa" | Extra; x: number; y: number };
+type Item = { id: string; kind: "mesa" | "principal" | Extra; x: number; y: number };
 
 const INITIAL_ITEMS: Item[] = [
-  { id: "m1", kind: "mesa", x: 20, y: 28 },
-  { id: "m2", kind: "mesa", x: 50, y: 28 },
-  { id: "m3", kind: "mesa", x: 80, y: 28 },
-  { id: "m4", kind: "mesa", x: 20, y: 68 },
-  { id: "m5", kind: "mesa", x: 50, y: 68 },
-  { id: "m6", kind: "mesa", x: 80, y: 68 },
+  { id: "principal", kind: "principal", x: 50, y: 11 },
+  { id: "m1", kind: "mesa", x: 20, y: 36 },
+  { id: "m2", kind: "mesa", x: 50, y: 36 },
+  { id: "m3", kind: "mesa", x: 80, y: 36 },
+  { id: "m4", kind: "mesa", x: 20, y: 70 },
+  { id: "m5", kind: "mesa", x: 50, y: 70 },
+  { id: "m6", kind: "mesa", x: 80, y: 70 },
 ];
 const EXTRAS: { kind: Extra; label: string; x: number; y: number }[] = [
   { kind: "pista", label: "Pista", x: 50, y: 48 },
@@ -370,9 +371,15 @@ export function SeatingDemo() {
             {items.map((it) => {
               const isTable = it.kind === "mesa";
               if (isTable) tableNumber += 1;
-              const label = isTable ? String(tableNumber) : EXTRAS.find((e) => e.kind === it.kind)!.label;
+              const label = isTable
+                ? String(tableNumber)
+                : it.kind === "principal"
+                  ? "Mesa principal"
+                  : EXTRAS.find((e) => e.kind === it.kind)!.label;
               const shape =
-                it.kind === "mesa"
+                it.kind === "principal"
+                  ? "rounded-full bg-background px-6 py-2.5 text-xs font-semibold ring-2 ring-clay-ink whitespace-nowrap"
+                  : it.kind === "mesa"
                   ? "size-[12%] min-h-10 min-w-10 rounded-full bg-background ring-2 ring-clay font-display text-lg font-semibold"
                   : it.kind === "pista"
                     ? "h-[24%] w-[26%] rounded-xl border-2 border-dashed border-clay-ink/50 bg-clay-soft/60 font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink"
@@ -426,7 +433,7 @@ export function SeatingDemo() {
           <div className={eyebrow}>Pruébalo · Plano de mesas</div>
           <h2 className={h2}>¿Cómo colocaríais el salón?</h2>
           <p className="mt-4 text-pretty text-muted-foreground">
-            Añade mesas, pon la pista, el DJ o el bar si los vais a tener y muévelo todo a tu gusto. En la
+            Mueve la mesa principal, añade mesas, pon la pista, el DJ o el bar si los vais a tener y muévelo todo a tu gusto. En la
             app colocáis las mesas reales, sentáis a cada invitado y veis quién se ha quedado sin sitio.
           </p>
           <p className="mt-3 text-sm text-muted-foreground">
