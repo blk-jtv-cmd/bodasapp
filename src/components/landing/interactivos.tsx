@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 const eyebrow = "mb-4 font-mono text-[11px] uppercase tracking-[0.25em] text-clay-ink";
 const h2 = "text-balance font-display text-4xl tracking-tight md:text-5xl";
@@ -228,7 +228,7 @@ export function ChecklistDemo() {
 /* ---------------------------------------------------------------- */
 /* 5 · Cronograma según la hora de la ceremonia                      */
 /* ---------------------------------------------------------------- */
-const CEREMONY_TIMES = ["12:00", "18:00", "19:00"];
+const CEREMONY_TIMES = ["12:00", "17:00", "19:00"];
 const DAY_PLAN: [number, string, string][] = [
   [-240, "Peluquería y maquillaje", "Novia y acompañantes"],
   [-150, "Vestirse y fotos de preparativos", "Novios · fotógrafo"],
@@ -248,7 +248,7 @@ function shift(time: string, minutes: number) {
 }
 
 export function TimelineDemo() {
-  const [time, setTime] = useState("18:00");
+  const [time, setTime] = useState("17:00");
   const meal = Number(time.split(":")[0]) < 15 ? "Comida" : "Cena";
 
   return (
@@ -299,81 +299,139 @@ export function TimelineDemo() {
 }
 
 /* ---------------------------------------------------------------- */
-/* 6 · Mini plano de mesas (arrastrar con el dedo o el ratón)        */
+/* 6 · Mini plano de mesas: solo mesas; pista, DJ y bar opcionales    */
 /* ---------------------------------------------------------------- */
-type Pos = { x: number; y: number };
-const INITIAL_TABLES: Pos[] = [
-  { x: 18, y: 55 },
-  { x: 38, y: 78 },
-  { x: 62, y: 78 },
-  { x: 82, y: 55 },
-  { x: 25, y: 30 },
-  { x: 75, y: 30 },
+type Extra = "pista" | "dj" | "bar";
+type Item = { id: string; kind: "mesa" | Extra; x: number; y: number };
+
+const INITIAL_ITEMS: Item[] = [
+  { id: "m1", kind: "mesa", x: 20, y: 28 },
+  { id: "m2", kind: "mesa", x: 50, y: 28 },
+  { id: "m3", kind: "mesa", x: 80, y: 28 },
+  { id: "m4", kind: "mesa", x: 20, y: 68 },
+  { id: "m5", kind: "mesa", x: 50, y: 68 },
+  { id: "m6", kind: "mesa", x: 80, y: 68 },
 ];
+const EXTRAS: { kind: Extra; label: string; x: number; y: number }[] = [
+  { kind: "pista", label: "Pista", x: 50, y: 48 },
+  { kind: "dj", label: "DJ", x: 88, y: 88 },
+  { kind: "bar", label: "Bar", x: 12, y: 88 },
+];
+const MAX_TABLES = 15;
 
 export function SeatingDemo() {
-  const [tables, setTables] = useState<Pos[]>(INITIAL_TABLES);
+  const [items, setItems] = useState<Item[]>(INITIAL_ITEMS);
   const area = useRef<HTMLDivElement>(null);
-  const dragging = useRef<number | null>(null);
+  const dragging = useRef<string | null>(null);
+
+  const tables = items.filter((i) => i.kind === "mesa");
+  const has = (kind: Extra) => items.some((i) => i.kind === kind);
 
   const moveTo = (clientX: number, clientY: number) => {
-    const i = dragging.current;
+    const id = dragging.current;
     const rect = area.current?.getBoundingClientRect();
-    if (i === null || !rect) return;
+    if (!id || !rect) return;
     const x = Math.min(94, Math.max(6, ((clientX - rect.left) / rect.width) * 100));
-    const y = Math.min(92, Math.max(22, ((clientY - rect.top) / rect.height) * 100));
-    setTables((t) => t.map((p, j) => (j === i ? { x, y } : p)));
+    const y = Math.min(92, Math.max(8, ((clientY - rect.top) / rect.height) * 100));
+    setItems((all) => all.map((it) => (it.id === id ? { ...it, x, y } : it)));
   };
 
-  const hint = useMemo(() => "Arrastra las mesas para colocarlas", []);
+  function addTable() {
+    if (tables.length >= MAX_TABLES) return;
+    // Aparece en una posición libre aproximada y se puede arrastrar.
+    const n = tables.length;
+    setItems((all) => [
+      ...all,
+      { id: `m${Date.now()}`, kind: "mesa", x: 15 + ((n * 17) % 70), y: 15 + ((Math.floor(n / 4) * 22) % 70) },
+    ]);
+  }
+
+  function toggleExtra(kind: Extra) {
+    if (has(kind)) setItems((all) => all.filter((i) => i.kind !== kind));
+    else {
+      const e = EXTRAS.find((x) => x.kind === kind)!;
+      setItems((all) => [...all, { id: kind, kind, x: e.x, y: e.y }]);
+    }
+  }
+
+  let tableNumber = 0;
 
   return (
     <section className="border-t border-line">
       <div className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-20 lg:grid-cols-[1.15fr_1fr]">
-        <div
-          ref={area}
-          className="relative aspect-[4/3] w-full touch-none select-none overflow-hidden rounded-2xl bg-panel ring-1 ring-foreground/5"
-          onPointerMove={(e) => moveTo(e.clientX, e.clientY)}
-          onPointerUp={() => (dragging.current = null)}
-          onPointerLeave={() => (dragging.current = null)}
-        >
-          <div className="absolute left-1/2 top-[5%] -translate-x-1/2 rounded-full bg-clay px-6 py-2 text-xs font-medium">
-            Mesa presidencial
+        <div>
+          <div
+            ref={area}
+            className="relative aspect-[4/3] w-full touch-none select-none overflow-hidden rounded-2xl bg-panel ring-1 ring-foreground/5"
+            onPointerMove={(e) => moveTo(e.clientX, e.clientY)}
+            onPointerUp={() => (dragging.current = null)}
+            onPointerLeave={() => (dragging.current = null)}
+          >
+            {items.map((it) => {
+              const isTable = it.kind === "mesa";
+              if (isTable) tableNumber += 1;
+              const label = isTable ? String(tableNumber) : EXTRAS.find((e) => e.kind === it.kind)!.label;
+              const shape =
+                it.kind === "mesa"
+                  ? "size-[12%] min-h-10 min-w-10 rounded-full bg-background ring-2 ring-clay font-display text-lg font-semibold"
+                  : it.kind === "pista"
+                    ? "h-[24%] w-[26%] rounded-xl border-2 border-dashed border-clay-ink/50 bg-clay-soft/60 font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink"
+                    : "rounded-full bg-clay px-4 py-2 text-xs font-medium";
+              return (
+                <button
+                  key={it.id}
+                  type="button"
+                  aria-label={isTable ? `Mesa ${label}` : label}
+                  onPointerDown={(e) => {
+                    dragging.current = it.id;
+                    area.current?.setPointerCapture?.(e.pointerId);
+                  }}
+                  className={`absolute flex -translate-x-1/2 -translate-y-1/2 cursor-grab items-center justify-center shadow-sm active:cursor-grabbing ${shape}`}
+                  style={{ left: `${it.x}%`, top: `${it.y}%`, zIndex: it.kind === "pista" ? 0 : 1 }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+            <div className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs text-muted-foreground">
+              ☝️ Arrastra para colocar
+            </div>
           </div>
-          <div className="absolute left-1/2 top-[52%] flex size-[22%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-xl border-2 border-dashed border-clay-ink/40 font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">
-            Pista
-          </div>
-          {tables.map((p, i) => (
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             <button
-              key={i}
               type="button"
-              aria-label={`Mesa ${i + 1}`}
-              onPointerDown={(e) => {
-                dragging.current = i;
-                (e.currentTarget.parentElement as HTMLElement).setPointerCapture?.(e.pointerId);
-              }}
-              className="absolute flex size-[13%] min-h-10 min-w-10 -translate-x-1/2 -translate-y-1/2 cursor-grab items-center justify-center rounded-full bg-background font-display text-lg font-semibold shadow-sm ring-2 ring-clay active:cursor-grabbing"
-              style={{ left: `${p.x}%`, top: `${p.y}%` }}
+              onClick={addTable}
+              disabled={tables.length >= MAX_TABLES}
+              className="rounded-full bg-clay px-4 py-2 text-sm font-medium transition-colors hover:bg-clay-ink hover:text-background disabled:opacity-50"
             >
-              {i + 1}
+              + Añadir mesa
             </button>
-          ))}
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-xs text-muted-foreground">☝️ {hint}</div>
+            {EXTRAS.map((e) => (
+              <button key={e.kind} type="button" onClick={() => toggleExtra(e.kind)} className={chip(has(e.kind))}>
+                {has(e.kind) ? "✓ " : "+ "}
+                {e.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setItems(INITIAL_ITEMS)}
+              className="ml-auto text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+            >
+              Empezar de nuevo
+            </button>
+          </div>
         </div>
         <div>
           <div className={eyebrow}>Pruébalo · Plano de mesas</div>
-          <h2 className={h2}>¿Dónde iría cada mesa?</h2>
+          <h2 className={h2}>¿Cómo colocaríais el salón?</h2>
           <p className="mt-4 text-pretty text-muted-foreground">
-            Mueve las mesas como si fuera vuestro salón. En la app colocáis las mesas reales, sentáis a cada
-            invitado y veis quién se ha quedado sin sitio.
+            Añade mesas, pon la pista, el DJ o el bar si los vais a tener y muévelo todo a tu gusto. En la
+            app colocáis las mesas reales, sentáis a cada invitado y veis quién se ha quedado sin sitio.
           </p>
-          <button
-            type="button"
-            onClick={() => setTables(INITIAL_TABLES)}
-            className="mt-6 text-sm font-medium text-clay-ink underline underline-offset-4"
-          >
-            Volver a colocar
-          </button>
+          <p className="mt-3 text-sm text-muted-foreground">
+            {tables.length} {tables.length === 1 ? "mesa" : "mesas"}
+          </p>
         </div>
       </div>
     </section>
