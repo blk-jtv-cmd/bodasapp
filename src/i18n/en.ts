@@ -498,6 +498,17 @@ const dict: Record<string, string> = {
   "★ Mayor capacidad": "★ Largest capacity",
   "★ Precio más bajo": "★ Lowest price",
   "☝️ Arrastra para colocar": "☝️ Drag to arrange",
+  "Aviso legal": "Legal notice",
+  "Privacidad": "Privacy",
+  "Cookies": "Cookies",
+  "Condiciones de venta": "Terms of sale",
+  "condiciones de venta": "terms of sale",
+  "política de privacidad": "privacy policy",
+  "Volver al inicio": "Back to home",
+  "Última actualización: {date}": "Last updated: {date}",
+  "(próximamente)": "(coming soon)",
+  "Quiero acceder al plan completo de inmediato y acepto que, por ello, pierdo el derecho de desistimiento. He leído las {terms}.": "I want immediate access to the full plan and accept that I therefore lose my right of withdrawal. I have read the {terms}.",
+  "Al crear la cuenta aceptáis las {terms} y la {privacy}.": "By creating an account you accept the {terms} and the {privacy}.",
 };
 
 export default dict;

@@ -2,30 +2,32 @@ import { useSyncExternalStore } from "react";
 import en from "./en";
 import it from "./it";
 import fr from "./fr";
+import pt from "./pt";
 
 /**
  * Idiomas de la web. Los textos se escriben en español dentro del código y
  * t("texto") devuelve su traducción (o el propio español si falta).
  * Variables: t("{n} mesas", { n: 3 }).
  */
-export type Lang = "es" | "en" | "it" | "fr";
+export type Lang = "es" | "en" | "it" | "fr" | "pt";
 
 export const LANGS: { code: Lang; label: string; name: string }[] = [
   { code: "es", label: "ES", name: "Español" },
   { code: "en", label: "EN", name: "English" },
   { code: "it", label: "IT", name: "Italiano" },
   { code: "fr", label: "FR", name: "Français" },
+  { code: "pt", label: "PT", name: "Português" },
 ];
 
-const DICTS: Record<Lang, Record<string, string>> = { es: {}, en, it, fr };
-const LOCALES: Record<Lang, string> = { es: "es-ES", en: "en-GB", it: "it-IT", fr: "fr-FR" };
+const DICTS: Record<Lang, Record<string, string>> = { es: {}, en, it, fr, pt };
+const LOCALES: Record<Lang, string> = { es: "es-ES", en: "en-GB", it: "it-IT", fr: "fr-FR", pt: "pt-PT" };
 const STORAGE_KEY = "lang";
 
 let current: Lang = "es";
 const listeners = new Set<() => void>();
 
 function isLang(v: unknown): v is Lang {
-  return v === "es" || v === "en" || v === "it" || v === "fr";
+  return v === "es" || v === "en" || v === "it" || v === "fr" || v === "pt";
 }
 
 /** Idioma guardado por la persona o, si no, el de su navegador. Por defecto, español. */
