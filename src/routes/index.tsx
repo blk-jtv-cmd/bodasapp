@@ -97,7 +97,7 @@ function Index() {
           </nav>
           <Link
             to="/auth"
-            className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-clay-ink"
+            className="rounded-full bg-clay px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background"
           >
             {tr("Empezar")}
           </Link>
@@ -204,7 +204,7 @@ function Index() {
                 </div>
               </div>
             </div>
-            <div className="absolute -bottom-4 -left-4 hidden rounded-xl bg-foreground px-4 py-3 text-background sm:block">
+            <div className="absolute -bottom-4 -left-4 hidden rounded-xl bg-clay px-4 py-3 text-foreground sm:block">
               <div className="font-mono text-[9px] uppercase tracking-[0.2em] opacity-60">
                 {tr("Este mes")}
               </div>
@@ -327,12 +327,6 @@ function Index() {
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
             {tr("Un plan, una boda, 37€")}
           </span>
-          <Link
-            to="/auth"
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            {tr("Empezar")}
-          </Link>
         </div>
         <div className="mx-auto max-w-6xl px-6 pb-8">
           <LegalLinks className="justify-center md:justify-start" />
