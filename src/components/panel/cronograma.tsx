@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Clock, Pencil, Plus, Trash2, X } from "lucide-react";
+import { t as tr, useI18n } from "@/i18n";
 
 export type TimelineItem = { id: string; time_label: string; title: string; owner: string | null };
 
@@ -41,6 +42,7 @@ function CeremonyPicker({
   value: string | null;
   onChange: (v: string | null) => void;
 }) {
+  const { t: tr } = useI18n();
   const [local, setLocal] = useState(value ? prettyTime(value) : "");
 
   useEffect(() => {
@@ -52,7 +54,7 @@ function CeremonyPicker({
       <div className="flex items-center gap-2">
         <Clock className="size-4 text-clay-ink" />
         <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-          Hora de la ceremonia
+          {tr("Hora de la ceremonia")}
         </span>
       </div>
       <div className="relative">
@@ -65,7 +67,7 @@ function CeremonyPicker({
             onChange(next || null);
           }}
           className={`${timeBtn} w-32`}
-          aria-label="Hora de la ceremonia"
+          aria-label={tr("Hora de la ceremonia")}
         />
       </div>
       {value && (
@@ -90,6 +92,7 @@ function EventRow({
   onEdit: (patch: Partial<TimelineItem>) => void;
   onDelete: () => void;
 }) {
+  const { t: tr } = useI18n();
   const [editing, setEditing] = useState(false);
   const [time, setTime] = useState(item.time_label);
   const [title, setTitle] = useState(item.title);
@@ -140,19 +143,19 @@ function EventRow({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className={`${inputClass} min-w-[140px] flex-1`}
-              placeholder="Momento"
+              placeholder={tr("Momento")}
             />
             <input
               value={owner}
               onChange={(e) => setOwner(e.target.value)}
               className={`${inputClass} w-36`}
-              placeholder="Responsable"
+              placeholder={tr("Responsable")}
             />
             <button
               onClick={save}
               className="rounded-full bg-clay px-4 py-1.5 text-xs font-medium text-foreground hover:bg-clay-ink hover:text-background"
             >
-              Guardar
+              {tr("Guardar")}
             </button>
             <button
               onClick={() => {
@@ -163,7 +166,7 @@ function EventRow({
               }}
               className="text-xs text-muted-foreground hover:text-foreground"
             >
-              Cancelar
+              {tr("Cancelar")}
             </button>
           </div>
         ) : (
@@ -189,14 +192,14 @@ function EventRow({
               <button
                 onClick={() => setEditing(true)}
                 className="text-muted-foreground transition-colors hover:text-foreground"
-                aria-label="Editar momento"
+                aria-label={tr("Editar momento")}
               >
                 <Pencil className="size-3.5" />
               </button>
               <button
                 onClick={onDelete}
                 className="text-muted-foreground transition-colors hover:text-destructive"
-                aria-label="Borrar momento"
+                aria-label={tr("Borrar momento")}
               >
                 <Trash2 className="size-3.5" />
               </button>
@@ -205,7 +208,7 @@ function EventRow({
         )}
         {isCeremony && !editing && (
           <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.15em] text-clay-ink">
-            Ceremonia
+            {tr("Ceremonia")}
           </p>
         )}
       </div>
@@ -214,6 +217,7 @@ function EventRow({
 }
 
 function CeremonyRow({ time, isLast }: { time: string; isLast: boolean }) {
+  const { t: tr } = useI18n();
   return (
     <li className="relative flex gap-5 sm:gap-6">
       <div className="relative flex flex-col items-center">
@@ -223,10 +227,10 @@ function CeremonyRow({ time, isLast }: { time: string; isLast: boolean }) {
       <div className="-mt-0.5 flex-1 pb-8">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span className="font-mono text-xs font-semibold text-clay-ink">{prettyTime(time)}</span>
-          <span className="font-display text-base font-semibold text-foreground">Ceremonia</span>
+          <span className="font-display text-base font-semibold text-foreground">{tr("Ceremonia")}</span>
         </div>
         <p className="mt-1 text-[11px] text-muted-foreground">
-          La hora se cambia arriba, en «Hora de la ceremonia».
+          {tr("La hora se cambia arriba, en «Hora de la ceremonia».")}
         </p>
       </div>
     </li>
@@ -248,6 +252,7 @@ export function Cronograma({
   userId: string;
   reload: () => Promise<void>;
 }) {
+  const { t: tr } = useI18n();
   const [form, setForm] = useState({ time_label: "12:00", title: "", owner: "" });
   const [adding, setAdding] = useState(false);
 
@@ -301,7 +306,7 @@ export function Cronograma({
 
     if (weddingError || itemError) {
       setWedding({ ...wedding, ceremony_time: previousTime });
-      toast.error("No se ha podido actualizar la hora de la ceremonia");
+      toast.error(tr("No se ha podido actualizar la hora de la ceremonia"));
       return;
     }
 
@@ -312,7 +317,7 @@ export function Cronograma({
     e.preventDefault();
     if (!form.title.trim()) return;
     if (toMinutes(form.time_label) === null) {
-      toast.error("Introduce una hora válida (HH:MM)");
+      toast.error(tr("Introduce una hora válida (HH:MM)"));
       return;
     }
     const { error } = await supabase.from("timeline_items").insert({
@@ -323,7 +328,7 @@ export function Cronograma({
       user_id: userId,
     });
     if (error) {
-      toast.error("No se ha podido guardar");
+      toast.error(tr("No se ha podido guardar"));
       return;
     }
     setForm({ time_label: "12:00", title: "", owner: "" });
@@ -334,7 +339,7 @@ export function Cronograma({
   async function updateItem(id: string, patch: Partial<TimelineItem>) {
     const { error } = await supabase.from("timeline_items").update(patch).eq("id", id);
     if (error) {
-      toast.error("No se ha podido guardar");
+      toast.error(tr("No se ha podido guardar"));
       return;
     }
     await reload();
@@ -343,7 +348,7 @@ export function Cronograma({
   async function deleteItem(id: string) {
     const { error } = await supabase.from("timeline_items").delete().eq("id", id);
     if (error) {
-      toast.error("No se ha podido borrar");
+      toast.error(tr("No se ha podido borrar"));
       return;
     }
     await reload();
@@ -355,9 +360,9 @@ export function Cronograma({
     <div className="max-w-2xl">
       {/* Cabecera */}
       <div className="mb-6">
-        <h2 className="font-display text-3xl tracking-tight">Cronograma</h2>
+        <h2 className="font-display text-3xl tracking-tight">{tr("Cronograma")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          El gran día, hora por hora.
+          {tr("El gran día, hora por hora.")}
         </p>
       </div>
 
@@ -374,7 +379,7 @@ export function Cronograma({
         >
           <label className="flex flex-col gap-1">
             <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              Hora
+              {tr("Hora")}
             </span>
             <input
               type="time"
@@ -385,35 +390,35 @@ export function Cronograma({
           </label>
           <label className="flex flex-1 flex-col gap-1">
             <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              Momento
+              {tr("Momento")}
             </span>
             <input
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
-              placeholder="Qué pasa"
+              placeholder={tr("Qué pasa")}
               className={inputClass}
             />
           </label>
           <label className="flex flex-col gap-1">
             <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              Responsable
+              {tr("Responsable")}
             </span>
             <input
               value={form.owner}
               onChange={(e) => setForm({ ...form, owner: e.target.value })}
-              placeholder="Quién se encarga"
+              placeholder={tr("Quién se encarga")}
               className={inputClass}
             />
           </label>
           <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground hover:bg-clay-ink hover:text-background">
-            Añadir
+            {tr("Añadir")}
           </button>
           <button
             type="button"
             onClick={() => setAdding(false)}
             className="text-sm text-muted-foreground hover:text-foreground"
           >
-            Cancelar
+            {tr("Cancelar")}
           </button>
         </form>
       )}
@@ -421,15 +426,15 @@ export function Cronograma({
       {isEmpty && !adding ? (
         <div className="rounded-2xl bg-panel px-6 py-16 text-center ring-1 ring-foreground/5">
           <Clock className="mx-auto mb-4 size-10 text-muted-foreground/40" />
-          <h3 className="font-display text-2xl font-semibold">Tu gran día, hora por hora.</h3>
+          <h3 className="font-display text-2xl font-semibold">{tr("Tu gran día, hora por hora.")}</h3>
           <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
-            Añade los momentos importantes de tu boda y crea tu propio cronograma.
+            {tr("Añade los momentos importantes de tu boda y crea tu propio cronograma.")}
           </p>
           <button
             onClick={() => setAdding(true)}
             className="mt-6 inline-flex items-center gap-2 rounded-full bg-clay px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background"
           >
-            <Plus className="size-4" /> Añadir primer momento
+            <Plus className="size-4" /> {tr("Añadir primer momento")}
           </button>
         </div>
       ) : isEmpty && adding ? null : (
@@ -439,7 +444,7 @@ export function Cronograma({
               onClick={() => setAdding(true)}
               className="mb-8 inline-flex items-center gap-2 rounded-full border border-line bg-background px-5 py-2 text-sm font-medium text-foreground transition-colors hover:border-clay hover:text-clay-ink"
             >
-              <Plus className="size-4" /> Añadir momento
+              <Plus className="size-4" /> {tr("Añadir momento")}
             </button>
           )}
 

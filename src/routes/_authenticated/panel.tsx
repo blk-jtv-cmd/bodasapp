@@ -13,7 +13,7 @@ import { Cronograma } from "@/components/panel/cronograma";
 import { Fincas } from "@/components/panel/fincas";
 import { Menu } from "@/components/panel/menu";
 import { TextField } from "@/components/panel/fields";
-import { CURRENCIES, formatMoney, currencySymbol } from "@/lib/currency";
+import { CURRENCIES, currencyLabel, formatMoney, currencySymbol } from "@/lib/currency";
 import {
   Bar,
   BarChart,
@@ -25,6 +25,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { locale, t as tr, useI18n } from "@/i18n";
+import { LanguageSwitcher } from "@/i18n/switcher";
 
 export const Route = createFileRoute("/_authenticated/panel")({
   head: () => ({
@@ -183,7 +185,7 @@ function weddingDateLabel(date: string | null) {
   if (!date) return null;
   const wedding = weddingDay(date);
   if (!wedding) return null;
-  return new Intl.DateTimeFormat("es-ES", {
+  return new Intl.DateTimeFormat(locale(), {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -191,6 +193,7 @@ function weddingDateLabel(date: string | null) {
 }
 
 function PanelPage() {
+  const { t: tr } = useI18n();
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -260,7 +263,7 @@ function PanelPage() {
           )
           .select(WEDDING_COLUMNS);
         if (error) {
-          toast.error("No hemos podido crear vuestro plan");
+          toast.error(tr("No hemos podido crear vuestro plan"));
           setLoading(false);
           return;
         }
@@ -273,7 +276,7 @@ function PanelPage() {
           current = await findWedding();
         }
         if (!current) {
-          toast.error("No hemos podido cargar vuestro plan");
+          toast.error(tr("No hemos podido cargar vuestro plan"));
           setLoading(false);
           return;
         }
@@ -322,7 +325,7 @@ function PanelPage() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("pago") !== "ok") return;
     window.history.replaceState(null, "", window.location.pathname);
-    toast("Confirmando vuestro pago…");
+    toast(tr("Confirmando vuestro pago…"));
     let tries = 0;
     const timer = window.setInterval(async () => {
       tries += 1;
@@ -335,11 +338,11 @@ function PanelPage() {
         window.clearInterval(timer);
         setWedding((w) => (w ? { ...w, plan_active: true } : w));
         await loadAll(wedding.id);
-        toast.success("¡Pago recibido! Ya tenéis el plan completo.");
+        toast.success(tr("¡Pago recibido! Ya tenéis el plan completo."));
       } else if (tries >= 20) {
         window.clearInterval(timer);
         toast.error(
-          "Aún no nos ha llegado la confirmación del pago. Recargad la página en un minuto; si sigue igual, escribidnos.",
+          tr("Aún no nos ha llegado la confirmación del pago. Recargad la página en un minuto; si sigue igual, escribidnos."),
         );
       }
     }, 2000);
@@ -355,7 +358,7 @@ function PanelPage() {
   if (loading || !wedding || !userId) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
-        Preparando vuestro plan…
+        {tr("Preparando vuestro plan…")}
       </div>
     );
   }
@@ -370,16 +373,18 @@ function PanelPage() {
         <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 py-2">
           <BrandName className="justify-self-start" />
           <BrandLogo />
-          <div className="flex items-center gap-5 justify-self-end">
+          <div className="flex items-center gap-3 justify-self-end sm:gap-5">
             <span className="hidden font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground sm:inline">
-              {wedding.partner_one || "Novia"} &amp; {wedding.partner_two || "Novio"}
-              {daysLeft !== null && ` · Día ${daysLeft >= 0 ? `−${daysLeft}` : `+${Math.abs(daysLeft)}`}`}
+              {wedding.partner_one || tr("Novia")} &amp; {wedding.partner_two || tr("Novio")}
+              {daysLeft !== null &&
+                ` · ${tr("Día {n}", { n: daysLeft >= 0 ? `−${daysLeft}` : `+${Math.abs(daysLeft)}` })}`}
             </span>
+            <LanguageSwitcher />
             <button
               onClick={signOut}
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
-              Salir
+              {tr("Salir")}
             </button>
           </div>
         </div>
@@ -394,9 +399,9 @@ function PanelPage() {
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
-              {label}
+              {tr(label)}
               {!wedding.plan_active && PAID_TABS.includes(key) && (
-                <span aria-label="Requiere el plan completo" className="ml-1 text-[10px] opacity-60">
+                <span aria-label={tr("Requiere el plan completo")} className="ml-1 text-[10px] opacity-60">
                   🔒
                 </span>
               )}
@@ -409,10 +414,9 @@ function PanelPage() {
         {!wedding.plan_active && !locked && (
           <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-clay-soft px-6 py-5">
             <div>
-              <div className="font-display text-lg font-semibold">Plan gratuito</div>
+              <div className="font-display text-lg font-semibold">{tr("Plan gratuito")}</div>
               <p className="text-sm text-muted-foreground">
-                Tenéis el Resumen y el Checklist. Desbloquead presupuesto, fincas, invitados, mesas, menú, proveedores,
-                cronograma y la plantilla en Excel con un pago único de 37€, sin suscripciones.
+                {tr("Tenéis el Resumen y el Checklist. Desbloquead presupuesto, fincas, invitados, mesas, menú, proveedores, cronograma y la plantilla en Excel con un pago único de 37€, sin suscripciones.")}
               </p>
             </div>
             <PayButton url={payUrl} />
@@ -447,7 +451,7 @@ function PanelPage() {
                 .update({ total_budget: n })
                 .eq("id", wedding.id);
               if (error) {
-                toast.error("No se ha podido guardar");
+                toast.error(tr("No se ha podido guardar"));
                 return;
               }
               setWedding({ ...wedding, total_budget: n });
@@ -494,6 +498,7 @@ const TEMPLATE_BUCKET = "descargas";
 const TEMPLATE_FILE = "plantilla-tu-boda-en-orden.xlsx";
 
 function ExcelDownload() {
+  const { t: tr } = useI18n();
   const [loading, setLoading] = useState(false);
 
   async function download() {
@@ -503,7 +508,7 @@ function ExcelDownload() {
       .createSignedUrl(TEMPLATE_FILE, 60, { download: "Plantilla Tu Boda en Orden.xlsx" });
     setLoading(false);
     if (error || !data?.signedUrl) {
-      toast.error("No hemos podido preparar la descarga. Volved a intentarlo en un momento.");
+      toast.error(tr("No hemos podido preparar la descarga. Volved a intentarlo en un momento."));
       return;
     }
     window.location.href = data.signedUrl;
@@ -512,9 +517,9 @@ function ExcelDownload() {
   return (
     <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-panel px-6 py-5 ring-1 ring-foreground/5">
       <div>
-        <div className="font-display text-lg font-semibold">¿Preferís trabajar en Excel?</div>
+        <div className="font-display text-lg font-semibold">{tr("¿Preferís trabajar en Excel?")}</div>
         <p className="text-sm text-muted-foreground">
-          Descargad nuestra plantilla completa para usarla en Excel, Numbers o Google Sheets.
+          {tr("Descargad nuestra plantilla completa para usarla en Excel, Numbers o Google Sheets.")}
         </p>
       </div>
       <button
@@ -523,17 +528,18 @@ function ExcelDownload() {
         disabled={loading}
         className="whitespace-nowrap rounded-full border border-line bg-background px-5 py-2.5 text-sm font-medium transition-colors hover:border-clay-ink hover:text-clay-ink disabled:opacity-60"
       >
-        {loading ? "Preparando…" : "Descargar plantilla Excel"}
+        {loading ? tr("Preparando…") : tr("Descargar plantilla Excel")}
       </button>
     </div>
   );
 }
 
 function PayButton({ url }: { url: string | null }) {
+  const { t: tr } = useI18n();
   if (!url) {
     return (
       <span className="rounded-full bg-foreground/10 px-5 py-2.5 text-sm text-muted-foreground">
-        Pago no disponible todavía
+        {tr("Pago no disponible todavía")}
       </span>
     );
   }
@@ -542,25 +548,24 @@ function PayButton({ url }: { url: string | null }) {
       href={url}
       className="whitespace-nowrap rounded-full bg-clay px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background"
     >
-      Desbloquear por 37€
+      {tr("Desbloquear por 37€")}
     </a>
   );
 }
 
 function Paywall({ url }: { url: string | null }) {
+  const { t: tr } = useI18n();
   return (
     <div className="mx-auto max-w-lg rounded-3xl bg-panel px-8 py-12 text-center ring-1 ring-foreground/5">
       <div className="text-3xl">🔒</div>
-      <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight">Parte del plan completo</h2>
+      <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight">{tr("Parte del plan completo")}</h2>
       <p className="mt-3 text-sm text-muted-foreground">
-        Con un pago único de 37€ tendréis presupuesto, comparador de fincas, invitados, plano de mesas,
-        menú, proveedores, el
-        cronograma del día y la plantilla en Excel para descargar. Para siempre, sin suscripciones.
+        {tr("Con un pago único de 37€ tendréis presupuesto, comparador de fincas, invitados, plano de mesas, menú, proveedores, el cronograma del día y la plantilla en Excel para descargar. Para siempre, sin suscripciones.")}
       </p>
       <div className="mt-8 flex justify-center">
         <PayButton url={url} />
       </div>
-      <p className="mt-4 text-xs text-muted-foreground">Pago seguro con tarjeta a través de Stripe.</p>
+      <p className="mt-4 text-xs text-muted-foreground">{tr("Pago seguro con tarjeta a través de Stripe.")}</p>
     </div>
   );
 }
@@ -600,6 +605,7 @@ function Resumen({
   guests: number;
   vendors: number;
 }) {
+  const { t: tr } = useI18n();
   const doneCount = tasks.filter((t) => t.done).length;
   const pending = tasks.filter((t) => !t.done).slice(0, 5);
 
@@ -608,45 +614,45 @@ function Resumen({
     const { error } = await supabase.from("tasks").update({ done: true }).eq("id", task.id);
     if (error) {
       setTasks(tasks.map((t) => (t.id === task.id ? { ...t, done: false } : t)));
-      toast.error("No se ha podido guardar");
+      toast.error(tr("No se ha podido guardar"));
       return;
     }
-    toast.success("Tarea completada");
+    toast.success(tr("Tarea completada"));
   }
-  const firstName = wedding.partner_one.trim() || "Novia";
-  const secondName = wedding.partner_two.trim() || "Novio";
+  const firstName = wedding.partner_one.trim() || tr("Novia");
+  const secondName = wedding.partner_two.trim() || tr("Novio");
   const daysLeft = daysUntilWedding(wedding.wedding_date);
   const dateLabel = weddingDateLabel(wedding.wedding_date);
 
-  let countdownLabel = "Indicad la fecha en Ajustes";
-  let countdownDetail = "Y aquí comenzará vuestra cuenta atrás";
+  let countdownLabel = tr("Indicad la fecha en Ajustes");
+  let countdownDetail = tr("Y aquí comenzará vuestra cuenta atrás");
   if (daysLeft === 0) {
-    countdownLabel = "¡Hoy es vuestro gran día!";
-    countdownDetail = dateLabel ?? "Disfrutad cada momento";
+    countdownLabel = tr("¡Hoy es vuestro gran día!");
+    countdownDetail = dateLabel ?? tr("Disfrutad cada momento");
   } else if (daysLeft === 1) {
-    countdownLabel = "Falta 1 día";
-    countdownDetail = dateLabel ?? "Ya casi está aquí";
+    countdownLabel = tr("Falta 1 día");
+    countdownDetail = dateLabel ?? tr("Ya casi está aquí");
   } else if (daysLeft !== null && daysLeft > 1) {
-    countdownLabel = `Faltan ${daysLeft} días`;
-    countdownDetail = dateLabel ?? "Vuestra cuenta atrás";
+    countdownLabel = tr("Faltan {n} días", { n: daysLeft });
+    countdownDetail = dateLabel ?? tr("Vuestra cuenta atrás");
   } else if (daysLeft === -1) {
-    countdownLabel = "Hace 1 día de vuestra boda";
-    countdownDetail = dateLabel ?? "Un recuerdo para siempre";
+    countdownLabel = tr("Hace 1 día de vuestra boda");
+    countdownDetail = dateLabel ?? tr("Un recuerdo para siempre");
   } else if (daysLeft !== null && daysLeft < -1) {
-    countdownLabel = `Hace ${Math.abs(daysLeft)} días de vuestra boda`;
-    countdownDetail = dateLabel ?? "Un recuerdo para siempre";
+    countdownLabel = tr("Hace {n} días de vuestra boda", { n: Math.abs(daysLeft) });
+    countdownDetail = dateLabel ?? tr("Un recuerdo para siempre");
   }
 
   return (
     <div className="space-y-8">
       <section className="grid gap-8 border-y border-line py-8 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:py-10">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">Vuestro espacio</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">{tr("Vuestro espacio")}</p>
           <h1 className="mt-3 max-w-3xl font-display text-4xl font-semibold leading-none sm:text-5xl">
-            Bienvenidos, {firstName} y {secondName}
+            {tr("Bienvenidos, {a} y {b}", { a: firstName, b: secondName })}
           </h1>
           <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">
-            Todo lo importante de vuestra boda, reunido para que disfrutéis también del camino.
+            {tr("Todo lo importante de vuestra boda, reunido para que disfrutéis también del camino.")}
           </p>
         </div>
         <div className="border-l-2 border-clay pl-5 sm:min-w-64">
@@ -659,23 +665,26 @@ function Resumen({
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
-          label="Tareas hechas"
+          label={tr("Tareas hechas")}
           value={`${doneCount}/${tasks.length}`}
-          hint={tasks.length ? `${Math.round((doneCount / tasks.length) * 100)}% completado` : undefined}
+          hint={tasks.length ? tr("{n}% completado", { n: Math.round((doneCount / tasks.length) * 100) }) : undefined}
         />
         <Stat
-          label="Presupuesto"
+          label={tr("Presupuesto")}
           value={money(Number(wedding.total_budget) - budget.planned, wedding.currency)}
-          hint={`Disponible ${money(Number(wedding.total_budget), wedding.currency)} · Estimado ${money(budget.planned, wedding.currency)}`}
+          hint={tr("Disponible {a} · Estimado {b}", {
+            a: money(Number(wedding.total_budget), wedding.currency),
+            b: money(budget.planned, wedding.currency),
+          })}
         />
-        <Stat label="Invitados confirmados" value={`${confirmed}`} hint={`${guests} en la lista`} />
-        <Stat label="Proveedores" value={`${vendors}`} hint="Fichas guardadas" />
+        <Stat label={tr("Invitados confirmados")} value={`${confirmed}`} hint={tr("{n} en la lista", { n: guests })} />
+        <Stat label={tr("Proveedores")} value={`${vendors}`} hint={tr("Fichas guardadas")} />
       </div>
 
       <section className="rounded-2xl bg-panel p-6 ring-1 ring-foreground/5">
-        <h2 className="font-display text-2xl font-semibold">Lo siguiente</h2>
+        <h2 className="font-display text-2xl font-semibold">{tr("Lo siguiente")}</h2>
         {pending.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">Todo hecho. Disfrutad.</p>
+          <p className="mt-3 text-sm text-muted-foreground">{tr("Todo hecho. Disfrutad.")}</p>
         ) : (
           <ul className="mt-4 space-y-2">
             {pending.map((t) => (
@@ -683,12 +692,12 @@ function Resumen({
                 <button
                   type="button"
                   onClick={() => void completar(t)}
-                  aria-label={`Marcar "${t.title}" como hecha`}
+                  aria-label={tr("Marcar «{title}» como hecha", { title: tr(t.title) })}
                   className="size-4 shrink-0 rounded-full border border-clay/60 transition hover:border-clay hover:bg-clay/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-clay-ink"
                 />
-                {t.title}
+                {tr(t.title)}
                 <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                  {t.category}
+                  {tr(t.category)}
                 </span>
               </li>
             ))}
@@ -737,6 +746,7 @@ function Checklist({
   userId: string;
   reload: () => Promise<void>;
 }) {
+  const { t: tr } = useI18n();
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("General");
   const [filter, setFilter] = useState<"todas" | "pendientes" | "completadas">("todas");
@@ -753,7 +763,7 @@ function Checklist({
       .from("tasks")
       .insert({ title, category, wedding_id: wedding.id, user_id: userId });
     if (error) {
-      toast.error("No se ha podido guardar");
+      toast.error(tr("No se ha podido guardar"));
       return;
     }
     setTitle("");
@@ -768,7 +778,7 @@ function Checklist({
   async function patchTask(id: string, values: Partial<Task>) {
     setTasks(tasks.map((t) => (t.id === id ? { ...t, ...values } : t)));
     const { error } = await supabase.from("tasks").update(values).eq("id", id);
-    if (error) toast.error("No se ha podido guardar");
+    if (error) toast.error(tr("No se ha podido guardar"));
   }
 
   const total = tasks.length;
@@ -802,13 +812,14 @@ function Checklist({
 
   return (
     <div>
-      <SectionHeader title="Checklist" subtitle="Todo lo que hay que hacer, mes a mes." />
+      <SectionHeader title={tr("Checklist")} subtitle={tr("Todo lo que hay que hacer, mes a mes.")} />
 
       <div className="mb-8 rounded-2xl bg-panel px-5 py-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">Progreso</span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">{tr("Progreso")}</span>
           <span className="text-sm text-muted-foreground">
-            {completed} de {total} tareas · <span className="font-medium text-foreground">{percent}%</span>
+            {tr("{done} de {total} tareas", { done: completed, total })} ·{" "}
+            <span className="font-medium text-foreground">{percent}%</span>
           </span>
         </div>
         <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-clay-soft">
@@ -823,18 +834,18 @@ function Checklist({
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Nueva tarea"
+          placeholder={tr("Nueva tarea")}
           className={`${inputClass} flex-1 min-w-[220px]`}
         />
         <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
           {categoryOptions.map((c) => (
             <option key={c} value={c}>
-              {c}
+              {tr(c)}
             </option>
           ))}
         </select>
         <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground hover:bg-clay-ink hover:text-background">
-          Añadir
+          {tr("Añadir")}
         </button>
       </form>
 
@@ -849,18 +860,18 @@ function Checklist({
                 : "bg-panel text-muted-foreground hover:text-foreground"
             }`}
           >
-            {f.label} ({f.count})
+            {tr(f.label)} ({f.count})
           </button>
         ))}
       </div>
 
       <div className="space-y-8">
         {orderedGroups.length === 0 && (
-          <p className="text-sm text-muted-foreground">No hay tareas en esta vista.</p>
+          <p className="text-sm text-muted-foreground">{tr("No hay tareas en esta vista.")}</p>
         )}
         {orderedGroups.map(([group, items]) => (
           <div key={group}>
-            <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">{group}</div>
+            <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">{tr(group)}</div>
             <ul className="space-y-2">
               {items.map((t) => (
                 <li key={t.id} className="rounded-lg bg-panel px-4 py-3 text-sm">
@@ -871,25 +882,25 @@ function Checklist({
                       onChange={() => toggle(t)}
                       className="size-4 accent-clay-ink"
                     />
-                    <span className={t.done ? "text-muted-foreground line-through" : ""}>{t.title}</span>
+                    <span className={t.done ? "text-muted-foreground line-through" : ""}>{tr(t.title)}</span>
                     <button
                       onClick={() => remove(t.id)}
                       className="ml-auto text-xs text-muted-foreground hover:text-foreground"
                     >
-                      Borrar
+                      {tr("Borrar")}
                     </button>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2 pl-7">
                     <TextField
                       value={t.owner ?? ""}
                       onSave={(owner) => patchTask(t.id, { owner })}
-                      placeholder="Responsable"
+                      placeholder={tr("Responsable")}
                       className="w-40 py-1.5 text-xs"
                     />
                     <TextField
                       value={t.notes ?? ""}
                       onSave={(notes) => patchTask(t.id, { notes })}
-                      placeholder="Notas"
+                      placeholder={tr("Notas")}
                       className="min-w-[10rem] flex-1 py-1.5 text-xs"
                     />
                   </div>
@@ -923,6 +934,7 @@ function Invitados({
   userId: string;
   reload: () => Promise<void>;
 }) {
+  const { t: tr } = useI18n();
   const hosts = [wedding.partner_one?.trim() || "Novia", wedding.partner_two?.trim() || "Novio"];
   const [form, setForm] = useState({
     name: "",
@@ -943,7 +955,7 @@ function Invitados({
       user_id: userId,
     });
     if (error) {
-      toast.error("No se ha podido guardar");
+      toast.error(tr("No se ha podido guardar"));
       return;
     }
     setForm({ name: "", invited_by: hosts[0]!, guest_group: "Familia", notes: "" });
@@ -956,11 +968,11 @@ function Invitados({
       map.set(key, (map.get(key) ?? 0) + 1 + (g.companions || 0));
       return map;
     }, new Map<string, number>()),
-    ([name, value]) => ({ name, value }),
+    ([name, value]) => ({ name: tr(name), value }),
   ).sort((a, b) => b.value - a.value);
 
   const rsvpData = RSVP.map((r) => ({
-    name: RSVP_LABEL[r]!,
+    name: tr(RSVP_LABEL[r]!),
     value: guests.filter((g) => g.rsvp === r).length,
   }));
   const rsvpColors = ["var(--color-clay-soft)", "var(--color-clay)", "var(--color-muted)"];
@@ -969,20 +981,20 @@ function Invitados({
   return (
     <div>
       <SectionHeader
-        title="Invitados"
-        subtitle={`${guests.length} en la lista · ${totalSeats} plazas${
-          Number(wedding.guest_target) ? ` · objetivo ${wedding.guest_target}` : ""
+        title={tr("Invitados")}
+        subtitle={`${tr("{n} en la lista", { n: guests.length })} · ${tr("{n} plazas", { n: totalSeats })}${
+          Number(wedding.guest_target) ? ` · ${tr("objetivo {n}", { n: wedding.guest_target })}` : ""
         }`}
       />
       <form onSubmit={add} className="mb-8 flex flex-wrap gap-3">
         <input
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
-          placeholder="Nombre"
+          placeholder={tr("Nombre")}
           className={`${inputClass} flex-1 min-w-[180px]`}
         />
         <label className="flex items-center gap-2 text-xs text-muted-foreground">
-          Invitado de
+          {tr("Invitado de")}
           <select
             value={form.invited_by}
             onChange={(e) => setForm({ ...form, invited_by: e.target.value })}
@@ -990,7 +1002,7 @@ function Invitados({
           >
             {hosts.map((h) => (
               <option key={h} value={h}>
-                {h}
+                {tr(h)}
               </option>
             ))}
           </select>
@@ -1002,18 +1014,18 @@ function Invitados({
         >
           {GUEST_GROUPS.map((g) => (
             <option key={g} value={g}>
-              {g}
+              {tr(g)}
             </option>
           ))}
         </select>
         <input
           value={form.notes}
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
-          placeholder="Notas (opcional)"
+          placeholder={tr("Notas (opcional)")}
           className={`${inputClass} min-w-[200px] flex-1`}
         />
         <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground hover:bg-clay-ink hover:text-background">
-          Añadir
+          {tr("Añadir")}
         </button>
       </form>
 
@@ -1022,12 +1034,12 @@ function Invitados({
           <li key={g.id} className="flex flex-wrap items-center gap-3 rounded-lg bg-panel px-4 py-3 text-sm">
             <span className="font-medium">{g.name}</span>
             <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              {g.guest_group}
-              {g.invited_by && ` · de ${g.invited_by}`}
+              {tr(g.guest_group)}
+              {g.invited_by && ` · ${tr("de {name}", { name: tr(g.invited_by) })}`}
             </span>
             <input
               defaultValue={g.notes ?? ""}
-              placeholder="Notas"
+              placeholder={tr("Notas")}
               onBlur={async (e) => {
                 const next = e.target.value;
                 if (next === (g.notes ?? "")) return;
@@ -1046,7 +1058,7 @@ function Invitados({
             >
               {RSVP.map((r) => (
                 <option key={r} value={r}>
-                  {r}
+                  {tr(r)}
                 </option>
               ))}
             </select>
@@ -1057,13 +1069,13 @@ function Invitados({
               }}
               className="text-xs text-muted-foreground hover:text-foreground"
             >
-              Borrar
+              {tr("Borrar")}
             </button>
           </li>
         ))}
         {guests.length === 0 && (
           <li className="rounded-lg bg-panel px-4 py-8 text-center text-sm text-muted-foreground">
-            Empezad añadiendo a la familia más cercana.
+            {tr("Empezad añadiendo a la familia más cercana.")}
           </li>
         )}
       </ul>
@@ -1071,7 +1083,7 @@ function Invitados({
       {guests.length > 0 && (
         <section className="mt-10 grid gap-6 lg:grid-cols-2">
           <div className="rounded-2xl bg-panel p-6 ring-1 ring-foreground/5">
-            <h2 className="font-display text-xl font-semibold">Invitados por grupo</h2>
+            <h2 className="font-display text-xl font-semibold">{tr("Invitados por grupo")}</h2>
             <div className="mt-4" style={{ height: Math.max(220, groupData.length * 52) }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={groupData} layout="vertical" margin={{ left: 10, right: 16 }}>
@@ -1104,7 +1116,7 @@ function Invitados({
           </div>
 
           <div className="rounded-2xl bg-panel p-6 ring-1 ring-foreground/5">
-            <h2 className="font-display text-xl font-semibold">Estado de confirmación</h2>
+            <h2 className="font-display text-xl font-semibold">{tr("Estado de confirmación")}</h2>
             <div className="relative mt-4 h-[240px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -1132,7 +1144,7 @@ function Invitados({
               </ResponsiveContainer>
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
                 <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                  Invitados
+                  {tr("Invitados")}
                 </span>
                 <span className="font-display text-2xl font-semibold">{guests.length}</span>
               </div>
@@ -1187,6 +1199,7 @@ function Proveedores({
   userId: string;
   reload: () => Promise<void>;
 }) {
+  const { t: tr } = useI18n();
   const services = useMemo(() => {
     const list = categories.length
       ? categories.map((c) => c.name)
@@ -1217,7 +1230,7 @@ function Proveedores({
     const name = newService.trim();
     if (!name) return;
     if (services.some((s) => s.toLowerCase() === name.toLowerCase())) {
-      toast.error("Esa categoría ya existe");
+      toast.error(tr("Esa categoría ya existe"));
       return;
     }
     const { error } = await supabase.from("expense_categories").insert({
@@ -1227,7 +1240,7 @@ function Proveedores({
       sort_order: categories.length + 1,
     });
     if (error) {
-      toast.error("No se ha podido crear la categoría");
+      toast.error(tr("No se ha podido crear la categoría"));
       return;
     }
     setNewService("");
@@ -1254,7 +1267,7 @@ function Proveedores({
       user_id: userId,
     });
     if (error) {
-      toast.error("No se ha podido guardar");
+      toast.error(tr("No se ha podido guardar"));
       return;
     }
     setForm({
@@ -1284,27 +1297,27 @@ function Proveedores({
   ) {
     const { error } = await supabase.from("vendors").update(patch).eq("id", id);
     if (error) {
-      toast.error("No se ha podido guardar");
+      toast.error(tr("No se ha podido guardar"));
       return;
     }
     await reload();
   }
 
   const statusData = VENDOR_STATUS.map((s) => ({
-    name: VENDOR_STATUS_LABEL[s]!,
+    name: tr(VENDOR_STATUS_LABEL[s]!),
     value: vendors.filter((v) => v.status === s).length,
     key: s,
   }));
 
   return (
     <div>
-      <SectionHeader title="Proveedores" subtitle="Contactos, precios y en qué punto está cada uno." />
+      <SectionHeader title={tr("Proveedores")} subtitle={tr("Contactos, precios y en qué punto está cada uno.")} />
 
       <form onSubmit={add} className="mb-4 grid gap-3 rounded-2xl bg-panel p-5 sm:grid-cols-2 lg:grid-cols-3">
         <input
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
-          placeholder="Nombre"
+          placeholder={tr("Nombre")}
           className={inputClass}
         />
         <select
@@ -1314,47 +1327,47 @@ function Proveedores({
         >
           {services.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {tr(s)}
             </option>
           ))}
         </select>
         <input
           value={form.contact}
           onChange={(e) => setForm({ ...form, contact: e.target.value })}
-          placeholder="Persona de contacto"
+          placeholder={tr("Persona de contacto")}
           className={inputClass}
         />
         <input
           value={form.phone}
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
-          placeholder="Teléfono"
+          placeholder={tr("Teléfono")}
           type="tel"
           className={inputClass}
         />
         <input
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
-          placeholder="Email"
+          placeholder={tr("Email")}
           type="email"
           className={inputClass}
         />
         <input
           value={form.website}
           onChange={(e) => setForm({ ...form, website: e.target.value })}
-          placeholder="Web o Instagram"
+          placeholder={tr("Web o Instagram")}
           className={inputClass}
         />
         <input
           value={form.price}
           onChange={(e) => setForm({ ...form, price: e.target.value })}
-          placeholder={`Precio total ${currencySymbol(wedding.currency)}`}
+          placeholder={`${tr("Precio total")} ${currencySymbol(wedding.currency)}`}
           inputMode="decimal"
           className={inputClass}
         />
         <input
           value={form.deposit_paid}
           onChange={(e) => setForm({ ...form, deposit_paid: e.target.value })}
-          placeholder={`Señal pagada ${currencySymbol(wedding.currency)}`}
+          placeholder={`${tr("Señal pagada")} ${currencySymbol(wedding.currency)}`}
           inputMode="decimal"
           className={inputClass}
         />
@@ -1365,7 +1378,7 @@ function Proveedores({
         >
           {VENDOR_STATUS.map((s) => (
             <option key={s} value={s}>
-              {VENDOR_STATUS_LABEL[s]}
+              {tr(VENDOR_STATUS_LABEL[s]!)}
             </option>
           ))}
         </select>
@@ -1376,16 +1389,16 @@ function Proveedores({
             onChange={(e) => setForm({ ...form, contract_signed: e.target.checked })}
             className="size-4 accent-[var(--color-clay)]"
           />
-          Contrato firmado
+          {tr("Contrato firmado")}
         </label>
         <input
           value={form.notes}
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
-          placeholder="Notas"
+          placeholder={tr("Notas")}
           className={`${inputClass} sm:col-span-2`}
         />
         <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground hover:bg-clay-ink hover:text-background">
-          Añadir proveedor
+          {tr("Añadir proveedor")}
         </button>
       </form>
 
@@ -1393,11 +1406,11 @@ function Proveedores({
         <input
           value={newService}
           onChange={(e) => setNewService(e.target.value)}
-          placeholder="Nueva categoría"
+          placeholder={tr("Nueva categoría")}
           className={`${inputClass} min-w-[220px]`}
         />
         <button className="rounded-full border border-line px-5 py-2 text-sm font-medium hover:border-clay">
-          Añadir categoría
+          {tr("Añadir categoría")}
         </button>
       </form>
 
@@ -1409,7 +1422,7 @@ function Proveedores({
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="font-display text-xl font-semibold">{v.name}</div>
-                  <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-clay-ink">{v.service}</div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-clay-ink">{tr(v.service)}</div>
                 </div>
                 <div className="font-display text-lg">{money(Number(v.price), wedding.currency)}</div>
               </div>
@@ -1435,7 +1448,7 @@ function Proveedores({
               <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                 <label className="flex flex-col gap-1">
                   <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                    Señal pagada
+                    {tr("Señal pagada")}
                   </span>
                   <input
                     defaultValue={String(Number(v.deposit_paid))}
@@ -1449,7 +1462,7 @@ function Proveedores({
                 </label>
                 <div className="flex flex-col gap-1">
                   <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                    Saldo pendiente
+                    {tr("Saldo pendiente")}
                   </span>
                   <span className={`py-1 ${pending > 0 ? "text-destructive" : "text-muted-foreground"}`}>
                     {money(pending, wedding.currency)}
@@ -1459,7 +1472,7 @@ function Proveedores({
 
               <input
                 defaultValue={v.notes ?? ""}
-                placeholder="Notas"
+                placeholder={tr("Notas")}
                 onBlur={async (e) => {
                   const next = e.target.value;
                   if (next !== (v.notes ?? "")) await update(v.id, { notes: next });
@@ -1475,7 +1488,7 @@ function Proveedores({
                 >
                   {VENDOR_STATUS.map((s) => (
                     <option key={s} value={s}>
-                      {VENDOR_STATUS_LABEL[s]}
+                      {tr(VENDOR_STATUS_LABEL[s]!)}
                     </option>
                   ))}
                 </select>
@@ -1486,7 +1499,7 @@ function Proveedores({
                     onChange={(e) => update(v.id, { contract_signed: e.target.checked })}
                     className="size-4 accent-[var(--color-clay)]"
                   />
-                  Contrato firmado
+                  {tr("Contrato firmado")}
                 </label>
                 <button
                   onClick={async () => {
@@ -1495,20 +1508,20 @@ function Proveedores({
                   }}
                   className="ml-auto text-xs text-muted-foreground hover:text-foreground"
                 >
-                  Borrar
+                  {tr("Borrar")}
                 </button>
               </div>
             </div>
           );
         })}
         {vendors.length === 0 && (
-          <p className="text-sm text-muted-foreground">Aún no hay proveedores guardados.</p>
+          <p className="text-sm text-muted-foreground">{tr("Aún no hay proveedores guardados.")}</p>
         )}
       </div>
 
       {vendors.length > 0 && (
         <section className="mt-10 rounded-2xl bg-panel p-6 ring-1 ring-foreground/5">
-          <h2 className="font-display text-xl font-semibold">Proveedores por estado</h2>
+          <h2 className="font-display text-xl font-semibold">{tr("Proveedores por estado")}</h2>
           <div className="mt-4" style={{ height: Math.max(240, statusData.length * 48) }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={statusData} layout="vertical" margin={{ left: 10, right: 16 }}>
@@ -1565,6 +1578,7 @@ function Ajustes({
   wedding: Wedding;
   setWedding: (w: Wedding) => void;
 }) {
+  const { t: tr } = useI18n();
   const [form, setForm] = useState({
     partner_one: wedding.partner_one,
     partner_two: wedding.partner_two,
@@ -1592,28 +1606,28 @@ function Ajustes({
     const { error } = await supabase.from("weddings").update(payload).eq("id", wedding.id);
     setSaving(false);
     if (error) {
-      toast.error("No se ha podido guardar");
+      toast.error(tr("No se ha podido guardar"));
       return;
     }
     setWedding({ ...wedding, ...payload });
-    toast.success("Guardado");
+    toast.success(tr("Guardado"));
   }
 
   return (
     <div className="max-w-xl">
-      <SectionHeader title="Ajustes" subtitle="Los datos básicos de vuestra boda." />
+      <SectionHeader title={tr("Ajustes")} subtitle={tr("Los datos básicos de vuestra boda.")} />
       <form onSubmit={save} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <input
             value={form.partner_one}
             onChange={(e) => setForm({ ...form, partner_one: e.target.value })}
-            placeholder="Nombre 1"
+            placeholder={tr("Nombre 1")}
             className={inputClass}
           />
           <input
             value={form.partner_two}
             onChange={(e) => setForm({ ...form, partner_two: e.target.value })}
-            placeholder="Nombre 2"
+            placeholder={tr("Nombre 2")}
             className={inputClass}
           />
         </div>
@@ -1626,28 +1640,28 @@ function Ajustes({
         <input
           value={form.venue}
           onChange={(e) => setForm({ ...form, venue: e.target.value })}
-          placeholder="Lugar"
+          placeholder={tr("Lugar")}
           className={`${inputClass} w-full`}
         />
         <div className="grid gap-4 sm:grid-cols-2">
           <input
             value={form.guest_target}
             onChange={(e) => setForm({ ...form, guest_target: e.target.value })}
-            placeholder="Invitados previstos"
+            placeholder={tr("Invitados previstos")}
             inputMode="numeric"
             className={inputClass}
           />
           <input
             value={form.total_budget}
             onChange={(e) => setForm({ ...form, total_budget: e.target.value })}
-            placeholder={`Presupuesto total ${currencySymbol(form.currency)}`}
+            placeholder={`${tr("Presupuesto total")} ${currencySymbol(form.currency)}`}
             inputMode="decimal"
             className={inputClass}
           />
         </div>
         <label className="flex flex-col gap-1">
           <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-            Moneda
+            {tr("Moneda")}
           </span>
           <select
             value={form.currency}
@@ -1656,7 +1670,7 @@ function Ajustes({
           >
             {CURRENCIES.map((c) => (
               <option key={c.code} value={c.code}>
-                {c.label}
+                {currencyLabel(c.code, locale())}
               </option>
             ))}
           </select>
@@ -1665,7 +1679,7 @@ function Ajustes({
           disabled={saving}
           className="rounded-full bg-clay px-6 py-3 font-medium text-foreground hover:bg-clay-ink hover:text-background disabled:opacity-60"
         >
-          {saving ? "Guardando…" : "Guardar"}
+          {saving ? tr("Guardando…") : tr("Guardar")}
         </button>
       </form>
     </div>

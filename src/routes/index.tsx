@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { BrandLogo, BrandName, BRAND_NAME } from "@/components/brand";
+import { LanguageSwitcher } from "@/i18n/switcher";
 import {
   BudgetCalculator,
   ChecklistDemo,
@@ -9,6 +10,7 @@ import {
   SeatingDemo,
   TimelineDemo,
 } from "@/components/landing/interactivos";
+import { t as tr, useI18n } from "@/i18n";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -57,6 +59,7 @@ const included = [
 ];
 
 function Index() {
+  const { t: tr } = useI18n();
   // Los enlaces de los correos (confirmar, enlace mágico, contraseña) pueden llegar aquí
   // con la sesión en la dirección (#access_token=...). Los pasamos a /auth, que sabe leerlos.
   useEffect(() => {
@@ -74,27 +77,28 @@ function Index() {
           <div className="flex min-w-0 flex-col justify-self-start">
             <BrandName />
             <span className="hidden font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground sm:inline">
-              Plan · 37€
+              {tr("Plan · 37€")}
             </span>
           </div>
           <BrandLogo />
-          <div className="flex items-center gap-8 justify-self-end">
+          <div className="flex items-center gap-3 justify-self-end sm:gap-6">
+          <LanguageSwitcher />
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground lg:flex">
             <a href="#funciones" className="transition-colors hover:text-foreground">
-              Funciones
+              {tr("Funciones")}
             </a>
             <a href="#pruebalo" className="transition-colors hover:text-foreground">
-              Pruébalo
+              {tr("Pruébalo")}
             </a>
             <a href="#precio" className="transition-colors hover:text-foreground">
-              Precio
+              {tr("Precio")}
             </a>
           </nav>
           <Link
             to="/auth"
             className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-clay-ink"
           >
-            Empezar
+            {tr("Empezar")}
           </Link>
           </div>
         </div>
@@ -105,22 +109,21 @@ function Index() {
         <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 pb-10 pt-16 lg:grid-cols-[1.05fr_1fr]">
           <div>
             <div className="mb-6 font-mono text-[11px] uppercase tracking-[0.28em] text-clay-ink">
-              Para los novios · Todo en un solo plan
+              {tr("Para los novios · Todo en un solo plan")}
             </div>
             <h1
               className="text-balance font-display text-6xl leading-[0.95] tracking-tight md:text-7xl"
               style={{ animation: "rise 700ms var(--ease-soft) both" }}
             >
-              La boda, <em className="italic text-clay-ink">ordenada</em>
+              {tr("La boda,")} <em className="italic text-clay-ink">{tr("ordenada")}</em>
               <br />
-              desde el primer día.
+              {tr("desde el primer día.")}
             </h1>
             <p
               className="mt-6 max-w-[34ch] text-pretty text-lg text-muted-foreground"
               style={{ animation: "rise 700ms var(--ease-soft) both", animationDelay: "120ms" }}
             >
-              Un solo lugar donde los novios tienen la vista completa: checklist, presupuesto,
-              invitados y proveedores. Sin fórmulas que pierden.
+              {tr("Un solo lugar donde los novios tienen la vista completa: checklist, presupuesto, invitados y proveedores. Sin fórmulas que pierden.")}
             </p>
             <div
               className="mt-8 flex flex-wrap items-center gap-4"
@@ -130,22 +133,22 @@ function Index() {
                 to="/auth"
                 className="inline-flex items-center gap-2 rounded-full bg-clay px-6 py-3 font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background"
               >
-                Empezar mi plan · 37€
+                {tr("Empezar mi plan · 37€")}
               </Link>
               <a
                 href="#pruebalo"
                 className="text-sm font-medium text-foreground underline decoration-clay/40 underline-offset-4 transition-colors hover:decoration-clay"
               >
-                Ver cómo funciona
+                {tr("Ver cómo funciona")}
               </a>
             </div>
             <div
               className="mt-8 flex items-center gap-6 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground"
               style={{ animation: "rise 700ms var(--ease-soft) both", animationDelay: "320ms" }}
             >
-              <span>Pago único</span>
+              <span>{tr("Pago único")}</span>
               <span className="h-px w-6 bg-line" />
-              <span>Plantilla Excel incluida</span>
+              <span>{tr("Plantilla Excel incluida")}</span>
             </div>
           </div>
 
@@ -157,14 +160,14 @@ function Index() {
             <div className="rounded-2xl bg-panel p-5 ring-1 ring-foreground/5">
               <div className="mb-4 flex items-center justify-between">
                 <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                  Panel · Elena &amp; Marcos
+                  {tr("Panel · Elena & Marcos")}
                 </span>
-                <span className="font-mono text-[10px] text-clay-ink">Día −142</span>
+                <span className="font-mono text-[10px] text-clay-ink">{tr("Día −142")}</span>
               </div>
               <div className="mb-4 grid grid-cols-2 gap-3">
                 <div className="rounded-xl bg-clay-soft p-3">
                   <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                    Presupuesto
+                    {tr("Presupuesto")}
                   </div>
                   <div className="mt-1 font-display text-2xl font-semibold">8.240€</div>
                   <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-clay/15">
@@ -173,7 +176,7 @@ function Index() {
                 </div>
                 <div className="rounded-xl bg-clay-soft p-3">
                   <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                    Invitados
+                    {tr("Invitados")}
                   </div>
                   <div className="mt-1 font-display text-2xl font-semibold">
                     128 <span className="text-base text-muted-foreground">/160</span>
@@ -186,25 +189,25 @@ function Index() {
               <div className="space-y-2">
                 <div className="flex items-center gap-3 rounded-lg bg-background px-3 py-2.5">
                   <span className="size-4 rounded-full bg-clay/80" />
-                  <span className="text-sm">Florista · confirmada</span>
+                  <span className="text-sm">{tr("Florista · confirmada")}</span>
                   <span className="ml-auto font-mono text-[10px] text-muted-foreground">
-                    Jun 12
+                    {tr("Jun 12")}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 rounded-lg bg-background px-3 py-2.5">
                   <span className="size-4 rounded-full border border-clay/50" />
-                  <span className="text-sm">Sala · por confirmar</span>
+                  <span className="text-sm">{tr("Sala · por confirmar")}</span>
                   <span className="ml-auto font-mono text-[10px] text-muted-foreground">
-                    Jun 20
+                    {tr("Jun 20")}
                   </span>
                 </div>
               </div>
             </div>
             <div className="absolute -bottom-4 -left-4 hidden rounded-xl bg-foreground px-4 py-3 text-background sm:block">
               <div className="font-mono text-[9px] uppercase tracking-[0.2em] opacity-60">
-                Este mes
+                {tr("Este mes")}
               </div>
-              <div className="font-display text-xl font-semibold">3 tareas pendientes</div>
+              <div className="font-display text-xl font-semibold">{tr("3 tareas pendientes")}</div>
             </div>
           </div>
         </div>
@@ -213,10 +216,10 @@ function Index() {
       {/* Divider index */}
       <div className="border-t border-line">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3 font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-          <span>(a) La boda en tu cabeza</span>
-          <span className="hidden sm:inline">(b) Pruébalo</span>
-          <span className="hidden sm:inline">(c) Precio</span>
-          <span>(d) Preguntas</span>
+          <span>{tr("(a) La boda en tu cabeza")}</span>
+          <span className="hidden sm:inline">{tr("(b) Pruébalo")}</span>
+          <span className="hidden sm:inline">{tr("(c) Precio")}</span>
+          <span>{tr("(d) Preguntas")}</span>
         </div>
       </div>
 
@@ -226,20 +229,20 @@ function Index() {
       <section id="funciones" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-20">
         <div className="mb-12 max-w-xl">
           <h2 className="text-balance font-display text-4xl tracking-tight md:text-5xl">
-            Todo lo que hay que tener en cuenta, en orden.
+            {tr("Todo lo que hay que tener en cuenta, en orden.")}
           </h2>
           <p className="mt-4 text-pretty text-muted-foreground">
-            Cada sección pensada para que nada se escape entre la pedida y el gran día.
+            {tr("Cada sección pensada para que nada se escape entre la pedida y el gran día.")}
           </p>
         </div>
         <div className="grid gap-px overflow-hidden rounded-2xl bg-line ring-1 ring-foreground/5 md:grid-cols-3">
           {features.map((f) => (
             <div key={f.num} className="bg-panel p-7">
               <div className="mb-4 font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">
-                {f.num} — {f.tag}
+                {f.num} — {tr(f.tag)}
               </div>
-              <h3 className="font-display text-2xl font-semibold">{f.title}</h3>
-              <p className="mt-2 text-pretty text-sm text-muted-foreground">{f.text}</p>
+              <h3 className="font-display text-2xl font-semibold">{tr(f.title)}</h3>
+              <p className="mt-2 text-pretty text-sm text-muted-foreground">{tr(f.text)}</p>
             </div>
           ))}
         </div>
@@ -254,15 +257,13 @@ function Index() {
       <section className="border-t border-line bg-clay-soft/40">
         <div className="mx-auto max-w-4xl px-6 py-20 text-center">
           <div className="mb-4 font-mono text-[11px] uppercase tracking-[0.25em] text-clay-ink">
-            ¿Te gusta más el Excel?
+            {tr("¿Te gusta más el Excel?")}
           </div>
           <h2 className="text-balance font-display text-4xl tracking-tight md:text-5xl">
-            También te llevas la plantilla en Excel.
+            {tr("También te llevas la plantilla en Excel.")}
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-pretty text-muted-foreground">
-            Con el plan descargáis nuestro planificador completo en hoja de cálculo: presupuesto,
-            proveedores, fincas, invitados, mesas, menú, checklist y horario del día. Para usarlo en Excel,
-            Numbers o Google Sheets cuando os apetezca.
+            {tr("Con el plan descargáis nuestro planificador completo en hoja de cálculo: presupuesto, proveedores, fincas, invitados, mesas, menú, checklist y horario del día. Para usarlo en Excel, Numbers o Google Sheets cuando os apetezca.")}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
             {["Excel", "Numbers", "Google Sheets"].map((t) => (
@@ -280,34 +281,34 @@ function Index() {
           <div className="grid lg:grid-cols-[1fr_1.1fr]">
             <div className="p-10 lg:p-14">
               <div className="mb-6 font-mono text-[10px] uppercase tracking-[0.25em] text-background/50">
-                (c) El precio
+                {tr("(c) El precio")}
               </div>
               <div className="flex items-end gap-2">
                 <span className="font-display text-[6rem] font-semibold leading-none">37</span>
                 <span className="mb-3 font-display text-4xl">€</span>
               </div>
               <div className="mt-2 text-sm text-background/70">
-                Un solo pago. Sin suscripciones ni cuotas.
+                {tr("Un solo pago. Sin suscripciones ni cuotas.")}
               </div>
               <Link
                 to="/auth"
                 className="mt-8 inline-flex items-center gap-2 rounded-full bg-clay px-6 py-3.5 font-medium text-foreground transition-colors hover:bg-background hover:text-foreground"
               >
-                Crear mi plan ahora
+                {tr("Crear mi plan ahora")}
               </Link>
               <div className="mt-6 font-mono text-[10px] uppercase tracking-[0.18em] text-background/50">
-                Pruébala gratis · paga solo si te convence
+                {tr("Pruébala gratis · paga solo si te convence")}
               </div>
             </div>
             <div className="border-t border-background/15 p-10 lg:border-l lg:border-t-0 lg:p-14">
               <div className="mb-5 font-mono text-[10px] uppercase tracking-[0.2em] text-background/50">
-                Todo lo incluido
+                {tr("Todo lo incluido")}
               </div>
               <ul className="space-y-3 text-sm">
                 {included.map((item) => (
                   <li key={item} className="flex gap-3">
                     <span className="text-clay">—</span>
-                    {item}
+                    {tr(item)}
                   </li>
                 ))}
               </ul>
@@ -323,13 +324,13 @@ function Index() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 md:flex-row">
           <span className="font-brand text-4xl leading-none">{BRAND_NAME}</span>
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-            Un plan, una boda, 37€
+            {tr("Un plan, una boda, 37€")}
           </span>
           <Link
             to="/auth"
             className="text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
-            Empezar
+            {tr("Empezar")}
           </Link>
         </div>
       </footer>

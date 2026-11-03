@@ -3,6 +3,7 @@ import { Plus, Star, Trash2 } from "lucide-react";
 import { currencySymbol } from "@/lib/currency";
 import { useWeddingRows } from "./use-rows";
 import { NumberField, TextField, fieldClass } from "./fields";
+import { t as tr, useI18n } from "@/i18n";
 
 type Venue = {
   id: string;
@@ -49,6 +50,7 @@ export function Fincas({
   userId: string;
   currency: string;
 }) {
+  const { t: tr } = useI18n();
   const { rows, loading, add, patch, remove } = useWeddingRows<Venue>("venues", weddingId);
 
   // Como en la plantilla: se resaltan solos el precio más bajo y la capacidad más alta.
@@ -65,10 +67,9 @@ export function Fincas({
     <div>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="font-display text-3xl tracking-tight">Fincas</h2>
+          <h2 className="font-display text-3xl tracking-tight">{tr("Fincas")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Comparad los lugares que estáis valorando. El precio más bajo y la mayor capacidad se
-            resaltan solos.
+            {tr("Comparad los lugares que estáis valorando. El precio más bajo y la mayor capacidad se resaltan solos.")}
           </p>
         </div>
         <button
@@ -76,15 +77,15 @@ export function Fincas({
           onClick={() => add({ name: "" }, userId)}
           className="inline-flex items-center gap-2 rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background"
         >
-          <Plus className="size-4" /> Añadir lugar
+          <Plus className="size-4" /> {tr("Añadir lugar")}
         </button>
       </div>
 
       {loading ? null : rows.length === 0 ? (
         <div className="rounded-2xl bg-panel px-6 py-14 text-center ring-1 ring-foreground/5">
-          <h3 className="font-display text-2xl font-semibold">Aún no habéis añadido ningún lugar</h3>
+          <h3 className="font-display text-2xl font-semibold">{tr("Aún no habéis añadido ningún lugar")}</h3>
           <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
-            Añadid las fincas que estéis visitando para compararlas una al lado de la otra.
+            {tr("Añadid las fincas que estéis visitando para compararlas una al lado de la otra.")}
           </p>
         </div>
       ) : (
@@ -101,15 +102,15 @@ export function Fincas({
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                    Lugar {i + 1}
+                    {tr("Lugar {n}", { n: i + 1 })}
                   </span>
-                  <div className="flex items-center gap-1" aria-label="Calificación">
+                  <div className="flex items-center gap-1" aria-label={tr("Calificación")}>
                     {[1, 2, 3, 4, 5].map((n) => (
                       <button
                         key={n}
                         type="button"
                         onClick={() => patch(v.id, { rating: v.rating === n ? 0 : n })}
-                        aria-label={`${n} estrellas`}
+                        aria-label={tr("{n} estrellas", { n })}
                       >
                         <Star
                           className={`size-4 ${n <= v.rating ? "fill-clay text-clay-ink" : "text-line"}`}
@@ -122,17 +123,17 @@ export function Fincas({
                 <TextField
                   value={v.name}
                   onSave={(name) => patch(v.id, { name })}
-                  placeholder="Nombre del lugar"
+                  placeholder={tr("Nombre del lugar")}
                   className="font-display text-lg font-semibold"
                 />
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <TextField value={v.location} onSave={(location) => patch(v.id, { location })} placeholder="Ubicación" />
-                  <TextField value={v.contact} onSave={(contact) => patch(v.id, { contact })} placeholder="Contacto" />
+                  <TextField value={v.location} onSave={(location) => patch(v.id, { location })} placeholder={tr("Ubicación")} />
+                  <TextField value={v.contact} onSave={(contact) => patch(v.id, { contact })} placeholder={tr("Contacto")} />
                 </div>
                 <TextField
                   value={v.link}
                   onSave={(link) => patch(v.id, { link })}
-                  placeholder="Web, Instagram o enlace a fotos"
+                  placeholder={tr("Web, Instagram o enlace a fotos")}
                 />
                 {v.link && /^https?:\/\//i.test(v.link) && (
                   <a
@@ -141,36 +142,36 @@ export function Fincas({
                     rel="noopener noreferrer"
                     className="-mt-2 text-xs text-clay-ink underline underline-offset-4"
                   >
-                    Abrir enlace
+                    {tr("Abrir enlace")}
                   </a>
                 )}
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="flex flex-col gap-1">
-                    <Label>Precio total estimado</Label>
-                    <NumberField value={v.price} onSave={(price) => patch(v.id, { price })} placeholder={`Importe (${currencySymbol(currency)})`} />
+                    <Label>{tr("Precio total estimado")}</Label>
+                    <NumberField value={v.price} onSave={(price) => patch(v.id, { price })} placeholder={`${tr("Importe")} (${currencySymbol(currency)})`} />
                     {minPrice !== null && Number(v.price) === minPrice && (
-                      <span className="text-[11px] font-medium text-clay-ink">★ Precio más bajo</span>
+                      <span className="text-[11px] font-medium text-clay-ink">{tr("★ Precio más bajo")}</span>
                     )}
                   </label>
                   <label className="flex flex-col gap-1">
-                    <Label>Capacidad máxima</Label>
-                    <NumberField value={v.capacity} onSave={(capacity) => patch(v.id, { capacity })} placeholder="Invitados" integer />
+                    <Label>{tr("Capacidad máxima")}</Label>
+                    <NumberField value={v.capacity} onSave={(capacity) => patch(v.id, { capacity })} placeholder={tr("Invitados")} integer />
                     {maxCapacity !== null && Number(v.capacity) === maxCapacity && (
-                      <span className="text-[11px] font-medium text-clay-ink">★ Mayor capacidad</span>
+                      <span className="text-[11px] font-medium text-clay-ink">{tr("★ Mayor capacidad")}</span>
                     )}
                   </label>
                 </div>
 
                 <label className="flex flex-col gap-1">
-                  <Label>Disponible en vuestra fecha</Label>
+                  <Label>{tr("Disponible en vuestra fecha")}</Label>
                   <select
                     value={v.available}
                     onChange={(e) => patch(v.id, { available: e.target.value })}
                     className={fieldClass}
                   >
                     {AVAILABLE.map((o) => (
-                      <option key={o}>{o}</option>
+                      <option key={o} value={o}>{tr(o)}</option>
                     ))}
                   </select>
                 </label>
@@ -184,34 +185,34 @@ export function Fincas({
                         onChange={(e) => patch(v.id, { [f.key]: e.target.checked } as Partial<Venue>)}
                         className="size-4 accent-clay-ink"
                       />
-                      {f.label}
+                      {tr(f.label)}
                     </label>
                   ))}
                 </div>
 
-                <TextField value={v.pros} onSave={(pros) => patch(v.id, { pros })} placeholder="Pros" multiline />
-                <TextField value={v.cons} onSave={(cons) => patch(v.id, { cons })} placeholder="Contras" multiline />
+                <TextField value={v.pros} onSave={(pros) => patch(v.id, { pros })} placeholder={tr("Pros")} multiline />
+                <TextField value={v.cons} onSave={(cons) => patch(v.id, { cons })} placeholder={tr("Contras")} multiline />
 
                 <div className="mt-auto flex items-end justify-between gap-3">
                   <label className="flex flex-1 flex-col gap-1">
-                    <Label>Decisión</Label>
+                    <Label>{tr("Decisión")}</Label>
                     <select
                       value={v.decision}
                       onChange={(e) => patch(v.id, { decision: e.target.value })}
                       className={fieldClass}
                     >
                       {DECISIONS.map((o) => (
-                        <option key={o}>{o}</option>
+                        <option key={o} value={o}>{tr(o)}</option>
                       ))}
                     </select>
                   </label>
                   <button
                     type="button"
                     onClick={() => {
-                      if (window.confirm(`¿Borrar ${v.name || "este lugar"}?`)) remove(v.id);
+                      if (window.confirm(v.name ? tr("¿Borrar {name}?", { name: v.name }) : tr("¿Borrar este lugar?"))) remove(v.id);
                     }}
                     className="mb-2 text-muted-foreground transition-colors hover:text-destructive"
-                    aria-label="Borrar lugar"
+                    aria-label={tr("Borrar lugar")}
                   >
                     <Trash2 className="size-4" />
                   </button>
