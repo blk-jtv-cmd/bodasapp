@@ -26,7 +26,7 @@ export function LegalLink({ doc, children, className = "" }: { doc: LegalDocKey;
 /** Fila de enlaces legales para pies de página. */
 export function LegalLinks({ className = "" }: { className?: string }) {
   return (
-    <nav className={`flex flex-wrap items-center gap-x-8 gap-y-2 sm:gap-x-12 text-xs text-muted-foreground ${className}`}>
+    <nav className={`flex flex-wrap items-center justify-center gap-x-8 gap-y-2 sm:gap-x-12 text-xs text-muted-foreground ${className}`}>
       {(Object.keys(LEGAL_LABELS) as LegalDocKey[]).map((doc) => (
         <LegalLink key={doc} doc={doc} className="no-underline hover:underline" />
       ))}

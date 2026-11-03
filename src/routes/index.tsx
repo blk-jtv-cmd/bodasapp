@@ -204,7 +204,7 @@ function Index() {
                 </div>
               </div>
             </div>
-            <div className="absolute -bottom-4 -left-4 hidden rounded-xl bg-clay px-4 py-3 text-foreground sm:block">
+            <div className="absolute -bottom-4 -left-4 hidden rounded-xl bg-clay-ink px-4 py-3 text-background sm:block">
               <div className="font-mono text-[9px] uppercase tracking-[0.2em] opacity-60">
                 {tr("Este mes")}
               </div>
@@ -329,7 +329,7 @@ function Index() {
           </span>
         </div>
         <div className="mx-auto max-w-6xl px-6 pb-8">
-          <LegalLinks className="justify-center md:justify-start" />
+          <LegalLinks />
         </div>
       </footer>
     </div>
