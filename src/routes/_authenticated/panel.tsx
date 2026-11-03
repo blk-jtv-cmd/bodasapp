@@ -12,6 +12,7 @@ import { Mesas, type MesaTable, type MesaGuest } from "@/components/panel/mesas"
 import { Cronograma } from "@/components/panel/cronograma";
 import { Fincas } from "@/components/panel/fincas";
 import { Menu } from "@/components/panel/menu";
+import { TextField } from "@/components/panel/fields";
 import { CURRENCIES, formatMoney, currencySymbol } from "@/lib/currency";
 import {
   Bar,
@@ -65,6 +66,8 @@ type Task = {
   category: string;
   due_date: string | null;
   done: boolean;
+  owner: string;
+  notes: string | null;
 };
 type Expense = {
   id: string;
@@ -91,6 +94,8 @@ type Vendor = {
   name: string;
   service: string;
   contact: string | null;
+  phone: string;
+  email: string;
   price: number;
   status: string;
   website: string;
@@ -202,10 +207,10 @@ function PanelPage() {
 
   const loadAll = useCallback(async (weddingId: string) => {
     const [t, e, g, v, tl, c, mt] = await Promise.all([
-      supabase.from("tasks").select("id,title,category,due_date,done").eq("wedding_id", weddingId).order("created_at"),
+      supabase.from("tasks").select("id,title,category,due_date,done,owner,notes").eq("wedding_id", weddingId).order("created_at"),
       supabase.from("expenses").select("id,concept,category,planned,actual_cost,paid,notes").eq("wedding_id", weddingId).order("created_at"),
       supabase.from("guests").select("id,name,guest_group,invited_by,rsvp,table_number,companions,notes,seat_order").eq("wedding_id", weddingId).order("created_at"),
-      supabase.from("vendors").select("id,name,service,contact,price,status,website,deposit_paid,contract_signed,notes").eq("wedding_id", weddingId).order("created_at"),
+      supabase.from("vendors").select("id,name,service,contact,phone,email,price,status,website,deposit_paid,contract_signed,notes").eq("wedding_id", weddingId).order("created_at"),
       supabase.from("timeline_items").select("id,time_label,title,owner").eq("wedding_id", weddingId).order("time_label"),
       supabase.from("expense_categories").select("id,name,sort_order").eq("wedding_id", weddingId).order("sort_order"),
       supabase.from("wedding_tables").select("id,name,capacity,shape,pos_x,pos_y,sort_order").eq("wedding_id", weddingId).order("sort_order"),
@@ -760,6 +765,12 @@ function Checklist({
     await reload();
   }
 
+  async function patchTask(id: string, values: Partial<Task>) {
+    setTasks(tasks.map((t) => (t.id === id ? { ...t, ...values } : t)));
+    const { error } = await supabase.from("tasks").update(values).eq("id", id);
+    if (error) toast.error("No se ha podido guardar");
+  }
+
   const total = tasks.length;
   const completed = tasks.filter((t) => t.done).length;
   const percent = total ? Math.round((completed / total) * 100) : 0;
@@ -852,20 +863,36 @@ function Checklist({
             <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">{group}</div>
             <ul className="space-y-2">
               {items.map((t) => (
-                <li key={t.id} className="flex items-center gap-3 rounded-lg bg-panel px-4 py-3 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={t.done}
-                    onChange={() => toggle(t)}
-                    className="size-4 accent-clay-ink"
-                  />
-                  <span className={t.done ? "text-muted-foreground line-through" : ""}>{t.title}</span>
-                  <button
-                    onClick={() => remove(t.id)}
-                    className="ml-auto text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    Borrar
-                  </button>
+                <li key={t.id} className="rounded-lg bg-panel px-4 py-3 text-sm">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={t.done}
+                      onChange={() => toggle(t)}
+                      className="size-4 accent-clay-ink"
+                    />
+                    <span className={t.done ? "text-muted-foreground line-through" : ""}>{t.title}</span>
+                    <button
+                      onClick={() => remove(t.id)}
+                      className="ml-auto text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Borrar
+                    </button>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2 pl-7">
+                    <TextField
+                      value={t.owner ?? ""}
+                      onSave={(owner) => patchTask(t.id, { owner })}
+                      placeholder="Responsable"
+                      className="w-40 py-1.5 text-xs"
+                    />
+                    <TextField
+                      value={t.notes ?? ""}
+                      onSave={(notes) => patchTask(t.id, { notes })}
+                      placeholder="Notas"
+                      className="min-w-[10rem] flex-1 py-1.5 text-xs"
+                    />
+                  </div>
                 </li>
               ))}
             </ul>
@@ -1172,6 +1199,8 @@ function Proveedores({
     name: "",
     service: "",
     contact: "",
+    phone: "",
+    email: "",
     website: "",
     price: "",
     deposit_paid: "",
@@ -1212,7 +1241,9 @@ function Proveedores({
     const { error } = await supabase.from("vendors").insert({
       name: form.name,
       service,
-      contact: form.contact,
+      contact: form.contact.trim(),
+      phone: form.phone.trim(),
+      email: form.email.trim(),
       website: form.website.trim(),
       price: Number(form.price.replace(",", ".")) || 0,
       deposit_paid: Number(form.deposit_paid.replace(",", ".")) || 0,
@@ -1230,6 +1261,8 @@ function Proveedores({
       name: "",
       service,
       contact: "",
+      phone: "",
+      email: "",
       website: "",
       price: "",
       deposit_paid: "",
@@ -1288,7 +1321,21 @@ function Proveedores({
         <input
           value={form.contact}
           onChange={(e) => setForm({ ...form, contact: e.target.value })}
-          placeholder="Teléfono o email"
+          placeholder="Persona de contacto"
+          className={inputClass}
+        />
+        <input
+          value={form.phone}
+          onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          placeholder="Teléfono"
+          type="tel"
+          className={inputClass}
+        />
+        <input
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          placeholder="Email"
+          type="email"
           className={inputClass}
         />
         <input
@@ -1366,7 +1413,21 @@ function Proveedores({
                 </div>
                 <div className="font-display text-lg">{money(Number(v.price), wedding.currency)}</div>
               </div>
-              {v.contact && <div className="mt-3 text-sm text-muted-foreground">{v.contact}</div>}
+              {(v.contact || v.phone || v.email) && (
+                <div className="mt-3 space-y-0.5 text-sm text-muted-foreground">
+                  {v.contact && <div>{v.contact}</div>}
+                  {v.phone && (
+                    <a href={`tel:${v.phone.replace(/\s/g, "")}`} className="block hover:text-clay-ink">
+                      {v.phone}
+                    </a>
+                  )}
+                  {v.email && (
+                    <a href={`mailto:${v.email}`} className="block truncate hover:text-clay-ink">
+                      {v.email}
+                    </a>
+                  )}
+                </div>
+              )}
               {v.website && (
                 <div className="mt-1 truncate text-sm text-muted-foreground">{v.website}</div>
               )}
