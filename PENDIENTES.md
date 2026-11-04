@@ -4,7 +4,7 @@
 
 - [x] Dominio `tubodaenorden.com` comprado en Cloudflare.
 - [x] Email de contacto `hola@tubodaenorden.com` puesto en los textos legales (`src/legal/config.ts`).
-- [ ] Activar `hola@tubodaenorden.com` en Cloudflare Email Routing → reenvío a `tubodaenorden@gmail.com`.
+- [x] `hola@tubodaenorden.com` activo en Cloudflare Email Routing → reenvía a `tubodaenorden@gmail.com`.
 - [ ] **Publicar la web** en Cloudflare con el dominio.
 - [ ] **Supabase → Authentication → URL Configuration**: Site URL = `https://tubodaenorden.com` y añadir `https://tubodaenorden.com/**` a Redirect URLs.
 - [ ] **Stripe**: cambiar la redirección del enlace de pago a `https://tubodaenorden.com/panel?pago=ok`.
