@@ -9,12 +9,14 @@
 - [x] **Supabase → Authentication → URL Configuration**: Site URL = `https://tubodaenorden.com` y añadir `https://tubodaenorden.com/**` a Redirect URLs.
 - [x] **Stripe** (modo prueba): cambiar la redirección del enlace de pago a `https://tubodaenorden.com/panel?pago=ok`.
 - [ ] **Inicio con Google sin la dirección de Supabase**:
-  - Opción 1 (código): botón de Google integrado en la web (Google Identity Services + `signInWithIdToken`), para que Google muestre "continuar a tubodaenorden.com".
+  - [x] Opción 1 (código): botón de Google integrado en la web (`src/components/google-button.tsx`). Requiere `VITE_GOOGLE_CLIENT_ID` en `.env` y en las variables de compilación de Cloudflare.
   - Opción 2 (Google Cloud): Google Auth Platform → Marca/Branding con logo, web, enlaces a privacidad y condiciones y dominio verificado, para que salga "Tu Boda en Orden".
   - [x] Añadido `https://tubodaenorden.com` a los "Orígenes de JavaScript autorizados" del cliente OAuth.
 - [ ] **Correos con tu marca** (Resend + dominio): confirmación de cuenta y recuperación de contraseña en los 5 idiomas. Después, volver a activar "Confirm email" en Supabase.
 
 ## Antes de vender
+
+- [ ] **Plano de mesas en el móvil**: rehacer el arrastre de la sección Mesas del panel con eventos de puntero (ratón + dedo); ahora usa arrastrar HTML5, que no va con el dedo en muchos móviles (sobre todo iPhone). En ordenador debe seguir igual.
 
 - [ ] **Stripe en modo real**: datos fiscales y bancarios; producto de 37 €; enlace de pago, webhook y secreto `STRIPE_WEBHOOK_SECRET` de modo real; actualizar `VITE_STRIPE_PAYMENT_LINK`. Opciones del enlace: nombre del cliente, códigos de promoción y aceptación de las condiciones (con la URL de `/legal/condiciones`).
 - [ ] **Gestor**: confirmar el IVA incluido en los 37 €, la facturación y si hace falta Stripe Tax / OSS.
