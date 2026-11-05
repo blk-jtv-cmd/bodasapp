@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { BrandLogo, BrandName } from "@/components/brand";
 import { LanguageSwitcher } from "@/i18n/switcher";
+import { GoogleButton } from "@/components/google-button";
 import { LegalLinks, withLegalLinks } from "@/components/legal-links";
 import { t as tr, useI18n } from "@/i18n";
 
@@ -177,13 +178,13 @@ function AuthPage() {
 
         {(mode === "signup" || mode === "login") && (
           <>
-            <button
-              type="button"
-              onClick={handleGoogle}
-              className="mt-8 w-full rounded-full border border-line bg-panel px-5 py-3 text-sm font-medium transition-colors hover:bg-clay-soft"
-            >
-              {tr("Continuar con Google")}
-            </button>
+            <div className="mt-8">
+              <GoogleButton
+                onSuccess={() => navigate({ to: "/panel" })}
+                onError={() => toast.error(tr("No hemos podido entrar con Google"))}
+                onFallback={handleGoogle}
+              />
+            </div>
 
             <div className="my-6 flex items-center gap-4 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
               <span className="h-px flex-1 bg-line" />{tr("o")}<span className="h-px flex-1 bg-line" />
