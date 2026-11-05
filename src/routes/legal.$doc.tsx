@@ -22,7 +22,6 @@ export const Route = createFileRoute("/legal/$doc")({
   head: ({ params }) => ({
     meta: [
       { title: `${isDoc(params.doc) ? es[params.doc].title : "Legal"} — ${LEGAL.brand}` },
-      { name: "robots", content: "noindex" },
     ],
   }),
   component: LegalPage,
