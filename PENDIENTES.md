@@ -5,13 +5,13 @@
 - [x] Dominio `tubodaenorden.com` comprado en Cloudflare.
 - [x] Email de contacto `hola@tubodaenorden.com` puesto en los textos legales (`src/legal/config.ts`).
 - [x] `hola@tubodaenorden.com` activo en Cloudflare Email Routing → reenvía a `tubodaenorden@gmail.com`.
-- [ ] **Publicar la web** en Cloudflare con el dominio.
-- [ ] **Supabase → Authentication → URL Configuration**: Site URL = `https://tubodaenorden.com` y añadir `https://tubodaenorden.com/**` a Redirect URLs.
-- [ ] **Stripe**: cambiar la redirección del enlace de pago a `https://tubodaenorden.com/panel?pago=ok`.
+- [x] **Web publicada** en https://tubodaenorden.com (Cloudflare Workers, se actualiza sola al aprobar cambios en GitHub).
+- [x] **Supabase → Authentication → URL Configuration**: Site URL = `https://tubodaenorden.com` y añadir `https://tubodaenorden.com/**` a Redirect URLs.
+- [x] **Stripe** (modo prueba): cambiar la redirección del enlace de pago a `https://tubodaenorden.com/panel?pago=ok`.
 - [ ] **Inicio con Google sin la dirección de Supabase**:
   - Opción 1 (código): botón de Google integrado en la web (Google Identity Services + `signInWithIdToken`), para que Google muestre "continuar a tubodaenorden.com".
   - Opción 2 (Google Cloud): Google Auth Platform → Marca/Branding con logo, web, enlaces a privacidad y condiciones y dominio verificado, para que salga "Tu Boda en Orden".
-  - Añadir `https://tubodaenorden.com` a los "Orígenes de JavaScript autorizados" del cliente OAuth.
+  - [x] Añadido `https://tubodaenorden.com` a los "Orígenes de JavaScript autorizados" del cliente OAuth.
 - [ ] **Correos con tu marca** (Resend + dominio): confirmación de cuenta y recuperación de contraseña en los 5 idiomas. Después, volver a activar "Confirm email" en Supabase.
 
 ## Antes de vender
