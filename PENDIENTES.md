@@ -16,7 +16,7 @@
 
 ## Antes de vender
 
-- [ ] **Plano de mesas en el móvil**: rehacer el arrastre de la sección Mesas del panel con eventos de puntero (ratón + dedo); ahora usa arrastrar HTML5, que no va con el dedo en muchos móviles (sobre todo iPhone). En ordenador debe seguir igual.
+- [x] **Plano de mesas en el móvil**: rehacer el arrastre de la sección Mesas del panel con eventos de puntero (ratón + dedo); ahora usa arrastrar HTML5, que no va con el dedo en muchos móviles (sobre todo iPhone). En ordenador debe seguir igual.
 
 - [ ] **Stripe en modo real**: datos fiscales y bancarios; producto de 37 €; enlace de pago, webhook y secreto `STRIPE_WEBHOOK_SECRET` de modo real; actualizar `VITE_STRIPE_PAYMENT_LINK`. Opciones del enlace: nombre del cliente, códigos de promoción y aceptación de las condiciones (con la URL de `/legal/condiciones`).
 - [ ] **Gestor**: confirmar el IVA incluido en los 37 €, la facturación y si hace falta Stripe Tax / OSS.
