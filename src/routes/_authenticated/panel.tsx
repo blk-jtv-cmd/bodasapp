@@ -500,16 +500,32 @@ function PanelPage() {
 // y solo pueden descargarla las cuentas con el plan pagado.
 const TEMPLATE_BUCKET = "descargas";
 const TEMPLATE_FILE = "plantilla-tu-boda-en-orden.xlsx";
+// Una copia traducida por idioma: plantilla-tu-boda-en-orden-en.xlsx, -it, -fr, -pt.
+const TEMPLATE_NAMES: Record<string, string> = {
+  es: "Plantilla Tu Boda en Orden.xlsx",
+  en: "Tu Boda en Orden - Wedding Planner.xlsx",
+  it: "Tu Boda en Orden - Planner matrimonio.xlsx",
+  fr: "Tu Boda en Orden - Planner mariage.xlsx",
+  pt: "Tu Boda en Orden - Planeador casamento.xlsx",
+};
 
 function ExcelDownload() {
-  const { t: tr } = useI18n();
+  const { t: tr, lang } = useI18n();
   const [loading, setLoading] = useState(false);
 
   async function download() {
     setLoading(true);
-    const { data, error } = await supabase.storage
-      .from(TEMPLATE_BUCKET)
-      .createSignedUrl(TEMPLATE_FILE, 60, { download: "Plantilla Tu Boda en Orden.xlsx" });
+    const bucket = supabase.storage.from(TEMPLATE_BUCKET);
+    const spanish = () =>
+      bucket.createSignedUrl(TEMPLATE_FILE, 60, { download: TEMPLATE_NAMES.es });
+    let { data, error } =
+      lang === "es"
+        ? await spanish()
+        : await bucket.createSignedUrl(TEMPLATE_FILE.replace(".xlsx", `-${lang}.xlsx`), 60, {
+            download: TEMPLATE_NAMES[lang] ?? TEMPLATE_NAMES.es,
+          });
+    // Si aún no está subida la versión de ese idioma, se baja la española.
+    if (error || !data?.signedUrl) ({ data, error } = await spanish());
     setLoading(false);
     if (error || !data?.signedUrl) {
       toast.error(tr("No hemos podido preparar la descarga. Volved a intentarlo en un momento."));
