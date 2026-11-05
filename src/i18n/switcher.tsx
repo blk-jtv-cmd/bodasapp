@@ -1,4 +1,5 @@
 import { LANGS, useI18n, type Lang } from "./index";
+import { rememberLangInAccount } from "./remember";
 
 /** Selector de idioma para la barra superior. */
 export function LanguageSwitcher({ className = "" }: { className?: string }) {
@@ -6,7 +7,10 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
   return (
     <select
       value={lang}
-      onChange={(e) => setLang(e.target.value as Lang)}
+      onChange={(e) => {
+        setLang(e.target.value as Lang);
+        void rememberLangInAccount();
+      }}
       aria-label={t("Idioma")}
       className={`cursor-pointer rounded-full border border-line bg-transparent px-2 py-1 font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground outline-none hover:text-foreground focus:border-clay-ink ${className}`}
     >

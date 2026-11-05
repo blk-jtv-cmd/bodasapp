@@ -1,0 +1,1 @@
+{{ $l := or .Data.lang "es" }}{{ if eq $l "en" }}Confirm your Tu Boda en Orden account{{ else if eq $l "it" }}Confermate il vostro account Tu Boda en Orden{{ else if eq $l "fr" }}Confirmez votre compte Tu Boda en Orden{{ else if eq $l "pt" }}Confirmem a vossa conta Tu Boda en Orden{{ else }}Confirmad vuestra cuenta en Tu Boda en Orden{{ end }}
