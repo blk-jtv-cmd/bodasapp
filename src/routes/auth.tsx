@@ -6,7 +6,8 @@ import { BrandLogo, BrandName } from "@/components/brand";
 import { LanguageSwitcher } from "@/i18n/switcher";
 import { GoogleButton } from "@/components/google-button";
 import { LegalLinks, withLegalLinks } from "@/components/legal-links";
-import { t as tr, useI18n } from "@/i18n";
+import { getLang, t as tr, useI18n } from "@/i18n";
+import { rememberLangInAccount } from "@/i18n/remember";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -89,7 +90,7 @@ function AuthPage() {
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/panel`,
-            data: { display_name: names || email.split("@")[0] },
+            data: { display_name: names || email.split("@")[0], lang: getLang() },
           },
         });
         if (error) throw error;
@@ -106,6 +107,7 @@ function AuthPage() {
       } else if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        void rememberLangInAccount();
         navigate({ to: "/panel" });
       } else if (mode === "forgot") {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -180,7 +182,10 @@ function AuthPage() {
           <>
             <div className="mt-8">
               <GoogleButton
-                onSuccess={() => navigate({ to: "/panel" })}
+                onSuccess={() => {
+                  void rememberLangInAccount();
+                  navigate({ to: "/panel" });
+                }}
                 onError={() => toast.error(tr("No hemos podido entrar con Google"))}
                 onFallback={handleGoogle}
               />

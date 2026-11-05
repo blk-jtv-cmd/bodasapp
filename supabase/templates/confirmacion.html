@@ -1,0 +1,34 @@
+{{ $l := or .Data.lang "es" }}{{ $title := "¡Bienvenidos!" }}{{ if eq $l "en" }}{{ $title = "Welcome!" }}{{ end }}{{ if eq $l "it" }}{{ $title = "Benvenuti!" }}{{ end }}{{ if eq $l "fr" }}{{ $title = "Bienvenue !" }}{{ end }}{{ if eq $l "pt" }}{{ $title = "Bem-vindos!" }}{{ end }}{{ $intro := "Gracias por crear vuestra cuenta. Pulsad el botón para confirmar vuestro email y empezar a organizar la boda." }}{{ if eq $l "en" }}{{ $intro = "Thanks for creating your account. Click the button to confirm your email and start planning your wedding." }}{{ end }}{{ if eq $l "it" }}{{ $intro = "Grazie per aver creato il vostro account. Premete il pulsante per confermare l'email e iniziare a organizzare il matrimonio." }}{{ end }}{{ if eq $l "fr" }}{{ $intro = "Merci d'avoir créé votre compte. Cliquez sur le bouton pour confirmer votre e-mail et commencer à organiser votre mariage." }}{{ end }}{{ if eq $l "pt" }}{{ $intro = "Obrigado por criarem a vossa conta. Carreguem no botão para confirmar o email e começar a organizar o casamento." }}{{ end }}{{ $button := "Confirmar mi cuenta" }}{{ if eq $l "en" }}{{ $button = "Confirm my account" }}{{ end }}{{ if eq $l "it" }}{{ $button = "Conferma il mio account" }}{{ end }}{{ if eq $l "fr" }}{{ $button = "Confirmer mon compte" }}{{ end }}{{ if eq $l "pt" }}{{ $button = "Confirmar a minha conta" }}{{ end }}{{ $note := "Si no habéis creado vosotros esta cuenta, podéis ignorar este correo." }}{{ if eq $l "en" }}{{ $note = "If you didn't create this account, you can ignore this email." }}{{ end }}{{ if eq $l "it" }}{{ $note = "Se non avete creato voi questo account, potete ignorare questa email." }}{{ end }}{{ if eq $l "fr" }}{{ $note = "Si vous n'avez pas créé ce compte, vous pouvez ignorer cet e-mail." }}{{ end }}{{ if eq $l "pt" }}{{ $note = "Se não foram vocês a criar esta conta, podem ignorar este email." }}{{ end }}{{ $foot := "Tu Boda en Orden · Tu boda, organizada desde el primer día" }}{{ if eq $l "en" }}{{ $foot = "Tu Boda en Orden · Your wedding, organised from day one" }}{{ end }}{{ if eq $l "it" }}{{ $foot = "Tu Boda en Orden · Il tuo matrimonio, organizzato dal primo giorno" }}{{ end }}{{ if eq $l "fr" }}{{ $foot = "Tu Boda en Orden · Ton mariage, organisé dès le premier jour" }}{{ end }}{{ if eq $l "pt" }}{{ $foot = "Tu Boda en Orden · O teu casamento, organizado desde o primeiro dia" }}{{ end }}
+<!doctype html>
+<html lang="{{ $l }}">
+  <body style="margin:0;padding:0;background:#f5efe3;font-family:Helvetica,Arial,sans-serif;color:#2e2620;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5efe3;padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fbf8f1;border-radius:20px;padding:40px 32px;">
+            <tr>
+              <td align="center" style="padding-bottom:24px;">
+                <img src="https://tubodaenorden.com/icon-192.png" width="88" height="88" alt="Tu Boda en Orden" style="display:block;border:0;" />
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1.25;padding-bottom:16px;">{{ $title }}</td>
+            </tr>
+            <tr>
+              <td align="center" style="font-size:15px;line-height:1.6;color:#5c524a;padding-bottom:28px;">{{ $intro }}</td>
+            </tr>
+            <tr>
+              <td align="center" style="padding-bottom:28px;">
+                <a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#efc3c6;color:#2e2620;text-decoration:none;font-weight:600;font-size:15px;padding:14px 28px;border-radius:999px;">{{ $button }}</a>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="font-size:12px;line-height:1.6;color:#8a8079;">{{ $note }}</td>
+            </tr>
+          </table>
+          <p style="font-size:11px;color:#8a8079;margin:20px 0 0;">{{ $foot }}</p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

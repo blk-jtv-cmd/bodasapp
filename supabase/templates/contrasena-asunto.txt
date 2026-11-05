@@ -1,0 +1,1 @@
+{{ $l := or .Data.lang "es" }}{{ if eq $l "en" }}Create a new password · Tu Boda en Orden{{ else if eq $l "it" }}Create una nuova password · Tu Boda en Orden{{ else if eq $l "fr" }}Créez un nouveau mot de passe · Tu Boda en Orden{{ else if eq $l "pt" }}Criem uma nova palavra-passe · Tu Boda en Orden{{ else }}Cread una contraseña nueva · Tu Boda en Orden{{ end }}
