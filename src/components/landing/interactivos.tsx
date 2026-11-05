@@ -367,7 +367,7 @@ export function SeatingDemo() {
             className="relative aspect-[4/3] w-full touch-none select-none overflow-hidden rounded-2xl bg-panel ring-1 ring-foreground/5"
             onPointerMove={(e) => moveTo(e.clientX, e.clientY)}
             onPointerUp={() => (dragging.current = null)}
-            onPointerLeave={() => (dragging.current = null)}
+            onPointerCancel={() => (dragging.current = null)}
           >
             {items.map((it) => {
               const isTable = it.kind === "mesa";
@@ -391,10 +391,12 @@ export function SeatingDemo() {
                   type="button"
                   aria-label={isTable ? tr("Mesa {n}", { n: label }) : label}
                   onPointerDown={(e) => {
+                    // En móvil: que el dedo mueva la mesa y no la página.
+                    e.preventDefault();
                     dragging.current = it.id;
                     area.current?.setPointerCapture?.(e.pointerId);
                   }}
-                  className={`absolute flex -translate-x-1/2 -translate-y-1/2 cursor-grab items-center justify-center shadow-sm active:cursor-grabbing ${shape}`}
+                  className={`absolute flex -translate-x-1/2 -translate-y-1/2 cursor-grab touch-none select-none items-center justify-center shadow-sm active:cursor-grabbing ${shape}`}
                   style={{ left: `${it.x}%`, top: `${it.y}%`, zIndex: it.kind === "pista" ? 0 : 1 }}
                 >
                   {label}
