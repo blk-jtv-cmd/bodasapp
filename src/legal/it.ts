@@ -90,7 +90,8 @@ const docs: LegalDocs = {
           "• Supabase: database e gestione degli account. I dati sono ospitati su server nell'Unione europea (Irlanda).",
           "• Stripe Payments Europe Ltd. (Irlanda): elaborazione dei pagamenti. Stripe tratta i dati di pagamento secondo la propria informativa.",
           "• Cloudflare: hosting e distribuzione del sito.",
-          "• Google Fonts: caratteri tipografici del sito. Al caricamento della pagina il tuo browser si collega ai server di Google, che ricevono il tuo indirizzo IP.",
+          "• Resend: invio delle email dell'account (conferma e cambio password), da server nell'Unione europea (Irlanda).",
+          "• Google (solo se scegli «Continua con Google»): Google ci fornisce nome, email e foto del profilo per l'accesso.",
           "• Consulenza fiscale e contabile, per adempiere ai nostri obblighi di legge.",
           "Alcuni di questi fornitori, o le loro società madri, si trovano negli Stati Uniti. I trasferimenti sono coperti dal Data Privacy Framework UE-USA o dalle clausole contrattuali tipo della Commissione europea.",
         ],
@@ -146,7 +147,6 @@ const docs: LegalDocs = {
         h: "3. Terze parti",
         p: [
           "Al momento del pagamento si apre la pagina di Stripe, che usa i propri cookie per elaborare il pagamento e prevenire le frodi. Puoi consultarli nella cookie policy di Stripe.",
-          "Google Fonts non installa cookie, ma riceve il tuo indirizzo IP quando carica i caratteri (vedi l'Informativa sulla privacy).",
         ],
       },
       {

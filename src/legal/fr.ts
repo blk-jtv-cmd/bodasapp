@@ -90,7 +90,8 @@ const docs: LegalDocs = {
           "• Supabase : base de données et gestion des comptes. Les données sont hébergées sur des serveurs dans l'Union européenne (Irlande).",
           "• Stripe Payments Europe Ltd. (Irlande) : traitement des paiements. Stripe traite les données de paiement selon sa propre politique de confidentialité.",
           "• Cloudflare : hébergement et diffusion du site.",
-          "• Google Fonts : polices du site. Au chargement de la page, ton navigateur se connecte aux serveurs de Google, qui reçoivent ton adresse IP.",
+          "• Resend : envoi des e-mails du compte (confirmation et changement de mot de passe), depuis des serveurs situés dans l'Union européenne (Irlande).",
+          "• Google (uniquement si tu choisis « Continuer avec Google ») : Google nous transmet ton nom, ton e-mail et ta photo de profil pour la connexion.",
           "• Conseil fiscal et comptable, pour respecter nos obligations légales.",
           "Certains de ces prestataires, ou leurs sociétés mères, sont situés aux États-Unis. Les transferts sont encadrés par le Data Privacy Framework UE–États-Unis ou par les clauses contractuelles types de la Commission européenne.",
         ],
@@ -146,7 +147,6 @@ const docs: LegalDocs = {
         h: "3. Tiers",
         p: [
           "Lors du paiement, la page de Stripe s'ouvre et utilise ses propres cookies pour traiter le paiement et prévenir la fraude. Tu peux les consulter dans la politique de cookies de Stripe.",
-          "Google Fonts ne dépose pas de cookies, mais reçoit ton adresse IP lors du chargement des polices (voir la Politique de confidentialité).",
         ],
       },
       {
