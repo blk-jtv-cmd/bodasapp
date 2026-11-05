@@ -12,7 +12,9 @@
   - [x] Opción 1 (código): botón de Google integrado en la web (`src/components/google-button.tsx`). Requiere `VITE_GOOGLE_CLIENT_ID` en `.env` y en las variables de compilación de Cloudflare.
   - Opción 2 (Google Cloud): Google Auth Platform → Marca/Branding con logo, web, enlaces a privacidad y condiciones y dominio verificado, para que salga "Tu Boda en Orden".
   - [x] Añadido `https://tubodaenorden.com` a los "Orígenes de JavaScript autorizados" del cliente OAuth.
-- [ ] **Correos con tu marca** (Resend + dominio): confirmación de cuenta y recuperación de contraseña en los 5 idiomas. Después, volver a activar "Confirm email" en Supabase.
+- [x] **Correos con tu marca** (Resend + `hola@tubodaenorden.com`): confirmación y contraseña en 5 idiomas (`supabase/templates`). "Confirm email" activado de nuevo.
+- [ ] **Verificación de marca en Google** (nombre y logo en la pantalla de Google): reintentar; si falla, apelar.
+- [ ] (Opcional) **Responder desde `hola@tubodaenorden.com`** en Gmail ("Enviar como", con el SMTP de Resend).
 
 ## Antes de vender
 
