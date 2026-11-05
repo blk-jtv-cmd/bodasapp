@@ -509,6 +509,11 @@ const dict: Record<string, string> = {
   "(próximamente)": "(a breve)",
   "Quiero acceder al plan completo de inmediato y acepto que, por ello, pierdo el derecho de desistimiento. He leído las {terms}.": "Voglio accedere subito al piano completo e accetto di perdere così il diritto di recesso. Ho letto le {terms}.",
   "Al crear la cuenta aceptáis las {terms} y la {privacy}.": "Creando l'account accettate le {terms} e l'{privacy}.",
+  "Tocad un invitado y después una mesa": "Toccate un invitato e poi un tavolo",
+  "Arrastrad a una mesa del salón o haced clic en un invitado y después en una mesa": "Trascinate su un tavolo della sala oppure cliccate un invitato e poi un tavolo",
+  "Tocad una mesa para sentar a {name}": "Toccate un tavolo per far sedere {name}",
+  "Subir": "Sposta su",
+  "Bajar": "Sposta giù",
 };
 
 export default dict;

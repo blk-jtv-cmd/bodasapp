@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ChevronDown, GripVertical, Move, Plus, Settings2, Sparkles, Trash2, UserPlus, Users, X } from "lucide-react";
+import { ChevronDown, ChevronUp, GripVertical, Move, Plus, Settings2, Sparkles, Trash2, UserPlus, Users, X } from "lucide-react";
 import { t as tr, useI18n } from "@/i18n";
 
 export type MesaTable = {
@@ -133,6 +133,19 @@ function labelPositions(count: number, isRound: boolean) {
   return positions;
 }
 
+/** true en móviles y tablets (dedo), false con ratón. */
+function useTouchDevice() {
+  const [touch, setTouch] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(pointer: coarse)");
+    const update = () => setTouch(mq.matches);
+    update();
+    mq.addEventListener?.("change", update);
+    return () => mq.removeEventListener?.("change", update);
+  }, []);
+  return touch;
+}
+
 function TableView({
   table,
   seated,
@@ -144,6 +157,9 @@ function TableView({
   onDragLeave,
   onDrop,
   onClick,
+  touchMode,
+  position,
+  onTouchDragStart,
 }: {
   table: MesaTable;
   seated: MesaGuest[];
@@ -155,6 +171,10 @@ function TableView({
   onDragLeave: () => void;
   onDrop: (e: React.DragEvent) => void;
   onClick: () => void;
+  /** En móvil se arrastra con eventos de puntero (dedo) en vez de arrastrar HTML5. */
+  touchMode: boolean;
+  position: { x: number; y: number };
+  onTouchDragStart: (e: React.PointerEvent) => void;
 }) {
   const { t: tr } = useI18n();
   const seatCount = seated.reduce((s, g) => s + 1 + g.companions, 0);
@@ -166,16 +186,17 @@ function TableView({
 
   return (
     <div
-      draggable
+      draggable={!touchMode}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       onClick={onClick}
+      onPointerDown={touchMode ? onTouchDragStart : undefined}
       className={`absolute cursor-move select-none transition-opacity ${
         isDragging ? "opacity-40" : ""
-      }`}
-      style={{ left: table.pos_x, top: table.pos_y }}
+      } ${touchMode ? "touch-none" : ""}`}
+      style={{ left: position.x, top: position.y }}
     >
       <div className="relative" style={{ width: tableW, height: tableH }}>
         {/* Guest name labels around the table */}
@@ -245,6 +266,16 @@ export function Mesas({
   const [draggingTableId, setDraggingTableId] = useState<string | null>(null);
   const [tableDragOffset, setTableDragOffset] = useState({ x: 0, y: 0 });
   const [dragOverGuestId, setDragOverGuestId] = useState<string | null>(null);
+  const touchMode = useTouchDevice();
+  // Tocar un invitado y luego una mesa (funciona con dedo y con ratón).
+  const [pickedGuestId, setPickedGuestId] = useState<string | null>(null);
+  // Arrastre de mesas con el dedo.
+  const [livePos, setLivePos] = useState<{ id: string; x: number; y: number } | null>(null);
+  const touchDrag = useRef<{ id: string; dx: number; dy: number; sx: number; sy: number; moved: boolean } | null>(
+    null,
+  );
+  // Tras un toque con el dedo, ignorar el "click" que algunos navegadores envían después.
+  const lastTouchEnd = useRef(0);
 
   const guestsByTable = useMemo(() => {
     const map = new Map<string, MesaGuest[]>();
@@ -341,12 +372,8 @@ export function Mesas({
     await reload();
   }
 
-  function handleGuestDrop(e: React.DragEvent, tableId: string) {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOverTableId(null);
-    const guestId = e.dataTransfer.getData(DRAG_GUEST);
-    if (!guestId) return;
+  /** Sienta a un invitado si cabe en la mesa; avisa si está llena. */
+  function trySeat(guestId: string, tableId: string) {
     const table = tables.find((t) => t.id === tableId);
     if (!table) return;
     const current = guestsByTable.get(tableId) ?? [];
@@ -357,6 +384,74 @@ export function Mesas({
       return;
     }
     void seatGuest(guestId, tableId);
+  }
+
+  function onTableTap(tableId: string) {
+    if (pickedGuestId) {
+      trySeat(pickedGuestId, tableId);
+      setPickedGuestId(null);
+      return;
+    }
+    setSelectedTableId(tableId);
+  }
+
+  function startTouchDrag(e: React.PointerEvent, table: MesaTable) {
+    if (!canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    touchDrag.current = {
+      id: table.id,
+      dx: e.clientX - rect.left - table.pos_x,
+      dy: e.clientY - rect.top - table.pos_y,
+      sx: e.clientX,
+      sy: e.clientY,
+      moved: false,
+    };
+    canvasRef.current.setPointerCapture?.(e.pointerId);
+  }
+
+  function moveTouchDrag(e: React.PointerEvent) {
+    const d = touchDrag.current;
+    if (!d || !canvasRef.current) return;
+    if (!d.moved && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 8) return;
+    d.moved = true;
+    const rect = canvasRef.current.getBoundingClientRect();
+    setLivePos({
+      id: d.id,
+      x: Math.max(0, Math.round(e.clientX - rect.left - d.dx)),
+      y: Math.max(0, Math.round(e.clientY - rect.top - d.dy)),
+    });
+  }
+
+  function endTouchDrag() {
+    const d = touchDrag.current;
+    touchDrag.current = null;
+    if (!d) return;
+    lastTouchEnd.current = Date.now();
+    if (d.moved && livePos && livePos.id === d.id) {
+      void updateTable(d.id, { pos_x: livePos.x, pos_y: livePos.y });
+    } else if (!d.moved) {
+      // Toque sin mover: igual que hacer clic en la mesa.
+      onTableTap(d.id);
+    }
+    setLivePos(null);
+  }
+
+  function moveSeated(idx: number, dir: -1 | 1) {
+    const to = idx + dir;
+    if (!selectedTableId || to < 0 || to >= selectedGuests.length) return;
+    const reordered = [...selectedGuests];
+    const [moved] = reordered.splice(idx, 1);
+    reordered.splice(to, 0, moved);
+    void reorderGuests(selectedTableId, reordered);
+  }
+
+  function handleGuestDrop(e: React.DragEvent, tableId: string) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverTableId(null);
+    const guestId = e.dataTransfer.getData(DRAG_GUEST);
+    if (!guestId) return;
+    trySeat(guestId, tableId);
   }
 
   function handleGuestDropToUnseated(e: React.DragEvent) {
@@ -497,6 +592,19 @@ export function Mesas({
 
       <MesasGuide />
 
+      {pickedGuestId && (
+        <div className="sticky top-24 z-20 mb-4 flex items-center justify-between gap-3 rounded-xl bg-clay px-4 py-3 text-sm">
+          <span>
+            {tr("Tocad una mesa para sentar a {name}", {
+              name: guests.find((g) => g.id === pickedGuestId)?.name ?? "",
+            })}
+          </span>
+          <button type="button" onClick={() => setPickedGuestId(null)} className="font-medium underline">
+            {tr("Cancelar")}
+          </button>
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
         {/* Salon canvas */}
         <div
@@ -506,6 +614,9 @@ export function Mesas({
             if (e.dataTransfer.types.includes(DRAG_TABLE)) e.dataTransfer.dropEffect = "move";
           }}
           onDrop={onCanvasDrop}
+          onPointerMove={moveTouchDrag}
+          onPointerUp={endTouchDrag}
+          onPointerCancel={endTouchDrag}
           className="relative min-h-[480px] overflow-hidden rounded-2xl bg-panel ring-1 ring-foreground/5"
           style={{
             backgroundImage:
@@ -545,7 +656,17 @@ export function Mesas({
                 }}
                 onDragLeave={() => setDragOverTableId((id) => (id === table.id ? null : id))}
                 onDrop={(e) => handleGuestDrop(e, table.id)}
-                onClick={() => setSelectedTableId(table.id)}
+                onClick={() => {
+                  if (Date.now() - lastTouchEnd.current < 600) return;
+                  onTableTap(table.id);
+                }}
+                touchMode={touchMode}
+                position={
+                  livePos?.id === table.id
+                    ? { x: livePos.x, y: livePos.y }
+                    : { x: table.pos_x, y: table.pos_y }
+                }
+                onTouchDragStart={(e) => startTouchDrag(e, table)}
               />
             );
           })}
@@ -634,7 +755,7 @@ export function Mesas({
                   {selectedGuests.map((g, idx) => (
                     <li
                       key={g.id}
-                      draggable
+                      draggable={!touchMode}
                       onDragStart={(e) => {
                         e.dataTransfer.setData(DRAG_SEATED, g.id);
                         e.dataTransfer.effectAllowed = "move";
@@ -663,6 +784,24 @@ export function Mesas({
                           +{g.companions}
                         </span>
                       )}
+                      <button
+                        type="button"
+                        onClick={() => moveSeated(idx, -1)}
+                        disabled={idx === 0}
+                        className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                        aria-label={tr("Subir")}
+                      >
+                        <ChevronUp className="size-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveSeated(idx, 1)}
+                        disabled={idx === selectedGuests.length - 1}
+                        className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                        aria-label={tr("Bajar")}
+                      >
+                        <ChevronDown className="size-3.5" />
+                      </button>
                       <button
                         onClick={() => seatGuest(g.id, null)}
                         className="text-muted-foreground hover:text-foreground"
@@ -699,18 +838,23 @@ export function Mesas({
           >
             <h3 className="mb-1 font-display text-lg font-semibold">{tr("Sin asignar")}</h3>
             <p className="mb-3 text-xs text-muted-foreground">
-              {tr("Arrastrad a una mesa del salón")}
+              {touchMode
+                ? tr("Tocad un invitado y después una mesa")
+                : tr("Arrastrad a una mesa del salón o haced clic en un invitado y después en una mesa")}
             </p>
             <ul className="space-y-1">
               {unseatedGuests.map((g) => (
                 <li
                   key={g.id}
-                  draggable
+                  draggable={!touchMode}
                   onDragStart={(e) => {
                     e.dataTransfer.setData(DRAG_GUEST, g.id);
                     e.dataTransfer.effectAllowed = "move";
                   }}
-                  className="flex cursor-grab items-center gap-2 rounded-lg bg-background px-3 py-2 text-sm transition-colors hover:border-clay hover:ring-1 hover:ring-clay/30 active:cursor-grabbing"
+                  onClick={() => setPickedGuestId((id) => (id === g.id ? null : g.id))}
+                  className={`flex cursor-grab items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:ring-1 hover:ring-clay/30 active:cursor-grabbing ${
+                    pickedGuestId === g.id ? "bg-clay ring-2 ring-clay-ink" : "bg-background"
+                  }`}
                 >
                   <span className="flex-1 truncate">{g.name}</span>
                   {g.companions > 0 && (
