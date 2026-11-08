@@ -44,7 +44,8 @@ function AuthPage() {
   const [names, setNames] = useState("");
   const [loading, setLoading] = useState(false);
   // Aviso de "revisad vuestro correo": por confirmación de cuenta o por cambio de contraseña.
-  const [notice, setNotice] = useState<{ kind: "confirm" | "reset"; email: string } | null>(null);
+  const [notice, setNotice] = useState<{ kind: "confirm" | "reset" | "exists"; email: string } | null>(null);
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
@@ -74,6 +75,18 @@ function AuthPage() {
     return () => sub.subscription.unsubscribe();
   }, [navigate]);
 
+  async function resendConfirmation(to: string) {
+    setResending(true);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: to,
+      options: { emailRedirectTo: `${window.location.origin}/panel` },
+    });
+    setResending(false);
+    if (error) toast.error(translateAuthError(error));
+    else toast.success(tr("Os lo hemos vuelto a enviar. Mirad también en spam."));
+  }
+
   function switchMode(next: Mode) {
     setMode(next);
     setNotice(null);
@@ -94,6 +107,14 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+        // Si el email ya tiene cuenta, Supabase responde "bien" pero no envía ningún correo
+        // (para no revelar qué emails están registrados): lo detectamos por las identidades vacías.
+        if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+          setNotice({ kind: "exists", email });
+          setMode("login");
+          setPassword("");
+          return;
+        }
         if (data.session) {
           // La confirmación por correo está desactivada: entran directamente.
           toast.success(tr("Cuenta creada. Ya podéis empezar."));
@@ -200,14 +221,18 @@ function AuthPage() {
 
         {notice && (
           <div className="mb-6 rounded-2xl bg-clay-soft px-5 py-4 text-sm">
-            <div className="font-display text-lg font-semibold">{tr("Revisad vuestro correo")}</div>
+            <div className="font-display text-lg font-semibold">
+              {notice.kind === "exists" ? tr("Ya tenéis una cuenta") : tr("Revisad vuestro correo")}
+            </div>
             <p className="mt-1 text-muted-foreground">
               {(() => {
                 // El email va en negrita en mitad de la frase, sea cual sea el idioma.
                 const [before, after = ""] = tr(
-                  notice.kind === "confirm"
-                    ? "Os hemos enviado un enlace a {email} para confirmar la cuenta. Pulsadlo y después entrad aquí con vuestro email y contraseña."
-                    : "Os hemos enviado un enlace a {email} para crear una contraseña nueva. Abridlo en este mismo dispositivo.",
+                  notice.kind === "exists"
+                    ? "Ya hay una cuenta con {email}. Entrad con vuestra contraseña, o con «Continuar con Google» si os registrasteis así. Si no la recordáis, pulsad «¿Habéis olvidado la contraseña?»."
+                    : notice.kind === "confirm"
+                      ? "Os hemos enviado un enlace a {email} para confirmar la cuenta. Pulsadlo y después entrad aquí con vuestro email y contraseña."
+                      : "Os hemos enviado un enlace a {email} para crear una contraseña nueva. Abridlo en este mismo dispositivo.",
                 ).split("{email}");
                 return (
                   <>
@@ -216,9 +241,19 @@ function AuthPage() {
                     {after}
                   </>
                 );
-              })()}{" "}
-              {tr("Si no lo veis, mirad en la carpeta de spam.")}
+              })()}
+              {notice.kind !== "exists" && <> {tr("Si no lo veis, mirad en la carpeta de spam.")}</>}
             </p>
+            {notice.kind === "confirm" && (
+              <button
+                type="button"
+                disabled={resending}
+                onClick={() => resendConfirmation(notice.email)}
+                className="mt-2 text-xs text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground disabled:opacity-60"
+              >
+                {resending ? tr("Un momento…") : tr("¿No os ha llegado? Volver a enviar")}
+              </button>
+            )}
           </div>
         )}
 

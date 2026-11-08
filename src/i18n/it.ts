@@ -514,6 +514,10 @@ const dict: Record<string, string> = {
   "Tocad una mesa para sentar a {name}": "Toccate un tavolo per far sedere {name}",
   "Subir": "Sposta su",
   "Bajar": "Sposta giù",
+  "Ya tenéis una cuenta": "Avete già un account",
+  "Ya hay una cuenta con {email}. Entrad con vuestra contraseña, o con «Continuar con Google» si os registrasteis así. Si no la recordáis, pulsad «¿Habéis olvidado la contraseña?».": "Esiste già un account con {email}. Entrate con la vostra password, oppure con «Continua con Google» se vi siete registrati così. Se non la ricordate, premete «Avete dimenticato la password?».",
+  "¿No os ha llegado? Volver a enviar": "Non vi è arrivata? Inviala di nuovo",
+  "Os lo hemos vuelto a enviar. Mirad también en spam.": "Ve l'abbiamo inviata di nuovo. Controllate anche lo spam.",
 };
 
 export default dict;
