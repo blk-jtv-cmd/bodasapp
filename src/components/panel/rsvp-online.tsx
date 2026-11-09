@@ -256,9 +256,9 @@ export function RsvpLinkCard({
               </label>
               <label className="flex items-center justify-between gap-3 text-sm sm:col-span-2">
                 <span>
-                  {t("Dejar que añadan acompañantes que no están en la lista")}
+                  {t("Dejar que añadan acompañantes y niños")}
                   <span className="block text-xs text-muted-foreground">
-                    {t("Si lo dejáis apagado, solo pueden responder por los acompañantes que vosotros hayáis previsto")}
+                    {t("Si lo apagáis, solo podrán responder por los acompañantes que vosotros hayáis previsto")}
                   </span>
                 </span>
                 <input

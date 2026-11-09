@@ -294,10 +294,12 @@ function RsvpPage() {
 
                     {(companions.length > 0 || info.allow_plus) && (
                       <div className="rounded-3xl bg-panel p-6 ring-1 ring-foreground/5 sm:p-8">
-                        <h3 className="font-display text-xl">{t("Quién viene contigo")}</h3>
-                        {companions.length === 0 && (
-                          <p className="mt-1 text-sm text-muted-foreground">{t("Si vienes con alguien, añádelo aquí.")}</p>
-                        )}
+                        <h3 className="font-display text-xl">{t("¿Vienes con alguien?")}</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {info.allow_plus
+                            ? t("Añade a tu pareja, acompañantes o niños para que os reserven sitio y menú.")
+                            : t("Dinos quién viene contigo y si hay niños.")}
+                        </p>
                         <ul className="mt-4 space-y-4">
                           {companions.map((c, i) => (
                             <li key={i} className="rounded-2xl bg-background p-4 ring-1 ring-line">
@@ -306,7 +308,7 @@ function RsvpPage() {
                                   value={c.name}
                                   onChange={(e) => setComp(i, { name: e.target.value })}
                                   maxLength={120}
-                                  placeholder={t("Nombre del acompañante {n}", { n: i + 1 })}
+                                  placeholder={c.is_child ? t("Nombre del niño o la niña") : t("Nombre del acompañante {n}", { n: i + 1 })}
                                   className={`${inputCls} py-2`}
                                 />
                                 {!c.planned && (
@@ -351,18 +353,26 @@ function RsvpPage() {
                           ))}
                         </ul>
                         {canAdd && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setCompanions((cs) => [
-                                ...cs,
-                                { name: "", coming: true, is_child: false, allergies: [], planned: false },
-                              ])
-                            }
-                            className="mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm ring-1 ring-line hover:ring-clay-ink"
-                          >
-                            <Plus className="size-4" /> {t("Añadir acompañante")}
-                          </button>
+                          <div className="mt-4 grid grid-cols-2 gap-2">
+                            {[
+                              { child: false, emoji: "🧑", label: t("Añadir acompañante") },
+                              { child: true, emoji: "🧒", label: t("Añadir niño/a") },
+                            ].map((o) => (
+                              <button
+                                key={String(o.child)}
+                                type="button"
+                                onClick={() =>
+                                  setCompanions((cs) => [
+                                    ...cs,
+                                    { name: "", coming: true, is_child: o.child, allergies: [], planned: false },
+                                  ])
+                                }
+                                className="inline-flex items-center justify-center gap-1.5 rounded-full bg-background px-3 py-2.5 text-sm ring-1 ring-line hover:ring-clay-ink"
+                              >
+                                <Plus className="size-4" /> {o.emoji} {o.label}
+                              </button>
+                            ))}
+                          </div>
                         )}
                       </div>
                     )}
