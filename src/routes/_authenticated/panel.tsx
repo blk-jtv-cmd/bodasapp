@@ -1026,7 +1026,8 @@ function Checklist({
 
 
 const RSVP = ["pendiente", "confirmado", "rechazado"];
-const GUEST_GROUPS = ["Familia", "Amigos", "Acompañante", "Trabajo", "Otros"];
+// "Acompañante" ya no se elige: los acompañantes se crean con la casilla «Acompañantes».
+const GUEST_GROUPS = ["Familia", "Amigos", "Trabajo", "Otros"];
 const RSVP_LABEL: Record<string, string> = {
   pendiente: "Pendiente",
   confirmado: "Confirmado",
@@ -1055,20 +1056,87 @@ function Invitados({
     notes: "",
     extra: "0",
   });
-  const [editing, setEditing] = useState<{ id: string; name: string; invited_by: string; guest_group: string } | null>(
-    null,
-  );
+  const [editing, setEditing] = useState<{
+    id: string;
+    name: string;
+    invited_by: string;
+    guest_group: string;
+    extra: string;
+  } | null>(null);
+
+  const companionName = (host: string, n: number, total: number) =>
+    total === 1 ? tr("Acompañante de {name}", { name: host }) : `${tr("Acompañante de {name}", { name: host })} ${n}`;
+
+  /** Crea `count` acompañantes enlazados al invitado, numerados a partir de `from`. */
+  async function createCompanions(
+    host: { id: string; name: string; invited_by: string; rsvp?: string },
+    from: number,
+    count: number,
+    total: number,
+  ) {
+    if (count <= 0) return true;
+    const rows = Array.from({ length: count }, (_, i) => ({
+      name: companionName(host.name, from + i, total),
+      guest_group: "Acompañante",
+      invited_by: host.invited_by,
+      rsvp: host.rsvp ?? "pendiente",
+      notes: "",
+      companion_of: host.id,
+      wedding_id: wedding.id,
+      user_id: userId,
+    }));
+    const { error } = await supabase.from("guests").insert(rows);
+    if (error) toast.error(tr("No se han podido añadir los acompañantes"));
+    return !error;
+  }
 
   async function saveEdit(e: React.FormEvent) {
     e.preventDefault();
     if (!editing || !editing.name.trim()) return;
+    const original = guests.find((x) => x.id === editing.id);
+    const name = editing.name.trim();
     const { error } = await supabase
       .from("guests")
-      .update({ name: editing.name.trim(), invited_by: editing.invited_by, guest_group: editing.guest_group })
+      .update({ name, invited_by: editing.invited_by, guest_group: editing.guest_group })
       .eq("id", editing.id);
     if (error) {
       toast.error(tr("No se ha podido guardar"));
       return;
+    }
+
+    if (original && !original.companion_of) {
+      const current = companionsOf(original.id);
+      const wanted = Math.min(Math.max(Math.round(Number(editing.extra) || 0), 0), 20);
+
+      // Si cambia el nombre, los acompañantes que conservan el nombre automático se actualizan.
+      if (name !== original.name) {
+        const oldPrefix = tr("Acompañante de {name}", { name: original.name });
+        await Promise.all(
+          current
+            .filter((c) => c.name.startsWith(oldPrefix))
+            .map((c) =>
+              supabase
+                .from("guests")
+                .update({ name: tr("Acompañante de {name}", { name }) + c.name.slice(oldPrefix.length) })
+                .eq("id", c.id),
+            ),
+        );
+      }
+
+      if (wanted > current.length) {
+        await createCompanions(
+          { id: original.id, name, invited_by: editing.invited_by, rsvp: original.rsvp },
+          current.length + 1,
+          wanted - current.length,
+          wanted,
+        );
+      } else if (wanted < current.length) {
+        const toRemove = current.slice(wanted); // se quitan los últimos añadidos
+        const ok = window.confirm(
+          tr("Se quitarán estos acompañantes: {names}. ¿Seguir?", { names: toRemove.map((c) => c.name).join(", ") }),
+        );
+        if (ok) await supabase.from("guests").delete().in("id", toRemove.map((c) => c.id));
+      }
     }
     setEditing(null);
     await reload();
@@ -1095,23 +1163,8 @@ function Invitados({
       toast.error(tr("No se ha podido guardar"));
       return;
     }
-    if (extra > 0) {
-      // Cada acompañante es un invitado propio (se puede renombrar y sentar donde se quiera).
-      const rows = Array.from({ length: extra }, (_, i) => ({
-        name:
-          extra === 1
-            ? tr("Acompañante de {name}", { name })
-            : `${tr("Acompañante de {name}", { name })} ${i + 1}`,
-        guest_group: "Acompañante",
-        invited_by: form.invited_by,
-        notes: "",
-        companion_of: host.id,
-        wedding_id: wedding.id,
-        user_id: userId,
-      }));
-      const { error: compError } = await supabase.from("guests").insert(rows);
-      if (compError) toast.error(tr("No se han podido añadir los acompañantes"));
-    }
+    // Cada acompañante es un invitado propio (se puede renombrar y sentar donde se quiera).
+    await createCompanions({ id: host.id, name, invited_by: form.invited_by }, 1, extra, extra);
     setForm({ name: "", invited_by: hosts[0]!, guest_group: "Familia", notes: "", extra: "0" });
     await reload();
   }
@@ -1310,17 +1363,32 @@ function Invitados({
                     ))}
                   </select>
                 </label>
-                <select
-                  value={editing.guest_group}
-                  onChange={(e) => setEditing({ ...editing, guest_group: e.target.value })}
-                  className={inputClass}
-                >
-                  {Array.from(new Set([...GUEST_GROUPS, editing.guest_group].filter(Boolean))).map((gr) => (
-                    <option key={gr} value={gr}>
-                      {tr(gr)}
-                    </option>
-                  ))}
-                </select>
+                {!g.companion_of && (
+                  <>
+                    <select
+                      value={editing.guest_group}
+                      onChange={(e) => setEditing({ ...editing, guest_group: e.target.value })}
+                      className={inputClass}
+                    >
+                      {Array.from(new Set([...GUEST_GROUPS, editing.guest_group].filter(Boolean))).map((gr) => (
+                        <option key={gr} value={gr}>
+                          {tr(gr)}
+                        </option>
+                      ))}
+                    </select>
+                    <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {tr("Acompañantes")}
+                      <input
+                        type="number"
+                        min={0}
+                        max={20}
+                        value={editing.extra}
+                        onChange={(e) => setEditing({ ...editing, extra: e.target.value })}
+                        className={`${inputClass} w-16`}
+                      />
+                    </label>
+                  </>
+                )}
                 <button
                   type="button"
                   onClick={() => setEditing(null)}
@@ -1388,7 +1456,13 @@ function Invitados({
             </select>
             <button
               onClick={() =>
-                setEditing({ id: g.id, name: g.name, invited_by: g.invited_by, guest_group: g.guest_group })
+                setEditing({
+                  id: g.id,
+                  name: g.name,
+                  invited_by: g.invited_by,
+                  guest_group: g.guest_group,
+                  extra: String(companionsOf(g.id).length),
+                })
               }
               className="text-xs text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground"
             >
