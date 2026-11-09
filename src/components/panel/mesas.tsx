@@ -46,7 +46,7 @@ const GUIDE_STEPS = [
   {
     icon: UserPlus,
     title: "Sentad a los invitados",
-    text: "Arrastrad invitados desde la lista «Sin asignar» directamente a una mesa. Cada mesa muestra cuántos invitados tiene sentados y su capacidad, y avisa si está llena.",
+    text: "Arrastrad invitados desde «Sin asignar» a una mesa, o de una mesa a otra arrastrando su nombre. Cada mesa muestra sus sillas ocupadas y avisa si está llena.",
   },
   {
     icon: Settings2,
@@ -99,39 +99,39 @@ function MesasGuide() {
   );
 }
 
-/** Position labels around a table using polar coordinates. */
-function labelPositions(count: number, isRound: boolean) {
-  const positions: { x: number; y: number }[] = [];
-  if (count === 0) return positions;
+/** Puntos alrededor de la mesa (sillas o nombres); `spread` = distancia extra desde el borde. */
+function seatPoints(count: number, isRound: boolean, w: number, h: number, spread: number) {
+  const points: { x: number; y: number }[] = [];
+  if (count === 0) return points;
   if (isRound) {
-    const radius = 72;
+    const radius = w / 2 + spread;
     for (let i = 0; i < count; i++) {
       const angle = (i / count) * Math.PI * 2 - Math.PI / 2;
-      positions.push({
-        x: Math.cos(angle) * radius,
-        y: Math.sin(angle) * radius,
-      });
+      points.push({ x: Math.cos(angle) * radius, y: Math.sin(angle) * radius });
     }
-  } else {
-    // Distribute along top and bottom edges of rectangular table
-    const halfW = 82;
-    const halfH = 52;
-    for (let i = 0; i < count; i++) {
-      if (i % 2 === 0) {
-        const t = Math.floor(i / 2);
-        const total = Math.ceil(count / 2);
-        const x = total > 1 ? (t / (total - 1)) * 2 - 1 : 0;
-        positions.push({ x: x * halfW, y: -halfH - 14 });
-      } else {
-        const t = Math.floor(i / 2);
-        const total = Math.floor(count / 2);
-        const x = total > 1 ? (t / (total - 1)) * 2 - 1 : 0;
-        positions.push({ x: x * halfW, y: halfH + 14 });
-      }
-    }
+    return points;
   }
-  return positions;
+  // Mesa rectangular: sillas repartidas por el lado de arriba y el de abajo.
+  const top = Math.ceil(count / 2);
+  const bottom = count - top;
+  const halfW = w / 2 - 14;
+  const along = (i: number, n: number) => (n > 1 ? (i / (n - 1)) * 2 - 1 : 0) * halfW;
+  for (let i = 0; i < count; i++) {
+    const onTop = i % 2 === 0;
+    const k = Math.floor(i / 2);
+    points.push({ x: along(k, onTop ? top : bottom), y: (onTop ? -1 : 1) * (h / 2 + spread) });
+  }
+  return points;
 }
+
+/** Fondo de cuadros rosa y crema del plano. */
+const CHECKER_BG = `url("data:image/svg+xml,${encodeURIComponent(
+  "<svg xmlns='http://www.w3.org/2000/svg' width='112' height='112'>" +
+    "<rect width='112' height='112' fill='#FCF4E2'/>" +
+    "<rect x='2' y='2' width='52' height='52' rx='4' fill='#EEB3BA'/>" +
+    "<rect x='58' y='58' width='52' height='52' rx='4' fill='#EEB3BA'/>" +
+    "</svg>",
+)}")`;
 
 /** true en móviles y tablets (dedo), false con ratón. */
 function useTouchDevice() {
@@ -160,6 +160,9 @@ function TableView({
   touchMode,
   position,
   onTouchDragStart,
+  pickedGuestId,
+  onGuestDragStart,
+  onGuestTap,
 }: {
   table: MesaTable;
   seated: MesaGuest[];
@@ -175,14 +178,30 @@ function TableView({
   touchMode: boolean;
   position: { x: number; y: number };
   onTouchDragStart: (e: React.PointerEvent) => void;
+  pickedGuestId: string | null;
+  onGuestDragStart: (e: React.DragEvent, guestId: string) => void;
+  onGuestTap: (guestId: string) => void;
 }) {
   const { t: tr } = useI18n();
   const seatCount = seated.reduce((s, g) => s + 1 + g.companions, 0);
   const isFull = seatCount >= table.capacity;
   const isRound = table.shape === "round";
-  const tableW = isRound ? 110 : 140;
-  const tableH = isRound ? 110 : 90;
-  const labels = labelPositions(Math.min(seated.length, 12), isRound);
+  const tableW = isRound ? 112 : 150;
+  const tableH = isRound ? 112 : 84;
+  const chairs = Math.min(Math.max(table.capacity, seatCount), 20);
+  const chairPts = seatPoints(chairs, isRound, tableW, tableH, 13);
+  // En las rectangulares los nombres se escalonan para que no se pisen.
+  const labelPts = seatPoints(chairs, isRound, tableW, tableH, isRound ? 44 : 32).map((pt, i) =>
+    isRound || Math.floor(i / 2) % 2 === 0 ? pt : { x: pt.x, y: pt.y + Math.sign(pt.y) * 20 },
+  );
+
+  // Cada invitado ocupa una silla, y sus acompañantes las siguientes.
+  let next = 0;
+  const firstChair = new Map<string, number>();
+  for (const g of seated) {
+    firstChair.set(g.id, next);
+    next += 1 + g.companions;
+  }
 
   return (
     <div
@@ -199,37 +218,30 @@ function TableView({
       style={{ left: position.x, top: position.y }}
     >
       <div className="relative" style={{ width: tableW, height: tableH }}>
-        {/* Guest name labels around the table */}
-        {seated.slice(0, 12).map((g, i) => {
-          const pos = labels[i];
-          if (!pos) return null;
-          const cx = tableW / 2 + pos.x;
-          const cy = tableH / 2 + pos.y;
-          return (
-            <span
-              key={g.id}
-              className="pointer-events-none absolute max-w-[80px] -translate-x-1/2 -translate-y-1/2 truncate rounded-full bg-background/90 px-1.5 py-0.5 text-center text-[9px] font-medium text-foreground ring-1 ring-foreground/10"
-              style={{ left: cx, top: cy }}
-              title={g.name}
-            >
-              {g.name.split(" ")[0]}
-            </span>
-          );
-        })}
+        {/* Sillas */}
+        {chairPts.map((pt, i) => (
+          <span
+            key={`c${i}`}
+            className={`pointer-events-none absolute size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 shadow-sm ${
+              i < seatCount ? "border-clay-ink bg-clay" : "border-white bg-white/90"
+            }`}
+            style={{ left: tableW / 2 + pt.x, top: tableH / 2 + pt.y }}
+          />
+        ))}
 
-        {/* The table itself */}
+        {/* La mesa */}
         <div
-          className={`flex h-full w-full flex-col items-center justify-center border-2 p-2 text-center transition-colors ${
-            isRound ? "rounded-full" : "rounded-lg"
+          className={`relative flex h-full w-full flex-col items-center justify-center border-2 p-2 text-center shadow-md transition-colors ${
+            isRound ? "rounded-full" : "rounded-2xl"
           } ${
             isDragOver
-              ? "border-clay bg-clay/15"
+              ? "border-clay-ink bg-clay-soft"
               : isSelected
-                ? "border-clay bg-clay/10"
-                : "border-line bg-background hover:border-clay/50"
+                ? "border-clay-ink bg-white"
+                : "border-white bg-white hover:border-clay"
           }`}
         >
-          <span className="font-display text-sm font-semibold">{table.name}</span>
+          <span className="max-w-full truncate font-display text-base font-semibold leading-tight">{table.name}</span>
           <span className="font-mono text-[10px] text-muted-foreground">
             {seatCount}/{table.capacity}
           </span>
@@ -237,6 +249,36 @@ function TableView({
             <span className="mt-0.5 font-mono text-[9px] uppercase text-clay-ink">{tr("Llena")}</span>
           )}
         </div>
+
+        {/* Nombres: se pueden arrastrar (o tocar) para cambiar de mesa */}
+        {seated.map((g) => {
+          const pt = labelPts[firstChair.get(g.id) ?? 0];
+          if (!pt) return null;
+          const picked = pickedGuestId === g.id;
+          return (
+            <span
+              key={g.id}
+              draggable={!touchMode}
+              onDragStart={(e) => {
+                e.stopPropagation();
+                onGuestDragStart(e, g.id);
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                onGuestTap(g.id);
+              }}
+              className={`absolute z-10 max-w-[84px] -translate-x-1/2 -translate-y-1/2 cursor-grab truncate rounded-full px-2 py-0.5 text-center text-[10px] font-medium shadow-sm ring-1 transition-colors active:cursor-grabbing ${
+                picked ? "bg-clay-ink text-background ring-clay-ink" : "bg-white text-foreground ring-foreground/10 hover:ring-clay-ink"
+              }`}
+              style={{ left: tableW / 2 + pt.x, top: tableH / 2 + pt.y }}
+              title={g.companions > 0 ? `${g.name} (+${g.companions})` : g.name}
+            >
+              {g.name.split(" ")[0]}
+              {g.companions > 0 && <span className="text-muted-foreground"> +{g.companions}</span>}
+            </span>
+          );
+        })}
       </div>
     </div>
   );
@@ -311,8 +353,8 @@ export function Mesas({
       capacity,
       shape: newTableShape,
       sort_order: tables.length,
-      pos_x: 50 + tables.length * 20,
-      pos_y: 50 + (tables.length % 3) * 60,
+      pos_x: 90 + (tables.length % 5) * 250,
+      pos_y: 90 + Math.floor(tables.length / 5) * 250,
     });
     if (error) {
       toast.error(tr("No se ha podido crear la mesa"));
@@ -376,9 +418,10 @@ export function Mesas({
   function trySeat(guestId: string, tableId: string) {
     const table = tables.find((t) => t.id === tableId);
     if (!table) return;
-    const current = guestsByTable.get(tableId) ?? [];
-    const totalSeats = current.reduce((s, g) => s + 1 + g.companions, 0);
     const guest = guests.find((g) => g.id === guestId);
+    if (guest?.table_number === tableId) return; // ya está en esa mesa
+    const current = (guestsByTable.get(tableId) ?? []).filter((g) => g.id !== guestId);
+    const totalSeats = current.reduce((s, g) => s + 1 + g.companions, 0);
     if (guest && totalSeats + 1 + guest.companions > table.capacity) {
       toast.error(tr("Esta mesa está llena (capacidad {n})", { n: table.capacity }));
       return;
@@ -417,8 +460,8 @@ export function Mesas({
     const rect = canvasRef.current.getBoundingClientRect();
     setLivePos({
       id: d.id,
-      x: Math.max(0, Math.round(e.clientX - rect.left - d.dx)),
-      y: Math.max(0, Math.round(e.clientY - rect.top - d.dy)),
+      x: Math.max(40, Math.round(e.clientX - rect.left - d.dx)),
+      y: Math.max(40, Math.round(e.clientY - rect.top - d.dy)),
     });
   }
 
@@ -498,8 +541,8 @@ export function Mesas({
       const x = e.clientX - canvasRect.left - tableDragOffset.x;
       const y = e.clientY - canvasRect.top - tableDragOffset.y;
       void updateTable(tableId, {
-        pos_x: Math.max(0, Math.round(x)),
-        pos_y: Math.max(0, Math.round(y)),
+        pos_x: Math.max(40, Math.round(x)),
+        pos_y: Math.max(40, Math.round(y)),
       });
       setDraggingTableId(null);
     },
@@ -517,6 +560,11 @@ export function Mesas({
   }, []);
 
   const totalSeats = tables.reduce((s, t) => s + t.capacity, 0);
+  // El salón crece si las mesas se colocan más lejos; siempre deja sitio para añadir más.
+  const canvasSize = {
+    w: Math.max(1500, ...tables.map((t) => t.pos_x + 360)),
+    h: Math.max(1100, ...tables.map((t) => t.pos_y + 360)),
+  };
   const seatedCount = guests.filter((g) => g.table_number).length;
 
   return (
@@ -606,7 +654,8 @@ export function Mesas({
       )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-        {/* Salon canvas */}
+        {/* Salón: lienzo grande con scroll para que quepan muchas mesas */}
+        <div className="relative max-h-[78vh] min-h-[520px] overflow-auto rounded-2xl ring-1 ring-foreground/10">
         <div
           ref={canvasRef}
           onDragOver={(e) => {
@@ -617,16 +666,17 @@ export function Mesas({
           onPointerMove={moveTouchDrag}
           onPointerUp={endTouchDrag}
           onPointerCancel={endTouchDrag}
-          className="relative min-h-[480px] overflow-hidden rounded-2xl bg-panel ring-1 ring-foreground/5"
+          className="relative"
           style={{
-            backgroundImage:
-              "radial-gradient(circle, var(--color-line) 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
+            width: canvasSize.w,
+            height: canvasSize.h,
+            backgroundImage: CHECKER_BG,
+            backgroundSize: "112px 112px",
           }}
         >
           {tables.length === 0 && (
-            <div className="flex h-full min-h-[480px] flex-col items-center justify-center text-center">
-              <Users className="mb-3 size-10 text-muted-foreground/40" />
+            <div className="absolute left-6 top-6 max-w-sm rounded-2xl bg-white/95 p-6 text-center shadow-md">
+              <Users className="mx-auto mb-3 size-10 text-muted-foreground/40" />
               <p className="text-sm text-muted-foreground">
                 {tr("Cread vuestra primera mesa para empezar a colocar invitados.")}
               </p>
@@ -667,9 +717,19 @@ export function Mesas({
                     : { x: table.pos_x, y: table.pos_y }
                 }
                 onTouchDragStart={(e) => startTouchDrag(e, table)}
+                pickedGuestId={pickedGuestId}
+                onGuestDragStart={(e, guestId) => {
+                  e.dataTransfer.setData(DRAG_GUEST, guestId);
+                  e.dataTransfer.effectAllowed = "move";
+                }}
+                onGuestTap={(guestId) => {
+                  if (Date.now() - lastTouchEnd.current < 600) return;
+                  setPickedGuestId((id) => (id === guestId ? null : guestId));
+                }}
               />
             );
           })}
+        </div>
         </div>
 
         {/* Sidebar: unseated guests + selected table detail */}
@@ -758,6 +818,7 @@ export function Mesas({
                       draggable={!touchMode}
                       onDragStart={(e) => {
                         e.dataTransfer.setData(DRAG_SEATED, g.id);
+                        e.dataTransfer.setData(DRAG_GUEST, g.id);
                         e.dataTransfer.effectAllowed = "move";
                         setDragOverGuestId(g.id);
                       }}

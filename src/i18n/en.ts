@@ -40,7 +40,7 @@ const dict: Record<string, string> = {
   "Apuntad gastos reales para ver el desglose.": "Add actual costs to see the breakdown.",
   "Arrastrad a una mesa del salón": "Drag onto a table in the room",
   "Arrastrad invitados aquí": "Drag guests here",
-  "Arrastrad invitados desde la lista «Sin asignar» directamente a una mesa. Cada mesa muestra cuántos invitados tiene sentados y su capacidad, y avisa si está llena.": "Drag guests from the \"Unassigned\" list straight onto a table. Each table shows how many guests are seated and its capacity, and warns you when it is full.",
+  "Arrastrad invitados desde «Sin asignar» a una mesa, o de una mesa a otra arrastrando su nombre. Cada mesa muestra sus sillas ocupadas y avisa si está llena.": "Drag guests from “Unassigned” onto a table, or from one table to another by dragging their name. Each table shows its taken chairs and warns you when it's full.",
   "Arrastrad las mesas por el lienzo para colocarlas como queráis.": "Drag the tables around the floor plan to place them however you like.",
   "Arrastrad para reordenar": "Drag to reorder",
   "Añade los momentos importantes de tu boda y crea tu propio cronograma.": "Add the key moments of your wedding and build your own timeline.",
@@ -519,6 +519,11 @@ const dict: Record<string, string> = {
   "¿No os ha llegado? Volver a enviar": "Didn't get it? Send it again",
   "Os lo hemos vuelto a enviar. Mirad también en spam.": "We've sent it again. Check your spam folder too.",
   "Editar": "Edit",
+  "Acompañante de {name}": "{name}'s plus-one",
+  "Acompañantes": "Plus-ones",
+  "Viene con {name}": "Comes with {name}",
+  "No se han podido añadir los acompañantes": "The plus-ones couldn't be added",
+  "¿Borrar {name} y sus {n} acompañantes?": "Delete {name} and their {n} plus-ones?",
 };
 
 export default dict;

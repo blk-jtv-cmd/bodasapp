@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { catLabel } from "@/lib/category-emoji";
 import { toast } from "sonner";
 import { formatMoney, currencySymbol } from "@/lib/currency";
 import {
@@ -180,7 +181,7 @@ export function Presupuesto({
       byCategory
         .filter((c) => c.actual > 0 || c.paid > 0)
         .map((c) => ({
-          name: tr(c.name),
+          name: catLabel(c.name, tr),
           Pagado: c.paid,
           Pendiente: Math.max(c.actual - c.paid, 0),
           total: c.actual,
@@ -304,6 +305,108 @@ export function Presupuesto({
         <Stat label={tr("Pendiente")} value={euro(totals.pending, cur)} />
       </div>
 
+      <section className="mb-8 grid gap-6 lg:grid-cols-[320px_1fr]">
+        <div className="rounded-2xl bg-panel p-6 ring-1 ring-foreground/5">
+          <h2 className="font-display text-xl font-semibold">{tr("Pagado vs pendiente")}</h2>
+          <div className="relative mt-4 h-[240px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: tr("Pagado"), value: totals.paid },
+                    { name: tr("Pendiente"), value: Math.max(totals.pending, 0) },
+                  ]}
+                  dataKey="value"
+                  innerRadius={70}
+                  outerRadius={100}
+                  paddingAngle={2}
+                  stroke="none"
+                >
+                  <Cell fill="var(--color-clay)" />
+                  <Cell fill="var(--color-clay-soft)" />
+                </Pie>
+                <Tooltip
+                  formatter={(v: number) => euro(Number(v), cur)}
+                  contentStyle={{
+                    background: "var(--color-panel)",
+                    border: "1px solid var(--color-line)",
+                    borderRadius: 12,
+                    fontSize: 12,
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                {tr("Gasto real")}
+              </span>
+              <span className="font-display text-2xl font-semibold">{euro(totals.actual, cur)}</span>
+            </div>
+          </div>
+          <div className="mt-4 space-y-2 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <span className="size-3 rounded-full bg-clay" /> {tr("Pagado")}
+              </span>
+              <span>{euro(totals.paid, cur)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <span className="size-3 rounded-full bg-clay-soft ring-1 ring-clay/30" /> {tr("Pendiente")}
+              </span>
+              <span>{euro(Math.max(totals.pending, 0), cur)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl bg-panel p-6 ring-1 ring-foreground/5">
+          <h2 className="font-display text-xl font-semibold">{tr("Por categoría")}</h2>
+          {chartData.length === 0 ? (
+            <p className="mt-3 text-sm text-muted-foreground">
+              {tr("Apuntad gastos reales para ver el desglose.")}
+            </p>
+          ) : (
+            <div className="mt-4" style={{ height: Math.max(240, chartData.length * 42) }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 16 }}>
+                  <XAxis
+                    type="number"
+                    tickFormatter={(v) => euro(Number(v), cur)}
+                    tick={{ fontSize: 11 }}
+                    stroke="var(--color-muted-foreground)"
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={150}
+                    tick={{ fontSize: 11 }}
+                    stroke="var(--color-muted-foreground)"
+                  />
+                  <Tooltip
+                    cursor={{ fill: "var(--color-clay-soft)" }}
+                    formatter={(v: number) => euro(Number(v), cur)}
+                    contentStyle={{
+                      background: "var(--color-background)",
+                      border: "1px solid var(--color-line)",
+                      borderRadius: 12,
+                      fontSize: 12,
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar dataKey="Pagado" stackId="a" fill="var(--color-clay)" radius={[0, 0, 0, 0]} />
+                  <Bar
+                    dataKey="Pendiente"
+                    stackId="a"
+                    fill="var(--color-clay-soft)"
+                    radius={[0, 6, 6, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+      </section>
+
       <form onSubmit={addCategory} className="mb-6 flex flex-wrap gap-3">
         <input
           value={newCategory}
@@ -336,7 +439,7 @@ export function Presupuesto({
                   >
                     ▸
                   </span>
-                  <span className="font-display text-xl font-semibold">{tr(cat.name)}</span>
+                  <span className="font-display text-xl font-semibold">{catLabel(cat.name, tr)}</span>
                   <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
                     {cat.rows.length === 1 ? tr("1 partida") : tr("{n} partidas", { n: cat.rows.length })}
                   </span>
@@ -395,7 +498,7 @@ export function Presupuesto({
                               >
                                 {categoryNames.map((n) => (
                                   <option key={n} value={n}>
-                                    {tr(n)}
+                                    {catLabel(n, tr)}
                                   </option>
                                 ))}
                               </select>
@@ -543,107 +646,7 @@ export function Presupuesto({
         })}
       </div>
 
-      <section className="mt-10 grid gap-6 lg:grid-cols-[320px_1fr]">
-        <div className="rounded-2xl bg-panel p-6 ring-1 ring-foreground/5">
-          <h2 className="font-display text-xl font-semibold">{tr("Pagado vs pendiente")}</h2>
-          <div className="relative mt-4 h-[240px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={[
-                    { name: tr("Pagado"), value: totals.paid },
-                    { name: tr("Pendiente"), value: Math.max(totals.pending, 0) },
-                  ]}
-                  dataKey="value"
-                  innerRadius={70}
-                  outerRadius={100}
-                  paddingAngle={2}
-                  stroke="none"
-                >
-                  <Cell fill="var(--color-clay)" />
-                  <Cell fill="var(--color-clay-soft)" />
-                </Pie>
-                <Tooltip
-                  formatter={(v: number) => euro(Number(v), cur)}
-                  contentStyle={{
-                    background: "var(--color-panel)",
-                    border: "1px solid var(--color-line)",
-                    borderRadius: 12,
-                    fontSize: 12,
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                {tr("Gasto real")}
-              </span>
-              <span className="font-display text-2xl font-semibold">{euro(totals.actual, cur)}</span>
-            </div>
-          </div>
-          <div className="mt-4 space-y-2 text-sm">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <span className="size-3 rounded-full bg-clay" /> {tr("Pagado")}
-              </span>
-              <span>{euro(totals.paid, cur)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <span className="size-3 rounded-full bg-clay-soft ring-1 ring-clay/30" /> {tr("Pendiente")}
-              </span>
-              <span>{euro(Math.max(totals.pending, 0), cur)}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl bg-panel p-6 ring-1 ring-foreground/5">
-          <h2 className="font-display text-xl font-semibold">{tr("Por categoría")}</h2>
-          {chartData.length === 0 ? (
-            <p className="mt-3 text-sm text-muted-foreground">
-              {tr("Apuntad gastos reales para ver el desglose.")}
-            </p>
-          ) : (
-            <div className="mt-4" style={{ height: Math.max(240, chartData.length * 42) }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 16 }}>
-                  <XAxis
-                    type="number"
-                    tickFormatter={(v) => euro(Number(v), cur)}
-                    tick={{ fontSize: 11 }}
-                    stroke="var(--color-muted-foreground)"
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    width={150}
-                    tick={{ fontSize: 11 }}
-                    stroke="var(--color-muted-foreground)"
-                  />
-                  <Tooltip
-                    cursor={{ fill: "var(--color-clay-soft)" }}
-                    formatter={(v: number) => euro(Number(v), cur)}
-                    contentStyle={{
-                      background: "var(--color-background)",
-                      border: "1px solid var(--color-line)",
-                      borderRadius: 12,
-                      fontSize: 12,
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar dataKey="Pagado" stackId="a" fill="var(--color-clay)" radius={[0, 0, 0, 0]} />
-                  <Bar
-                    dataKey="Pendiente"
-                    stackId="a"
-                    fill="var(--color-clay-soft)"
-                    radius={[0, 6, 6, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </div>
-      </section>
+      
     </div>
   );
 }

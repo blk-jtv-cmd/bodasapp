@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { catLabel } from "@/lib/category-emoji";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { BrandLogo, BrandName } from "@/components/brand";
@@ -91,6 +92,8 @@ type Guest = {
   companions: number;
   notes: string;
   seat_order: number;
+  /** Si es acompañante: id del invitado con el que viene. */
+  companion_of?: string | null;
 };
 type Vendor = {
   id: string;
@@ -210,10 +213,17 @@ function PanelPage() {
   const [loading, setLoading] = useState(true);
 
   const loadAll = useCallback(async (weddingId: string) => {
+    // Si aún no existe la columna companion_of en la base de datos, se cargan igual sin ella.
+    const loadGuests = async (id: string) => {
+      const cols = "id,name,guest_group,invited_by,rsvp,table_number,companions,notes,seat_order";
+      const res = await supabase.from("guests").select(`${cols},companion_of`).eq("wedding_id", id).order("created_at");
+      if (!res.error) return res;
+      return supabase.from("guests").select(cols).eq("wedding_id", id).order("created_at");
+    };
     const [t, e, g, v, tl, c, mt] = await Promise.all([
       supabase.from("tasks").select("id,title,category,due_date,done,owner,notes").eq("wedding_id", weddingId).order("created_at"),
       supabase.from("expenses").select("id,concept,category,planned,actual_cost,paid,notes").eq("wedding_id", weddingId).order("created_at"),
-      supabase.from("guests").select("id,name,guest_group,invited_by,rsvp,table_number,companions,notes,seat_order").eq("wedding_id", weddingId).order("created_at"),
+      loadGuests(weddingId),
       supabase.from("vendors").select("id,name,service,contact,phone,email,price,status,website,deposit_paid,contract_signed,notes").eq("wedding_id", weddingId).order("created_at"),
       supabase.from("timeline_items").select("id,time_label,title,owner").eq("wedding_id", weddingId).order("time_label"),
       supabase.from("expense_categories").select("id,name,sort_order").eq("wedding_id", weddingId).order("sort_order"),
@@ -465,7 +475,7 @@ function PanelPage() {
         {!locked && tab === "menu" && (
           <Menu weddingId={wedding.id} userId={userId} currency={wedding.currency} />
         )}
-        {!locked && tab === "invitados" && <Invitados guests={guests} {...ctx} />}
+        {!locked && tab === "invitados" && <Invitados guests={guests} tables={mesas} {...ctx} />}
         {!locked && tab === "mesas" && (
           <Mesas
             tables={mesas}
@@ -897,7 +907,7 @@ function Checklist({
         <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
           {categoryOptions.map((c) => (
             <option key={c} value={c}>
-              {tr(c)}
+              {catLabel(c, tr)}
             </option>
           ))}
         </select>
@@ -928,7 +938,7 @@ function Checklist({
         )}
         {orderedGroups.map(([group, items]) => (
           <div key={group}>
-            <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">{tr(group)}</div>
+            <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">{catLabel(group, tr)}</div>
             <ul className="space-y-2">
               {items.map((t) => (
                 <li key={t.id} className="rounded-lg bg-panel px-4 py-3 text-sm">
@@ -948,7 +958,7 @@ function Checklist({
                       >
                         {categoryOptions.map((c) => (
                           <option key={c} value={c}>
-                            {tr(c)}
+                            {catLabel(c, tr)}
                           </option>
                         ))}
                       </select>
@@ -964,17 +974,35 @@ function Checklist({
                       </button>
                     </form>
                   ) : (
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                     <input
                       type="checkbox"
                       checked={t.done}
                       onChange={() => toggle(t)}
-                      className="size-4 accent-clay-ink"
+                      className="size-4 shrink-0 accent-clay-ink"
                     />
-                    <span className={t.done ? "text-muted-foreground line-through" : ""}>{tr(t.title)}</span>
+                    <span className={`min-w-[12rem] flex-1 ${t.done ? "text-muted-foreground line-through" : ""}`}>
+                      {tr(t.title)}
+                    </span>
+                    <div className="w-32 shrink-0">
+                      <TextField
+                        value={t.owner ?? ""}
+                        onSave={(owner) => patchTask(t.id, { owner })}
+                        placeholder={tr("Responsable")}
+                        className="py-1.5 text-xs"
+                      />
+                    </div>
+                    <div className="w-44 shrink-0">
+                      <TextField
+                        value={t.notes ?? ""}
+                        onSave={(notes) => patchTask(t.id, { notes })}
+                        placeholder={tr("Notas")}
+                        className="py-1.5 text-xs"
+                      />
+                    </div>
                     <button
                       onClick={() => setEditing({ id: t.id, title: tr(t.title), category: t.category })}
-                      className="ml-auto text-xs text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground"
+                      className="text-xs text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground"
                     >
                       {tr("Editar")}
                     </button>
@@ -986,20 +1014,6 @@ function Checklist({
                     </button>
                   </div>
                   )}
-                  <div className="mt-2 flex flex-wrap gap-2 pl-7">
-                    <TextField
-                      value={t.owner ?? ""}
-                      onSave={(owner) => patchTask(t.id, { owner })}
-                      placeholder={tr("Responsable")}
-                      className="w-40 py-1.5 text-xs"
-                    />
-                    <TextField
-                      value={t.notes ?? ""}
-                      onSave={(notes) => patchTask(t.id, { notes })}
-                      placeholder={tr("Notas")}
-                      className="min-w-[10rem] flex-1 py-1.5 text-xs"
-                    />
-                  </div>
                 </li>
               ))}
             </ul>
@@ -1021,11 +1035,13 @@ const RSVP_LABEL: Record<string, string> = {
 
 function Invitados({
   guests,
+  tables,
   wedding,
   userId,
   reload,
 }: {
   guests: Guest[];
+  tables: MesaTable[];
   wedding: Wedding;
   userId: string;
   reload: () => Promise<void>;
@@ -1037,6 +1053,7 @@ function Invitados({
     invited_by: hosts[0]!,
     guest_group: "Familia",
     notes: "",
+    extra: "0",
   });
   const [editing, setEditing] = useState<{ id: string; name: string; invited_by: string; guest_group: string } | null>(
     null,
@@ -1059,22 +1076,48 @@ function Invitados({
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.name.trim()) return;
-    const { error } = await supabase.from("guests").insert({
-      name: form.name,
-      guest_group: form.guest_group,
-      invited_by: form.invited_by,
-      notes: form.notes.trim(),
-      wedding_id: wedding.id,
-      user_id: userId,
-    });
-    if (error) {
+    const name = form.name.trim();
+    if (!name) return;
+    const extra = Math.min(Math.max(Math.round(Number(form.extra) || 0), 0), 20);
+    const { data: host, error } = await supabase
+      .from("guests")
+      .insert({
+        name,
+        guest_group: form.guest_group,
+        invited_by: form.invited_by,
+        notes: form.notes.trim(),
+        wedding_id: wedding.id,
+        user_id: userId,
+      })
+      .select("id")
+      .single();
+    if (error || !host) {
       toast.error(tr("No se ha podido guardar"));
       return;
     }
-    setForm({ name: "", invited_by: hosts[0]!, guest_group: "Familia", notes: "" });
+    if (extra > 0) {
+      // Cada acompañante es un invitado propio (se puede renombrar y sentar donde se quiera).
+      const rows = Array.from({ length: extra }, (_, i) => ({
+        name:
+          extra === 1
+            ? tr("Acompañante de {name}", { name })
+            : `${tr("Acompañante de {name}", { name })} ${i + 1}`,
+        guest_group: "Acompañante",
+        invited_by: form.invited_by,
+        notes: "",
+        companion_of: host.id,
+        wedding_id: wedding.id,
+        user_id: userId,
+      }));
+      const { error: compError } = await supabase.from("guests").insert(rows);
+      if (compError) toast.error(tr("No se han podido añadir los acompañantes"));
+    }
+    setForm({ name: "", invited_by: hosts[0]!, guest_group: "Familia", notes: "", extra: "0" });
     await reload();
   }
+
+  const tableName = (id: string | null) => (id ? tables.find((t) => t.id === id)?.name ?? null : null);
+  const companionsOf = (id: string) => guests.filter((x) => x.companion_of === id);
 
   const groupData = Array.from(
     guests.reduce((map, g) => {
@@ -1100,161 +1143,8 @@ function Invitados({
           Number(wedding.guest_target) ? ` · ${tr("objetivo {n}", { n: wedding.guest_target })}` : ""
         }`}
       />
-      <form onSubmit={add} className="mb-8 flex flex-wrap gap-3">
-        <input
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          placeholder={tr("Nombre")}
-          className={`${inputClass} flex-1 min-w-[180px]`}
-        />
-        <label className="flex items-center gap-2 text-xs text-muted-foreground">
-          {tr("Invitado de")}
-          <select
-            value={form.invited_by}
-            onChange={(e) => setForm({ ...form, invited_by: e.target.value })}
-            className={inputClass}
-          >
-            {hosts.map((h) => (
-              <option key={h} value={h}>
-                {tr(h)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <select
-          value={form.guest_group}
-          onChange={(e) => setForm({ ...form, guest_group: e.target.value })}
-          className={inputClass}
-        >
-          {GUEST_GROUPS.map((g) => (
-            <option key={g} value={g}>
-              {tr(g)}
-            </option>
-          ))}
-        </select>
-        <input
-          value={form.notes}
-          onChange={(e) => setForm({ ...form, notes: e.target.value })}
-          placeholder={tr("Notas (opcional)")}
-          className={`${inputClass} min-w-[200px] flex-1`}
-        />
-        <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground hover:bg-clay-ink hover:text-background">
-          {tr("Añadir")}
-        </button>
-      </form>
-
-      <ul className="space-y-2">
-        {guests.map((g) =>
-          editing?.id === g.id ? (
-            <li key={g.id} className="rounded-lg bg-panel px-4 py-3 text-sm ring-1 ring-clay/60">
-              <form onSubmit={saveEdit} className="flex flex-wrap items-center gap-3">
-                <input
-                  value={editing.name}
-                  onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                  autoFocus
-                  required
-                  placeholder={tr("Nombre")}
-                  className={`${inputClass} min-w-[200px] flex-1`}
-                />
-                <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                  {tr("Invitado de")}
-                  <select
-                    value={editing.invited_by}
-                    onChange={(e) => setEditing({ ...editing, invited_by: e.target.value })}
-                    className={inputClass}
-                  >
-                    {Array.from(new Set([...hosts, editing.invited_by].filter(Boolean))).map((h) => (
-                      <option key={h} value={h}>
-                        {tr(h)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <select
-                  value={editing.guest_group}
-                  onChange={(e) => setEditing({ ...editing, guest_group: e.target.value })}
-                  className={inputClass}
-                >
-                  {Array.from(new Set([...GUEST_GROUPS, editing.guest_group].filter(Boolean))).map((gr) => (
-                    <option key={gr} value={gr}>
-                      {tr(gr)}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => setEditing(null)}
-                  className="text-xs text-muted-foreground hover:text-foreground"
-                >
-                  {tr("Cancelar")}
-                </button>
-                <button className="rounded-full bg-clay px-4 py-1.5 text-xs font-medium text-foreground hover:bg-clay-ink hover:text-background">
-                  {tr("Guardar")}
-                </button>
-              </form>
-            </li>
-          ) : (
-          <li key={g.id} className="flex flex-wrap items-center gap-3 rounded-lg bg-panel px-4 py-3 text-sm">
-            <span className="font-medium">{g.name}</span>
-            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              {tr(g.guest_group)}
-              {g.invited_by && ` · ${tr("de {name}", { name: tr(g.invited_by) })}`}
-            </span>
-            <input
-              defaultValue={g.notes ?? ""}
-              placeholder={tr("Notas")}
-              onBlur={async (e) => {
-                const next = e.target.value;
-                if (next === (g.notes ?? "")) return;
-                await supabase.from("guests").update({ notes: next }).eq("id", g.id);
-                await reload();
-              }}
-              className="w-48 rounded-md border border-transparent bg-transparent px-2 py-1 text-sm outline-none placeholder:text-muted-foreground/60 hover:border-line focus:border-clay-ink focus:bg-background"
-            />
-            <select
-              value={g.rsvp}
-              onChange={async (e) => {
-                await supabase.from("guests").update({ rsvp: e.target.value }).eq("id", g.id);
-                await reload();
-              }}
-              className="ml-auto rounded-lg border border-line bg-background px-2 py-1 text-xs"
-            >
-              {RSVP.map((r) => (
-                <option key={r} value={r}>
-                  {tr(r)}
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={() =>
-                setEditing({ id: g.id, name: g.name, invited_by: g.invited_by, guest_group: g.guest_group })
-              }
-              className="text-xs text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground"
-            >
-              {tr("Editar")}
-            </button>
-            <button
-              onClick={async () => {
-                if (!window.confirm(tr("¿Borrar {name}?", { name: g.name }))) return;
-                await supabase.from("guests").delete().eq("id", g.id);
-                await reload();
-              }}
-              className="text-xs text-muted-foreground hover:text-foreground"
-            >
-              {tr("Borrar")}
-            </button>
-          </li>
-          ),
-        )}
-        {guests.length === 0 && (
-          <li className="rounded-lg bg-panel px-4 py-8 text-center text-sm text-muted-foreground">
-            {tr("Empezad añadiendo a la familia más cercana.")}
-          </li>
-        )}
-      </ul>
-
       {guests.length > 0 && (
-        <section className="mt-10 grid gap-6 lg:grid-cols-2">
+        <section className="mb-8 grid gap-6 lg:grid-cols-2">
           <div className="rounded-2xl bg-panel p-6 ring-1 ring-foreground/5">
             <h2 className="font-display text-xl font-semibold">{tr("Invitados por grupo")}</h2>
             <div className="mt-4" style={{ height: Math.max(220, groupData.length * 52) }}>
@@ -1339,6 +1229,196 @@ function Invitados({
           </div>
         </section>
       )}
+      <form onSubmit={add} className="mb-8 flex flex-wrap gap-3">
+        <input
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          placeholder={tr("Nombre")}
+          className={`${inputClass} flex-1 min-w-[180px]`}
+        />
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          {tr("Invitado de")}
+          <select
+            value={form.invited_by}
+            onChange={(e) => setForm({ ...form, invited_by: e.target.value })}
+            className={inputClass}
+          >
+            {hosts.map((h) => (
+              <option key={h} value={h}>
+                {tr(h)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <select
+          value={form.guest_group}
+          onChange={(e) => setForm({ ...form, guest_group: e.target.value })}
+          className={inputClass}
+        >
+          {GUEST_GROUPS.map((g) => (
+            <option key={g} value={g}>
+              {tr(g)}
+            </option>
+          ))}
+        </select>
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          {tr("Acompañantes")}
+          <input
+            type="number"
+            min={0}
+            max={20}
+            value={form.extra}
+            onChange={(e) => setForm({ ...form, extra: e.target.value })}
+            className={`${inputClass} w-16`}
+          />
+        </label>
+        <input
+          value={form.notes}
+          onChange={(e) => setForm({ ...form, notes: e.target.value })}
+          placeholder={tr("Notas (opcional)")}
+          className={`${inputClass} min-w-[200px] flex-1`}
+        />
+        <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground hover:bg-clay-ink hover:text-background">
+          {tr("Añadir")}
+        </button>
+      </form>
+
+      <ul className="space-y-2">
+        {guests.map((g) =>
+          editing?.id === g.id ? (
+            <li key={g.id} className="rounded-lg bg-panel px-4 py-3 text-sm ring-1 ring-clay/60">
+              <form onSubmit={saveEdit} className="flex flex-wrap items-center gap-3">
+                <input
+                  value={editing.name}
+                  onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                  autoFocus
+                  required
+                  placeholder={tr("Nombre")}
+                  className={`${inputClass} min-w-[200px] flex-1`}
+                />
+                <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                  {tr("Invitado de")}
+                  <select
+                    value={editing.invited_by}
+                    onChange={(e) => setEditing({ ...editing, invited_by: e.target.value })}
+                    className={inputClass}
+                  >
+                    {Array.from(new Set([...hosts, editing.invited_by].filter(Boolean))).map((h) => (
+                      <option key={h} value={h}>
+                        {tr(h)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <select
+                  value={editing.guest_group}
+                  onChange={(e) => setEditing({ ...editing, guest_group: e.target.value })}
+                  className={inputClass}
+                >
+                  {Array.from(new Set([...GUEST_GROUPS, editing.guest_group].filter(Boolean))).map((gr) => (
+                    <option key={gr} value={gr}>
+                      {tr(gr)}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setEditing(null)}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  {tr("Cancelar")}
+                </button>
+                <button className="rounded-full bg-clay px-4 py-1.5 text-xs font-medium text-foreground hover:bg-clay-ink hover:text-background">
+                  {tr("Guardar")}
+                </button>
+              </form>
+            </li>
+          ) : (
+          <li
+            key={g.id}
+            className={`flex flex-wrap items-center gap-3 rounded-lg bg-panel px-4 py-3 text-sm ${
+              g.companion_of ? "ml-6 border-l-2 border-clay" : ""
+            }`}
+          >
+            <span className="font-medium">{g.name}</span>
+            {(() => {
+              const n = companionsOf(g.id).length + (g.companions || 0);
+              return n > 0 ? (
+                <span className="rounded-full bg-clay-soft px-2 py-0.5 font-mono text-[10px] text-clay-ink">+{n}</span>
+              ) : null;
+            })()}
+            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+              {g.companion_of
+                ? tr("Viene con {name}", { name: guests.find((x) => x.id === g.companion_of)?.name ?? "—" })
+                : tr(g.guest_group)}
+              {g.invited_by && ` · ${tr("de {name}", { name: tr(g.invited_by) })}`}
+            </span>
+            {tableName(g.table_number) && (
+              <span className="rounded-full bg-background px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-clay-ink ring-1 ring-clay/40">
+                {tableName(g.table_number)}
+              </span>
+            )}
+            <input
+              defaultValue={g.notes ?? ""}
+              placeholder={tr("Notas")}
+              onBlur={async (e) => {
+                const next = e.target.value;
+                if (next === (g.notes ?? "")) return;
+                await supabase.from("guests").update({ notes: next }).eq("id", g.id);
+                await reload();
+              }}
+              className="w-48 rounded-md border border-transparent bg-transparent px-2 py-1 text-sm outline-none placeholder:text-muted-foreground/60 hover:border-line focus:border-clay-ink focus:bg-background"
+            />
+            <select
+              value={g.rsvp}
+              onChange={async (e) => {
+                const rsvp = e.target.value;
+                await supabase.from("guests").update({ rsvp }).eq("id", g.id);
+                // Los acompañantes siguen la respuesta del invitado con el que vienen.
+                if (companionsOf(g.id).length) await supabase.from("guests").update({ rsvp }).eq("companion_of", g.id);
+                await reload();
+              }}
+              className="ml-auto rounded-lg border border-line bg-background px-2 py-1 text-xs"
+            >
+              {RSVP.map((r) => (
+                <option key={r} value={r}>
+                  {tr(r)}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={() =>
+                setEditing({ id: g.id, name: g.name, invited_by: g.invited_by, guest_group: g.guest_group })
+              }
+              className="text-xs text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground"
+            >
+              {tr("Editar")}
+            </button>
+            <button
+              onClick={async () => {
+                const comps = companionsOf(g.id).length;
+                const msg = comps
+                  ? tr("¿Borrar {name} y sus {n} acompañantes?", { name: g.name, n: comps })
+                  : tr("¿Borrar {name}?", { name: g.name });
+                if (!window.confirm(msg)) return;
+                await supabase.from("guests").delete().eq("id", g.id);
+                await reload();
+              }}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              {tr("Borrar")}
+            </button>
+          </li>
+          ),
+        )}
+        {guests.length === 0 && (
+          <li className="rounded-lg bg-panel px-4 py-8 text-center text-sm text-muted-foreground">
+            {tr("Empezad añadiendo a la familia más cercana.")}
+          </li>
+        )}
+      </ul>
+
+
     </div>
   );
 }
@@ -1533,7 +1613,7 @@ function Proveedores({
         >
           {services.map((s) => (
             <option key={s} value={s}>
-              {tr(s)}
+              {catLabel(s, tr)}
             </option>
           ))}
         </select>
@@ -1653,7 +1733,7 @@ function Proveedores({
                   >
                     {services.map((s) => (
                       <option key={s} value={s}>
-                        {tr(s)}
+                        {catLabel(s, tr)}
                       </option>
                     ))}
                   </select>
@@ -1683,7 +1763,7 @@ function Proveedores({
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="font-display text-xl font-semibold">{v.name}</div>
-                  <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-clay-ink">{tr(v.service)}</div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-clay-ink">{catLabel(v.service, tr)}</div>
                 </div>
                 <div className="font-display text-lg">{money(Number(v.price), wedding.currency)}</div>
               </div>
