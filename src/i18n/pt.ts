@@ -855,6 +855,13 @@ const dict: Record<string, string> = {
   "¿Podrás acompañarnos? Contéstanos antes del {date}.": "Podes acompanhar-nos? Responde-nos até {date}.",
   "¿Preferís un enlace para cada uno? Pulsad «Enlace» junto a cada invitado: verá su nombre y sus acompañantes ya puestos, y nadie más podrá responder por él.": "Preferem um link para cada um? Toquem em «Link» junto a cada convidado: verá o nome e os acompanhantes já preenchidos, e mais ninguém poderá responder por ele.",
   "¿Quién eres?": "Quem és?",
+  "¿Vienes con alguien?": "Vens com alguém?",
+  "Añade a tu pareja, acompañantes o niños para que os reserven sitio y menú.": "Adiciona o teu par, acompanhantes ou crianças para vos reservarem lugar e menu.",
+  "Dinos quién viene contigo y si hay niños.": "Diz-nos quem vem contigo e se há crianças.",
+  "Nombre del niño o la niña": "Nome da criança",
+  "Añadir niño/a": "Adicionar criança",
+  "Dejar que añadan acompañantes y niños": "Permitir adicionar acompanhantes e crianças",
+  "Si lo apagáis, solo podrán responder por los acompañantes que vosotros hayáis previsto": "Se o desligarem, só poderão responder pelos acompanhantes que vocês previram",
 };
 
 export default dict;

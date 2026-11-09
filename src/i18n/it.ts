@@ -855,6 +855,13 @@ const dict: Record<string, string> = {
   "¿Podrás acompañarnos? Contéstanos antes del {date}.": "Potrai essere con noi? Rispondici entro il {date}.",
   "¿Preferís un enlace para cada uno? Pulsad «Enlace» junto a cada invitado: verá su nombre y sus acompañantes ya puestos, y nadie más podrá responder por él.": "Preferite un link per ciascuno? Toccate «Link» accanto a ogni invitato: vedrà il suo nome e i suoi accompagnatori già inseriti, e nessun altro potrà rispondere per lui.",
   "¿Quién eres?": "Chi sei?",
+  "¿Vienes con alguien?": "Vieni con qualcuno?",
+  "Añade a tu pareja, acompañantes o niños para que os reserven sitio y menú.": "Aggiungi partner, accompagnatori o bambini così vi riservano posto e menù.",
+  "Dinos quién viene contigo y si hay niños.": "Dicci chi viene con te e se ci sono bambini.",
+  "Nombre del niño o la niña": "Nome del bambino o della bambina",
+  "Añadir niño/a": "Aggiungi bambino/a",
+  "Dejar que añadan acompañantes y niños": "Permetti di aggiungere accompagnatori e bambini",
+  "Si lo apagáis, solo podrán responder por los acompañantes que vosotros hayáis previsto": "Se lo spegnete, potranno rispondere solo per gli accompagnatori che avete previsto voi",
 };
 
 export default dict;

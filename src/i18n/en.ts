@@ -855,6 +855,13 @@ const dict: Record<string, string> = {
   "¿Podrás acompañarnos? Contéstanos antes del {date}.": "Can you join us? Please reply by {date}.",
   "¿Preferís un enlace para cada uno? Pulsad «Enlace» junto a cada invitado: verá su nombre y sus acompañantes ya puestos, y nadie más podrá responder por él.": "Prefer one link per guest? Tap “Link” next to each guest: they'll see their name and plus-ones already filled in, and nobody else can reply for them.",
   "¿Quién eres?": "Who are you?",
+  "¿Vienes con alguien?": "Are you bringing anyone?",
+  "Añade a tu pareja, acompañantes o niños para que os reserven sitio y menú.": "Add your partner, plus-ones or children so they save you a seat and a meal.",
+  "Dinos quién viene contigo y si hay niños.": "Tell us who's coming with you and whether there are children.",
+  "Nombre del niño o la niña": "Child's name",
+  "Añadir niño/a": "Add a child",
+  "Dejar que añadan acompañantes y niños": "Let guests add plus-ones and children",
+  "Si lo apagáis, solo podrán responder por los acompañantes que vosotros hayáis previsto": "If it's off, they can only reply for the plus-ones you added",
 };
 
 export default dict;
