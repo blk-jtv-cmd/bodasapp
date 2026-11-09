@@ -1267,8 +1267,34 @@ function Proveedores({
     notes: "",
   });
   const [newService, setNewService] = useState("");
+  // Ficha que se está editando (nombre, categoría, contacto y precio).
+  const [editing, setEditing] = useState<{
+    id: string;
+    name: string;
+    service: string;
+    contact: string;
+    phone: string;
+    email: string;
+    website: string;
+    price: string;
+  } | null>(null);
 
   const service = form.service || services[0] || "Otros";
+
+  async function saveEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editing || !editing.name.trim()) return;
+    await update(editing.id, {
+      name: editing.name.trim(),
+      service: editing.service,
+      contact: editing.contact.trim(),
+      phone: editing.phone.trim(),
+      email: editing.email.trim(),
+      website: editing.website.trim(),
+      price: parseAmount(editing.price),
+    });
+    setEditing(null);
+  }
 
   async function addService(e: React.FormEvent) {
     e.preventDefault();
@@ -1334,6 +1360,13 @@ function Proveedores({
   async function update(
     id: string,
     patch: {
+      name?: string;
+      service?: string;
+      contact?: string;
+      phone?: string;
+      email?: string;
+      website?: string;
+      price?: number;
       status?: string;
       deposit_paid?: number;
       contract_signed?: boolean;
@@ -1462,6 +1495,61 @@ function Proveedores({
       <div className="grid gap-4 md:grid-cols-2">
         {vendors.map((v) => {
           const pending = Number(v.price) - Number(v.deposit_paid);
+          if (editing?.id === v.id) {
+            const field = (key: "name" | "contact" | "phone" | "email" | "website" | "price", label: string, extra = {}) => (
+              <label className="flex flex-col gap-1">
+                <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{label}</span>
+                <input
+                  value={editing[key]}
+                  onChange={(e) => setEditing({ ...editing, [key]: e.target.value })}
+                  className={inputClass}
+                  {...extra}
+                />
+              </label>
+            );
+            return (
+              <form
+                key={v.id}
+                onSubmit={saveEdit}
+                className="grid gap-3 rounded-2xl bg-panel p-5 ring-1 ring-clay/60 sm:grid-cols-2"
+              >
+                {field("name", tr("Nombre"), { required: true, autoFocus: true })}
+                <label className="flex flex-col gap-1">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+                    {tr("Categoría")}
+                  </span>
+                  <select
+                    value={editing.service}
+                    onChange={(e) => setEditing({ ...editing, service: e.target.value })}
+                    className={inputClass}
+                  >
+                    {services.map((s) => (
+                      <option key={s} value={s}>
+                        {tr(s)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {field("contact", tr("Persona de contacto"))}
+                {field("phone", tr("Teléfono"), { type: "tel" })}
+                {field("email", tr("Email"), { type: "email" })}
+                {field("website", tr("Web o Instagram"))}
+                {field("price", `${tr("Precio total")} ${currencySymbol(wedding.currency)}`, { inputMode: "decimal" })}
+                <div className="flex items-end justify-end gap-3 sm:col-span-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditing(null)}
+                    className="rounded-full border border-line px-5 py-2 text-sm font-medium hover:border-clay"
+                  >
+                    {tr("Cancelar")}
+                  </button>
+                  <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground hover:bg-clay-ink hover:text-background">
+                    {tr("Guardar")}
+                  </button>
+                </div>
+              </form>
+            );
+          }
           return (
             <div key={v.id} className="rounded-2xl bg-panel p-5 ring-1 ring-foreground/5">
               <div className="flex items-start justify-between gap-3">
@@ -1547,11 +1635,29 @@ function Proveedores({
                   {tr("Contrato firmado")}
                 </label>
                 <button
+                  onClick={() =>
+                    setEditing({
+                      id: v.id,
+                      name: v.name,
+                      service: v.service,
+                      contact: v.contact ?? "",
+                      phone: v.phone ?? "",
+                      email: v.email ?? "",
+                      website: v.website ?? "",
+                      price: String(Number(v.price) || ""),
+                    })
+                  }
+                  className="ml-auto text-xs text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground"
+                >
+                  {tr("Editar")}
+                </button>
+                <button
                   onClick={async () => {
+                    if (!window.confirm(tr("¿Borrar {name}?", { name: v.name }))) return;
                     await supabase.from("vendors").delete().eq("id", v.id);
                     await reload();
                   }}
-                  className="ml-auto text-xs text-muted-foreground hover:text-foreground"
+                  className="text-xs text-muted-foreground hover:text-foreground"
                 >
                   {tr("Borrar")}
                 </button>
