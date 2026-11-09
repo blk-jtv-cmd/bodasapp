@@ -61,8 +61,9 @@ const docs: LegalDocs = {
         h: "2. Quelles données nous traitons",
         p: [
           "• Données du compte : e-mail, mot de passe (stocké chiffré ; nous ne pouvons pas le voir) et les prénoms du couple.",
-          "• Données que vous saisissez pour organiser le mariage : date, lieu, budget, tâches, prestataires, lieux, menu, planning et liste d'invités (nom, coordonnées, groupe, table, régimes alimentaires et notes).",
+          "• Données que vous saisissez pour organiser le mariage : date, lieu, budget, tâches, prestataires, lieux, menu, planning et liste d'invités (nom, groupe, table, accompagnants, s'il s'agit d'un enfant, allergies ou régime, réponse à l'invitation et notes).",
           "• Données de paiement : le paiement est géré par Stripe. Nous ne voyons ni ne conservons les données de carte ; nous recevons uniquement la confirmation du paiement, l'e-mail et l'identifiant de la transaction.",
+          "• Suggestions que vous nous envoyez depuis les Réglages : le message et l'e-mail du compte.",
           "• Données techniques : la langue choisie et la session ouverte dans ton navigateur.",
         ],
       },
@@ -73,6 +74,7 @@ const docs: LegalDocs = {
           "• Gérer le paiement, la facturation et les obligations comptables et fiscales. Base légale : contrat et obligation légale (art. 6.1.b et 6.1.c RGPD).",
           "• Répondre à tes demandes. Base légale : ta demande et notre intérêt légitime à t'aider (art. 6.1.f RGPD).",
           "• Assurer la sécurité du service et prévenir les abus. Base légale : intérêt légitime (art. 6.1.f RGPD).",
+          "• Lire vos suggestions et nous en servir pour améliorer l'outil. Base légale : intérêt légitime (art. 6.1.f RGPD).",
           "Nous n'envoyons pas de publicité sans ton consentement, nous ne vendons pas de données et nous ne prenons pas de décisions automatisées ni ne faisons de profilage.",
         ],
       },
@@ -80,7 +82,9 @@ const docs: LegalDocs = {
         h: "4. Données de vos invités et prestataires",
         p: [
           "En ajoutant les données d'autres personnes (invités, prestataires), vous garantissez être en droit de le faire, par exemple parce qu'elles vous les ont communiquées pour organiser le mariage, et de ne les utiliser qu'à cette fin. Nous ne les traitons que pour vous fournir le service, pour votre compte.",
-          "Les régimes alimentaires peuvent révéler des informations de santé (par exemple, la maladie cœliaque). Ne saisissez que le strict nécessaire pour organiser le menu.",
+          "Allergies et régime : savoir qu'un invité est cœliaque ou allergique est une donnée de santé (art. 9 RGPD). Ce champ est facultatif et sert uniquement à organiser le menu avec le traiteur. Nous n'utilisons pas cette information à d'autres fins, nous ne la partageons avec personne et nous n'y accédons que si c'est nécessaire pour résoudre un problème que vous nous signalez. Si vous préférez, laissez-le vide et prévenez directement le traiteur.",
+          "Enfants : vous pouvez indiquer qu'un invité est un enfant pour compter les menus enfants. Nous ne demandons ni âge ni date de naissance ; le prénom suffit.",
+          "Si un invité vous demande de corriger ou de supprimer ses données, vous pouvez le faire à tout moment depuis la liste d'invités.",
         ],
       },
       {
@@ -99,13 +103,13 @@ const docs: LegalDocs = {
       {
         h: "6. Durée de conservation",
         p: [
-          "Tant que ton compte est actif. Si tu le supprimes ou en demandes l'effacement, nous supprimerons tes données sous 30 jours maximum, sauf les données de facturation, que nous devons conserver pendant les durées prévues par la loi (en général jusqu'à 6 ans).",
+          "Tant que ton compte est actif. Si tu le supprimes ou en demandes l'effacement, nous supprimerons tes données sous 30 jours maximum, sauf les données de facturation, que nous devons conserver pendant les durées prévues par la loi (en général jusqu'à 6 ans). Si tu supprimes ton compte depuis les Réglages, le mariage et toutes ses données (y compris les suggestions envoyées) sont effacés immédiatement ; les sauvegardes techniques sont renouvelées sous 30 jours maximum.",
         ],
       },
       {
         h: "7. Tes droits",
         p: [
-          "Tu peux exercer tes droits d'accès, de rectification, d'effacement, d'opposition, de limitation du traitement et de portabilité, et retirer ton consentement à tout moment, en écrivant à {email}. Indique quel droit tu souhaites exercer.",
+          "Tu peux exercer tes droits d'accès, de rectification, d'effacement, d'opposition, de limitation du traitement et de portabilité, et retirer ton consentement à tout moment, en écrivant à {email}. Indique quel droit tu souhaites exercer. Depuis les Réglages, tu peux aussi télécharger une copie de toutes vos données ou supprimer ton compte toi-même.",
           "Si tu estimes que ta demande n'a pas été traitée correctement, tu peux introduire une réclamation auprès de l'Agence espagnole de protection des données (www.aepd.es) ou de la CNIL.",
         ],
       },
@@ -140,6 +144,7 @@ const docs: LegalDocs = {
           "Nous utilisons uniquement un stockage technique, nécessaire au fonctionnement du service, qui ne requiert pas de consentement :",
           "• Session utilisateur (stockage local, Supabase) : te garde connecté. Dure jusqu'à la déconnexion.",
           "• Langue (stockage local) : mémorise la langue choisie. Dure jusqu'à ce que tu la supprimes.",
+          "• Avis fermés (stockage local) : mémorise que tu as fermé l'avis pour installer l'application, pour ne plus l'afficher. Dure jusqu'à ce que tu le supprimes.",
           "Nous n'utilisons pas de cookies d'analyse, de publicité ou de réseaux sociaux.",
         ],
       },

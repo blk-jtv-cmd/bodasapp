@@ -61,8 +61,9 @@ const docs: LegalDocs = {
         h: "2. Quali dati trattiamo",
         p: [
           "• Dati dell'account: email, password (conservata in forma cifrata; noi non possiamo vederla) e i nomi della coppia.",
-          "• Dati che inserite per organizzare il matrimonio: data, luogo, budget, attività, fornitori, location, menù, programma e lista degli invitati (nome, recapiti, gruppo, tavolo, esigenze alimentari e note).",
+          "• Dati che inserite per organizzare il matrimonio: data, luogo, budget, attività, fornitori, location, menù, programma e lista degli invitati (nome, gruppo, tavolo, accompagnatori, se è un bambino o una bambina, allergie o dieta, conferma di partecipazione e note).",
           "• Dati di pagamento: il pagamento è gestito da Stripe. Non vediamo né conserviamo i dati della carta; riceviamo solo la conferma del pagamento, l'email e l'identificativo dell'operazione.",
+          "• Suggerimenti che ci inviate dalle Impostazioni: il messaggio e l'email dell'account.",
           "• Dati tecnici: la lingua scelta e la sessione aperta nel tuo browser.",
         ],
       },
@@ -73,6 +74,7 @@ const docs: LegalDocs = {
           "• Gestire il pagamento, la fatturazione e gli obblighi contabili e fiscali. Base giuridica: contratto e obbligo di legge (art. 6.1.b e 6.1.c GDPR).",
           "• Rispondere alle tue richieste. Base giuridica: la tua richiesta e il nostro legittimo interesse ad assisterti (art. 6.1.f GDPR).",
           "• Garantire la sicurezza del servizio e prevenire abusi. Base giuridica: legittimo interesse (art. 6.1.f GDPR).",
+          "• Leggere i vostri suggerimenti e usarli per migliorare lo strumento. Base giuridica: legittimo interesse (art. 6.1.f GDPR).",
           "Non inviamo pubblicità senza il tuo consenso, non vendiamo dati e non prendiamo decisioni automatizzate né facciamo profilazione.",
         ],
       },
@@ -80,7 +82,9 @@ const docs: LegalDocs = {
         h: "4. Dati dei vostri invitati e fornitori",
         p: [
           "Inserendo dati di altre persone (invitati, fornitori) garantite di poterlo fare, ad esempio perché ve li hanno forniti per organizzare il matrimonio, e di usarli solo a tale scopo. Noi li trattiamo solo per fornirvi il servizio e per vostro conto.",
-          "Le esigenze alimentari possono rivelare informazioni sulla salute (ad esempio la celiachia). Inserite solo quanto strettamente necessario per organizzare il menù.",
+          "Allergie e dieta: sapere che un invitato è celiaco o allergico è un'informazione sulla salute (art. 9 GDPR). È un campo facoltativo che serve solo a organizzare il menù con il catering. Non usiamo queste informazioni per altro, non le condividiamo con nessuno e vi accediamo solo se serve a risolvere un problema che ci segnalate. Se preferite, lasciatelo vuoto e comunicatelo direttamente al catering.",
+          "Bambini: potete indicare che un invitato è un bambino o una bambina per contare i menù bimbi. Non chiediamo età né data di nascita; basta il nome.",
+          "Se un invitato vi chiede di correggere o cancellare i suoi dati, potete farlo in qualsiasi momento dalla lista degli invitati.",
         ],
       },
       {
@@ -99,13 +103,13 @@ const docs: LegalDocs = {
       {
         h: "6. Per quanto tempo li conserviamo",
         p: [
-          "Finché il tuo account è attivo. Se lo elimini o ci chiedi la cancellazione, elimineremo i tuoi dati entro 30 giorni, tranne i dati di fatturazione, che dobbiamo conservare per i periodi previsti dalla legge (in generale fino a 6 anni).",
+          "Finché il tuo account è attivo. Se lo elimini o ci chiedi la cancellazione, elimineremo i tuoi dati entro 30 giorni, tranne i dati di fatturazione, che dobbiamo conservare per i periodi previsti dalla legge (in generale fino a 6 anni). Se elimini l'account dalle Impostazioni, il matrimonio e tutti i suoi dati (compresi i suggerimenti inviati) vengono cancellati subito; i backup tecnici si rinnovano entro un massimo di 30 giorni.",
         ],
       },
       {
         h: "7. I tuoi diritti",
         p: [
-          "Puoi esercitare i diritti di accesso, rettifica, cancellazione, opposizione, limitazione del trattamento e portabilità, e revocare il consenso in qualsiasi momento, scrivendo a {email}. Indica quale diritto vuoi esercitare.",
+          "Puoi esercitare i diritti di accesso, rettifica, cancellazione, opposizione, limitazione del trattamento e portabilità, e revocare il consenso in qualsiasi momento, scrivendo a {email}. Indica quale diritto vuoi esercitare. Dalle Impostazioni puoi anche scaricare una copia di tutti i vostri dati o eliminare l'account in autonomia.",
           "Se ritieni che la tua richiesta non sia stata gestita correttamente, puoi presentare reclamo all'Agenzia spagnola per la protezione dei dati (www.aepd.es) o al Garante per la protezione dei dati personali.",
         ],
       },
@@ -140,6 +144,7 @@ const docs: LegalDocs = {
           "Usiamo solo archiviazione tecnica, necessaria al funzionamento del servizio, che non richiede consenso:",
           "• Sessione utente (archiviazione locale, Supabase): mantiene l'accesso. Dura finché non esci.",
           "• Lingua (archiviazione locale): ricorda la lingua scelta. Dura finché non la cancelli.",
+          "• Avvisi chiusi (archiviazione locale): ricorda che hai chiuso l'avviso per installare l'app, per non mostrarlo di nuovo. Dura finché non lo cancelli.",
           "Non usiamo cookie di analisi, pubblicità o social network.",
         ],
       },

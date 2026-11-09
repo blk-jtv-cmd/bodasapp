@@ -61,8 +61,9 @@ const docs: LegalDocs = {
         h: "2. Qué datos tratamos",
         p: [
           "• Datos de la cuenta: email, contraseña (guardada cifrada; nosotros no podemos verla) y los nombres de la pareja.",
-          "• Datos que introducís para organizar la boda: fecha, lugar, presupuesto, tareas, proveedores, fincas, menú, cronograma y lista de invitados (nombre, datos de contacto, grupo, mesa, restricciones alimentarias y notas).",
+          "• Datos que introducís para organizar la boda: fecha, lugar, presupuesto, tareas, proveedores, fincas, menú, cronograma y lista de invitados (nombre, grupo, mesa, acompañantes, si es un niño o una niña, alergias o dieta, confirmación de asistencia y notas).",
           "• Datos del pago: el pago lo gestiona Stripe. Nosotros no vemos ni guardamos los datos de la tarjeta; solo recibimos la confirmación del pago, el email y el identificador de la operación.",
+          "• Sugerencias que nos enviáis desde Ajustes: el mensaje y el email de la cuenta.",
           "• Datos técnicos: el idioma elegido y la sesión iniciada en tu navegador.",
         ],
       },
@@ -73,6 +74,7 @@ const docs: LegalDocs = {
           "• Gestionar el pago, la facturación y las obligaciones contables y fiscales. Base legal: contrato y obligación legal (art. 6.1.b y 6.1.c RGPD).",
           "• Responder a tus consultas. Base legal: tu solicitud y nuestro interés legítimo en atenderte (art. 6.1.f RGPD).",
           "• Mantener la seguridad del servicio y prevenir abusos. Base legal: interés legítimo (art. 6.1.f RGPD).",
+          "• Leer vuestras sugerencias y usarlas para mejorar la herramienta. Base legal: interés legítimo (art. 6.1.f RGPD).",
           "No enviamos publicidad sin tu consentimiento, no vendemos datos y no tomamos decisiones automatizadas ni elaboramos perfiles.",
         ],
       },
@@ -80,7 +82,9 @@ const docs: LegalDocs = {
         h: "4. Datos de vuestros invitados y proveedores",
         p: [
           "Al añadir datos de otras personas (invitados, proveedores) garantizáis que podéis hacerlo, por ejemplo porque os los han dado para organizar la boda, y que solo los usaréis con ese fin. Nosotros solo los tratamos para prestaros el servicio y por cuenta vuestra.",
-          "Las restricciones alimentarias pueden revelar información de salud (por ejemplo, la celiaquía). Introducid solo lo imprescindible para organizar el menú.",
+          "Alergias y dieta: saber que un invitado es celíaco o alérgico es información de salud (art. 9 RGPD). Es un campo opcional que solo sirve para organizar el menú con el catering. No usamos esa información para nada más, no la compartimos con nadie y solo accedemos a ella si hace falta para resolver una incidencia que nos planteéis. Si lo preferís, podéis dejarlo en blanco y contárselo directamente al catering.",
+          "Niños y niñas: podéis marcar a un invitado como niño o niña para calcular los menús infantiles. No pedimos edad ni fecha de nacimiento; basta con el nombre.",
+          "Si un invitado os pide corregir o borrar sus datos, podéis hacerlo en cualquier momento desde la lista de invitados.",
         ],
       },
       {
@@ -99,13 +103,13 @@ const docs: LegalDocs = {
       {
         h: "6. Cuánto tiempo los guardamos",
         p: [
-          "Mientras tu cuenta esté activa. Si la borras o nos pides su supresión, eliminaremos tus datos en un máximo de 30 días, salvo los datos de facturación, que debemos conservar durante los plazos que marca la ley (en general, hasta 6 años).",
+          "Mientras tu cuenta esté activa. Si la borras o nos pides su supresión, eliminaremos tus datos en un máximo de 30 días, salvo los datos de facturación, que debemos conservar durante los plazos que marca la ley (en general, hasta 6 años). Si borras la cuenta desde Ajustes, la boda y todos sus datos (incluidas las sugerencias enviadas) se eliminan al momento; las copias de seguridad técnicas se renuevan en un máximo de 30 días.",
         ],
       },
       {
         h: "7. Tus derechos",
         p: [
-          "Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, limitación del tratamiento y portabilidad, y retirar tu consentimiento cuando quieras, escribiendo a {email}. Indica qué derecho quieres ejercer.",
+          "Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, limitación del tratamiento y portabilidad, y retirar tu consentimiento cuando quieras, escribiendo a {email}. Indica qué derecho quieres ejercer. Desde Ajustes también puedes descargar una copia de todos vuestros datos o borrar la cuenta tú mismo.",
           "Si consideras que no hemos atendido bien tu solicitud, puedes reclamar ante la Agencia Española de Protección de Datos (www.aepd.es).",
         ],
       },
@@ -143,6 +147,7 @@ const docs: LegalDocs = {
           "Solo usamos almacenamiento técnico, necesario para que el servicio funcione. Está exento de consentimiento según el artículo 22.2 de la LSSI-CE:",
           "• Sesión de usuario (almacenamiento local, Supabase): mantiene tu sesión iniciada. Dura hasta que cierras sesión.",
           "• Idioma (almacenamiento local): recuerda el idioma que has elegido. Dura hasta que lo borras.",
+          "• Avisos cerrados (almacenamiento local): recuerda que has cerrado el aviso para instalar la app, para no volver a mostrarlo. Dura hasta que lo borras.",
           "No usamos cookies de análisis, de publicidad ni de redes sociales.",
         ],
       },

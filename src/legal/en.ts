@@ -61,8 +61,9 @@ const docs: LegalDocs = {
         h: "2. What data we process",
         p: [
           "• Account data: email, password (stored encrypted; we cannot see it) and the couple's names.",
-          "• Data you enter to plan your wedding: date, venue, budget, tasks, suppliers, venues, menu, timeline and guest list (name, contact details, group, table, dietary requirements and notes).",
+          "• Data you enter to plan your wedding: date, venue, budget, tasks, suppliers, venues, menu, timeline and guest list (name, group, table, plus-ones, whether they are a child, allergies or diet, RSVP status and notes).",
           "• Payment data: payments are handled by Stripe. We do not see or store card details; we only receive the payment confirmation, the email address and the transaction ID.",
+          "• Suggestions you send us from Settings: the message and your account email.",
           "• Technical data: your chosen language and the logged-in session in your browser.",
         ],
       },
@@ -73,6 +74,7 @@ const docs: LegalDocs = {
           "• To manage payment, invoicing and accounting and tax obligations. Legal basis: contract and legal obligation (art. 6.1.b and 6.1.c GDPR).",
           "• To answer your enquiries. Legal basis: your request and our legitimate interest in helping you (art. 6.1.f GDPR).",
           "• To keep the service secure and prevent abuse. Legal basis: legitimate interest (art. 6.1.f GDPR).",
+          "• To read your suggestions and use them to improve the tool. Legal basis: legitimate interest (art. 6.1.f GDPR).",
           "We do not send marketing without your consent, we do not sell data and we do not make automated decisions or create profiles.",
         ],
       },
@@ -80,7 +82,9 @@ const docs: LegalDocs = {
         h: "4. Your guests' and suppliers' data",
         p: [
           "When you add other people's data (guests, suppliers) you confirm that you are entitled to do so, for example because they gave it to you to organise the wedding, and that you will only use it for that purpose. We only process it to provide the service on your behalf.",
-          "Dietary requirements may reveal health information (for example, coeliac disease). Only enter what is strictly necessary to plan the menu.",
+          "Allergies and diet: knowing that a guest is coeliac or has an allergy is health information (art. 9 GDPR). This field is optional and is only there to plan the menu with your caterer. We do not use this information for anything else, we do not share it with anyone, and we only access it if needed to solve an issue you raise with us. If you prefer, leave it blank and tell your caterer directly.",
+          "Children: you can mark a guest as a child to count children's menus. We do not ask for age or date of birth; the name is enough.",
+          "If a guest asks you to correct or delete their data, you can do so at any time from the guest list.",
         ],
       },
       {
@@ -99,13 +103,13 @@ const docs: LegalDocs = {
       {
         h: "6. How long we keep it",
         p: [
-          "For as long as your account is active. If you delete it or ask us to erase it, we will delete your data within 30 days, except invoicing data, which we must keep for the periods required by law (generally up to 6 years).",
+          "For as long as your account is active. If you delete it or ask us to erase it, we will delete your data within 30 days, except invoicing data, which we must keep for the periods required by law (generally up to 6 years). If you delete your account from Settings, the wedding and all its data (including any suggestions you sent) are erased immediately; technical backups are refreshed within 30 days at most.",
         ],
       },
       {
         h: "7. Your rights",
         p: [
-          "You can exercise your rights of access, rectification, erasure, objection, restriction of processing and portability, and withdraw your consent at any time, by writing to {email}. Please state which right you wish to exercise.",
+          "You can exercise your rights of access, rectification, erasure, objection, restriction of processing and portability, and withdraw your consent at any time, by writing to {email}. Please state which right you wish to exercise. From Settings you can also download a copy of all your data or delete your account yourself.",
           "If you believe we have not handled your request properly, you can complain to the Spanish Data Protection Agency (www.aepd.es) or to the data protection authority in your country.",
         ],
       },
@@ -140,6 +144,7 @@ const docs: LegalDocs = {
           "We only use technical storage that is necessary for the service to work. Under article 22.2 of the Spanish LSSI-CE it does not require consent:",
           "• User session (local storage, Supabase): keeps you logged in. Lasts until you log out.",
           "• Language (local storage): remembers the language you chose. Lasts until you delete it.",
+          "• Closed notices (local storage): remembers that you closed the install-the-app notice so it isn't shown again. Lasts until you delete it.",
           "We do not use analytics, advertising or social media cookies.",
         ],
       },

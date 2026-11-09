@@ -877,21 +877,12 @@ function Resumen({
         </div>
       </section>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4">
         <Stat
           label={tr("Tareas hechas")}
           value={`${doneCount}/${tasks.length}`}
           hint={tasks.length ? tr("{n}% completado", { n: Math.round((doneCount / tasks.length) * 100) }) : undefined}
         />
-        <Stat
-          label={tr("Presupuesto")}
-          value={money(Number(wedding.total_budget) - budget.planned, wedding.currency)}
-          hint={tr("Disponible {a} · Estimado {b}", {
-            a: money(Number(wedding.total_budget), wedding.currency),
-            b: money(budget.planned, wedding.currency),
-          })}
-        />
-        <Stat label={tr("Invitados confirmados")} value={`${confirmed}`} hint={tr("{n} en la lista", { n: guests })} />
         <Stat label={tr("Proveedores")} value={`${vendors}`} hint={tr("Fichas guardadas")} />
       </div>
 
@@ -919,17 +910,17 @@ function Resumen({
         </div>
       )}
 
-      <section className="flex flex-wrap items-center gap-4 rounded-2xl bg-clay-soft/70 p-5 ring-1 ring-clay/30">
+      <section className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl bg-clay-soft/70 p-5 ring-1 ring-clay/30">
         <span className="text-2xl" aria-hidden>
           💡
         </span>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 basis-[calc(100%-3rem)] sm:basis-0">
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">{tr("Vuestro siguiente paso")}</p>
           <p className="mt-1 text-sm leading-6">{tip.text}</p>
         </div>
         <button
           onClick={() => onGo(tip.go)}
-          className="rounded-full bg-background px-4 py-2 text-xs font-medium ring-1 ring-clay/40 hover:ring-clay-ink"
+          className="w-full rounded-full bg-background px-4 py-2 text-xs font-medium ring-1 ring-clay/40 hover:ring-clay-ink sm:w-auto"
         >
           {tip.cta} →
         </button>
@@ -1104,6 +1095,12 @@ function AllergyPicker({ value, onChange }: { value: string[]; onChange: (v: str
         placeholder={tr("Otra…")}
         className="w-24 rounded-full border border-line bg-background px-2.5 py-1 text-[11px] outline-none focus:border-clay-ink"
       />
+      <p className="basis-full text-[11px] text-muted-foreground">
+        🔒 {tr("Solo para organizar el menú con el catering.")}{" "}
+        <a href="/legal/privacidad" target="_blank" rel="noreferrer" className="underline underline-offset-2">
+          {tr("Más info")}
+        </a>
+      </p>
     </div>
   );
 }
