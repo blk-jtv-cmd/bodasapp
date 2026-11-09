@@ -40,7 +40,7 @@ const dict: Record<string, string> = {
   "Apuntad gastos reales para ver el desglose.": "Registem os gastos reais para ver a divisão.",
   "Arrastrad a una mesa del salón": "Arrastem para uma mesa da sala",
   "Arrastrad invitados aquí": "Arrastem convidados para aqui",
-  "Arrastrad invitados desde la lista «Sin asignar» directamente a una mesa. Cada mesa muestra cuántos invitados tiene sentados y su capacidad, y avisa si está llena.": "Arrastem convidados da lista «Sem lugar» diretamente para uma mesa. Cada mesa mostra quantos convidados tem sentados e a sua capacidade, e avisa quando está cheia.",
+  "Arrastrad invitados desde «Sin asignar» a una mesa, o de una mesa a otra arrastrando su nombre. Cada mesa muestra sus sillas ocupadas y avisa si está llena.": "Arrastem os convidados de «Sem lugar» para uma mesa, ou de uma mesa para outra arrastando o nome. Cada mesa mostra as cadeiras ocupadas e avisa quando está cheia.",
   "Arrastrad las mesas por el lienzo para colocarlas como queráis.": "Arrastem as mesas pela planta para as colocarem como quiserem.",
   "Arrastrad para reordenar": "Arrastem para reordenar",
   "Añade los momentos importantes de tu boda y crea tu propio cronograma.": "Adiciona os momentos importantes do teu casamento e cria o teu próprio cronograma.",
@@ -519,6 +519,11 @@ const dict: Record<string, string> = {
   "¿No os ha llegado? Volver a enviar": "Não chegou? Enviar de novo",
   "Os lo hemos vuelto a enviar. Mirad también en spam.": "Voltámos a enviá-lo. Vejam também no spam.",
   "Editar": "Editar",
+  "Acompañante de {name}": "Acompanhante de {name}",
+  "Acompañantes": "Acompanhantes",
+  "Viene con {name}": "Vem com {name}",
+  "No se han podido añadir los acompañantes": "Não foi possível adicionar os acompanhantes",
+  "¿Borrar {name} y sus {n} acompañantes?": "Apagar {name} e os seus {n} acompanhantes?",
 };
 
 export default dict;

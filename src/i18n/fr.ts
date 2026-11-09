@@ -40,7 +40,7 @@ const dict: Record<string, string> = {
   "Apuntad gastos reales para ver el desglose.": "Ajoutez les dépenses réelles pour voir la répartition.",
   "Arrastrad a una mesa del salón": "Glissez vers une table de la salle",
   "Arrastrad invitados aquí": "Glissez les invités ici",
-  "Arrastrad invitados desde la lista «Sin asignar» directamente a una mesa. Cada mesa muestra cuántos invitados tiene sentados y su capacidad, y avisa si está llena.": "Glissez les invités de la liste « Non placés » directement vers une table. Chaque table indique combien d'invités y sont assis et sa capacité, et vous prévient quand elle est pleine.",
+  "Arrastrad invitados desde «Sin asignar» a una mesa, o de una mesa a otra arrastrando su nombre. Cada mesa muestra sus sillas ocupadas y avisa si está llena.": "Faites glisser les invités depuis « Non placés » vers une table, ou d'une table à l'autre en faisant glisser leur nom. Chaque table montre ses chaises occupées et vous prévient quand elle est pleine.",
   "Arrastrad las mesas por el lienzo para colocarlas como queráis.": "Déplacez les tables sur le plan pour les placer comme vous voulez.",
   "Arrastrad para reordenar": "Glissez pour réorganiser",
   "Añade los momentos importantes de tu boda y crea tu propio cronograma.": "Ajoute les moments importants de ton mariage et crée ton propre planning.",
@@ -519,6 +519,11 @@ const dict: Record<string, string> = {
   "¿No os ha llegado? Volver a enviar": "Rien reçu ? Renvoyer l'e-mail",
   "Os lo hemos vuelto a enviar. Mirad también en spam.": "Nous vous l'avons renvoyé. Vérifiez aussi vos spams.",
   "Editar": "Modifier",
+  "Acompañante de {name}": "Accompagnant de {name}",
+  "Acompañantes": "Accompagnants",
+  "Viene con {name}": "Vient avec {name}",
+  "No se han podido añadir los acompañantes": "Impossible d'ajouter les accompagnants",
+  "¿Borrar {name} y sus {n} acompañantes?": "Supprimer {name} et ses {n} accompagnants ?",
 };
 
 export default dict;
