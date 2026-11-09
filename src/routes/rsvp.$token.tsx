@@ -355,8 +355,8 @@ function RsvpPage() {
                         {canAdd && (
                           <div className="mt-4 grid grid-cols-2 gap-2">
                             {[
-                              { child: false, emoji: "🧑", label: t("Añadir acompañante") },
-                              { child: true, emoji: "🧒", label: t("Añadir niño/a") },
+                              { child: false, emoji: "🧑", label: t("Acompañante") },
+                              { child: true, emoji: "🧒", label: t("Niño/a") },
                             ].map((o) => (
                               <button
                                 key={String(o.child)}
@@ -367,7 +367,7 @@ function RsvpPage() {
                                     { name: "", coming: true, is_child: o.child, allergies: [], planned: false },
                                   ])
                                 }
-                                className="inline-flex items-center justify-center gap-1.5 rounded-full bg-background px-3 py-2.5 text-sm ring-1 ring-line hover:ring-clay-ink"
+                                className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-background px-3 py-2.5 text-sm ring-1 ring-line hover:ring-clay-ink"
                               >
                                 <Plus className="size-4" /> {o.emoji} {o.label}
                               </button>
