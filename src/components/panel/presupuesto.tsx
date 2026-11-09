@@ -15,6 +15,7 @@ import {
   YAxis,
 } from "recharts";
 import { t as tr, useI18n } from "@/i18n";
+import { parseAmount } from "./use-rows";
 
 export type BudgetExpense = {
   id: string;
@@ -82,7 +83,7 @@ function AmountCell({
       onFocus={(e) => e.currentTarget.select()}
       onBlur={async () => {
         if (draft === null) return;
-        const n = Number(draft.replace(",", ".")) || 0;
+        const n = parseAmount(draft);
         setDraft(null);
         if (n !== Number(value)) await onSave(n);
       }}
@@ -94,16 +95,20 @@ function AmountCell({
 function NoteCell({
   value,
   onSave,
+  placeholder = "Añadir nota",
+  className = "w-48",
 }: {
   value: string;
   onSave: (v: string) => Promise<void>;
+  placeholder?: string;
+  className?: string;
 }) {
   const { t: tr } = useI18n();
   const [draft, setDraft] = useState<string | null>(null);
   return (
     <input
       value={draft ?? value ?? ""}
-      placeholder={tr("Añadir nota")}
+      placeholder={tr(placeholder)}
       onChange={(e) => setDraft(e.target.value)}
       onBlur={async () => {
         if (draft === null) return;
@@ -111,7 +116,7 @@ function NoteCell({
         setDraft(null);
         if (next !== (value ?? "")) await onSave(next);
       }}
-      className="w-48 rounded-md border border-transparent bg-transparent px-2 py-1 text-sm outline-none placeholder:text-muted-foreground/60 hover:border-line focus:border-clay-ink focus:bg-background"
+      className={`${className} rounded-md border border-transparent bg-transparent px-2 py-1 text-sm outline-none placeholder:text-muted-foreground/60 hover:border-line focus:border-clay-ink focus:bg-background`}
     />
   );
 }
@@ -213,28 +218,33 @@ export function Presupuesto({
     await reload();
   }
 
-  async function addRow(category: string, concept: string, notes: string) {
-    if (!concept.trim()) return;
+  async function addRow(
+    category: string,
+    concept: string,
+    notes: string,
+    amounts: { planned: number; actual_cost: number; paid: number },
+  ) {
+    if (!concept.trim()) return false;
     const { error } = await supabase.from("expenses").insert({
       wedding_id: wedding.id,
       user_id: userId,
       concept: concept.trim(),
       category,
       notes: notes.trim(),
-      planned: 0,
-      actual_cost: 0,
-      paid: 0,
+      ...amounts,
     });
     if (error) {
       toast.error(tr("No se ha podido guardar"));
-      return;
+      return false;
     }
     await reload();
+    return true;
   }
 
   async function updateRow(
     id: string,
     patch: {
+      concept?: string;
       planned?: number;
       actual_cost?: number;
       paid?: number;
@@ -367,7 +377,16 @@ export function Presupuesto({
                         const pending = Number(x.actual_cost) - Number(x.paid);
                         return (
                           <tr key={x.id} className="border-t border-line">
-                            <td className="px-4 py-2">{x.concept}</td>
+                            <td className="px-2 py-2">
+                              <NoteCell
+                                value={x.concept}
+                                placeholder="Concepto"
+                                className="w-full min-w-[10rem] font-medium"
+                                onSave={async (v) => {
+                                  if (v.trim()) await updateRow(x.id, { concept: v.trim() });
+                                }}
+                              />
+                            </td>
                             <td className="px-4 py-2">
                               <select
                                 value={x.category}
@@ -418,6 +437,7 @@ export function Presupuesto({
                             <td className="px-4 py-2 text-right">
                               <button
                                 onClick={async () => {
+                                  if (!window.confirm(tr("¿Borrar {name}?", { name: x.concept }))) return;
                                   await supabase.from("expenses").delete().eq("id", x.id);
                                   await reload();
                                 }}
@@ -454,11 +474,16 @@ export function Presupuesto({
                               onSubmit={async (e) => {
                                 e.preventDefault();
                                 const form = e.currentTarget;
-                                const input = form.elements.namedItem("concept") as HTMLInputElement;
-                                const noteInput = form.elements.namedItem("notes") as HTMLInputElement;
-                                await addRow(cat.name, input.value, noteInput.value);
-                                input.value = "";
-                                noteInput.value = "";
+                                const field = (n: string) => form.elements.namedItem(n) as HTMLInputElement;
+                                const ok = await addRow(cat.name, field("concept").value, field("notes").value, {
+                                  planned: parseAmount(field("planned").value),
+                                  actual_cost: parseAmount(field("actual_cost").value),
+                                  paid: parseAmount(field("paid").value),
+                                });
+                                if (ok) {
+                                  for (const n of ["concept", "notes", "planned", "actual_cost", "paid"]) field(n).value = "";
+                                  field("concept").focus();
+                                }
                               }}
                               className="flex flex-wrap gap-3"
                             >
@@ -468,10 +493,25 @@ export function Presupuesto({
                                 placeholder={tr("Concepto")}
                                 className={`${inputClass} min-w-[220px]`}
                               />
+                              {(
+                                [
+                                  ["planned", "Previsto"],
+                                  ["actual_cost", "Gasto real"],
+                                  ["paid", "Pagado"],
+                                ] as const
+                              ).map(([name, label]) => (
+                                <input
+                                  key={name}
+                                  name={name}
+                                  inputMode="decimal"
+                                  placeholder={`${tr(label)} ${currencySymbol(cur)}`}
+                                  className={`${inputClass} w-32 text-right`}
+                                />
+                              ))}
                               <input
                                 name="notes"
                                 placeholder={tr("Notas (opcional)")}
-                                className={`${inputClass} min-w-[240px]`}
+                                className={`${inputClass} min-w-[200px]`}
                               />
                               <button className="rounded-full bg-clay px-4 py-2 text-xs font-medium text-foreground hover:bg-clay-ink hover:text-background">
                                 {tr("Añadir")}
