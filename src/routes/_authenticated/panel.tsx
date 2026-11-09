@@ -795,6 +795,17 @@ function Checklist({
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("General");
   const [filter, setFilter] = useState<"todas" | "pendientes" | "completadas">("todas");
+  const [editing, setEditing] = useState<{ id: string; title: string; category: string } | null>(null);
+
+  async function saveEdit(e: React.FormEvent, task: Task) {
+    e.preventDefault();
+    if (!editing || !editing.title.trim()) return;
+    const values: Partial<Task> = { category: editing.category };
+    // Las tareas de ejemplo se muestran traducidas: solo se guarda el texto si se ha cambiado.
+    if (editing.title.trim() !== tr(task.title)) values.title = editing.title.trim();
+    setEditing(null);
+    await patchTask(task.id, values);
+  }
 
   async function toggle(task: Task) {
     setTasks(tasks.map((t) => (t.id === task.id ? { ...t, done: !t.done } : t)));
@@ -815,8 +826,9 @@ function Checklist({
     await reload();
   }
 
-  async function remove(id: string) {
-    await supabase.from("tasks").delete().eq("id", id);
+  async function remove(task: Task) {
+    if (!window.confirm(tr("¿Borrar {name}?", { name: tr(task.title) }))) return;
+    await supabase.from("tasks").delete().eq("id", task.id);
     await reload();
   }
 
@@ -920,6 +932,38 @@ function Checklist({
             <ul className="space-y-2">
               {items.map((t) => (
                 <li key={t.id} className="rounded-lg bg-panel px-4 py-3 text-sm">
+                  {editing?.id === t.id ? (
+                    <form onSubmit={(e) => saveEdit(e, t)} className="flex flex-wrap items-center gap-3">
+                      <input
+                        value={editing.title}
+                        onChange={(e) => setEditing({ ...editing, title: e.target.value })}
+                        autoFocus
+                        required
+                        className={`${inputClass} min-w-[220px] flex-1`}
+                      />
+                      <select
+                        value={editing.category}
+                        onChange={(e) => setEditing({ ...editing, category: e.target.value })}
+                        className={inputClass}
+                      >
+                        {categoryOptions.map((c) => (
+                          <option key={c} value={c}>
+                            {tr(c)}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setEditing(null)}
+                        className="text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        {tr("Cancelar")}
+                      </button>
+                      <button className="rounded-full bg-clay px-4 py-1.5 text-xs font-medium text-foreground hover:bg-clay-ink hover:text-background">
+                        {tr("Guardar")}
+                      </button>
+                    </form>
+                  ) : (
                   <div className="flex items-center gap-3">
                     <input
                       type="checkbox"
@@ -929,12 +973,19 @@ function Checklist({
                     />
                     <span className={t.done ? "text-muted-foreground line-through" : ""}>{tr(t.title)}</span>
                     <button
-                      onClick={() => remove(t.id)}
-                      className="ml-auto text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => setEditing({ id: t.id, title: tr(t.title), category: t.category })}
+                      className="ml-auto text-xs text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground"
+                    >
+                      {tr("Editar")}
+                    </button>
+                    <button
+                      onClick={() => remove(t)}
+                      className="text-xs text-muted-foreground hover:text-foreground"
                     >
                       {tr("Borrar")}
                     </button>
                   </div>
+                  )}
                   <div className="mt-2 flex flex-wrap gap-2 pl-7">
                     <TextField
                       value={t.owner ?? ""}
@@ -987,6 +1038,24 @@ function Invitados({
     guest_group: "Familia",
     notes: "",
   });
+  const [editing, setEditing] = useState<{ id: string; name: string; invited_by: string; guest_group: string } | null>(
+    null,
+  );
+
+  async function saveEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editing || !editing.name.trim()) return;
+    const { error } = await supabase
+      .from("guests")
+      .update({ name: editing.name.trim(), invited_by: editing.invited_by, guest_group: editing.guest_group })
+      .eq("id", editing.id);
+    if (error) {
+      toast.error(tr("No se ha podido guardar"));
+      return;
+    }
+    setEditing(null);
+    await reload();
+  }
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
@@ -1075,7 +1144,56 @@ function Invitados({
       </form>
 
       <ul className="space-y-2">
-        {guests.map((g) => (
+        {guests.map((g) =>
+          editing?.id === g.id ? (
+            <li key={g.id} className="rounded-lg bg-panel px-4 py-3 text-sm ring-1 ring-clay/60">
+              <form onSubmit={saveEdit} className="flex flex-wrap items-center gap-3">
+                <input
+                  value={editing.name}
+                  onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                  autoFocus
+                  required
+                  placeholder={tr("Nombre")}
+                  className={`${inputClass} min-w-[200px] flex-1`}
+                />
+                <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                  {tr("Invitado de")}
+                  <select
+                    value={editing.invited_by}
+                    onChange={(e) => setEditing({ ...editing, invited_by: e.target.value })}
+                    className={inputClass}
+                  >
+                    {Array.from(new Set([...hosts, editing.invited_by].filter(Boolean))).map((h) => (
+                      <option key={h} value={h}>
+                        {tr(h)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <select
+                  value={editing.guest_group}
+                  onChange={(e) => setEditing({ ...editing, guest_group: e.target.value })}
+                  className={inputClass}
+                >
+                  {Array.from(new Set([...GUEST_GROUPS, editing.guest_group].filter(Boolean))).map((gr) => (
+                    <option key={gr} value={gr}>
+                      {tr(gr)}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setEditing(null)}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  {tr("Cancelar")}
+                </button>
+                <button className="rounded-full bg-clay px-4 py-1.5 text-xs font-medium text-foreground hover:bg-clay-ink hover:text-background">
+                  {tr("Guardar")}
+                </button>
+              </form>
+            </li>
+          ) : (
           <li key={g.id} className="flex flex-wrap items-center gap-3 rounded-lg bg-panel px-4 py-3 text-sm">
             <span className="font-medium">{g.name}</span>
             <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
@@ -1108,7 +1226,16 @@ function Invitados({
               ))}
             </select>
             <button
+              onClick={() =>
+                setEditing({ id: g.id, name: g.name, invited_by: g.invited_by, guest_group: g.guest_group })
+              }
+              className="text-xs text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground"
+            >
+              {tr("Editar")}
+            </button>
+            <button
               onClick={async () => {
+                if (!window.confirm(tr("¿Borrar {name}?", { name: g.name }))) return;
                 await supabase.from("guests").delete().eq("id", g.id);
                 await reload();
               }}
@@ -1117,7 +1244,8 @@ function Invitados({
               {tr("Borrar")}
             </button>
           </li>
-        ))}
+          ),
+        )}
         {guests.length === 0 && (
           <li className="rounded-lg bg-panel px-4 py-8 text-center text-sm text-muted-foreground">
             {tr("Empezad añadiendo a la familia más cercana.")}
