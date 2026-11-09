@@ -85,6 +85,7 @@ const docs: LegalDocs = {
           "Allergies et régime : savoir qu'un invité est cœliaque ou allergique est une donnée de santé (art. 9 RGPD). Ce champ est facultatif et sert uniquement à organiser le menu avec le traiteur. Nous n'utilisons pas cette information à d'autres fins, nous ne la partageons avec personne et nous n'y accédons que si c'est nécessaire pour résoudre un problème que vous nous signalez. Si vous préférez, laissez-le vide et prévenez directement le traiteur.",
           "Enfants : vous pouvez indiquer qu'un invité est un enfant pour compter les menus enfants. Nous ne demandons ni âge ni date de naissance ; le prénom suffit.",
           "Si un invité vous demande de corriger ou de supprimer ses données, vous pouvez le faire à tout moment depuis la liste d'invités.",
+          "Réponses en ligne : si vous partagez votre lien de réponse, vos invités peuvent répondre eux-mêmes (présence, accompagnants, enfants, allergies ou régime, et un commentaire). Ces réponses sont enregistrées dans votre liste ; c'est vous qui en décidez et nous les traitons pour votre compte. Le formulaire indique à chaque invité à quoi elles servent.",
         ],
       },
       {

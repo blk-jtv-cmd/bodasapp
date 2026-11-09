@@ -85,6 +85,7 @@ const docs: LegalDocs = {
           "Allergie e dieta: sapere che un invitato è celiaco o allergico è un'informazione sulla salute (art. 9 GDPR). È un campo facoltativo che serve solo a organizzare il menù con il catering. Non usiamo queste informazioni per altro, non le condividiamo con nessuno e vi accediamo solo se serve a risolvere un problema che ci segnalate. Se preferite, lasciatelo vuoto e comunicatelo direttamente al catering.",
           "Bambini: potete indicare che un invitato è un bambino o una bambina per contare i menù bimbi. Non chiediamo età né data di nascita; basta il nome.",
           "Se un invitato vi chiede di correggere o cancellare i suoi dati, potete farlo in qualsiasi momento dalla lista degli invitati.",
+          "Conferme online: se condividete il link di conferma, i vostri invitati possono rispondere da soli (se partecipano, accompagnatori, bambini, allergie o dieta e un commento). Le risposte vengono salvate nella vostra lista; siete voi a decidere su di esse e noi le trattiamo per vostro conto. Il modulo spiega a ogni invitato a cosa servono.",
         ],
       },
       {

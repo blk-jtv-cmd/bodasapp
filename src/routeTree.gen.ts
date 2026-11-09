@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedPanelRouteImport } from './routes/_authenticated/panel'
 import { Route as LegalDocRouteImport } from './routes/legal.$doc'
 import { Route as InstalarRouteImport } from './routes/instalar'
+import { Route as RsvpTokenRouteImport } from './routes/rsvp.$token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +41,11 @@ const InstalarRoute = InstalarRouteImport.update({
   path: '/instalar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RsvpTokenRoute = RsvpTokenRouteImport.update({
+  id: '/rsvp/$token',
+  path: '/rsvp/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedPanelRoute = AuthenticatedPanelRouteImport.update({
   id: '/panel',
   path: '/panel',
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/instalar': typeof InstalarRoute
   '/legal/$doc': typeof LegalDocRoute
+  '/rsvp/$token': typeof RsvpTokenRoute
   '/panel': typeof AuthenticatedPanelRoute
 }
 export interface FileRoutesByTo {
@@ -58,6 +65,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/instalar': typeof InstalarRoute
   '/legal/$doc': typeof LegalDocRoute
+  '/rsvp/$token': typeof RsvpTokenRoute
   '/panel': typeof AuthenticatedPanelRoute
 }
 export interface FileRoutesById {
@@ -67,14 +75,15 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/instalar': typeof InstalarRoute
   '/legal/$doc': typeof LegalDocRoute
+  '/rsvp/$token': typeof RsvpTokenRoute
   '/_authenticated/panel': typeof AuthenticatedPanelRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/instalar' | '/legal/$doc' | '/panel'
+  fullPaths: '/' | '/auth' | '/instalar' | '/legal/$doc' | '/rsvp/$token' | '/panel'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/instalar' | '/legal/$doc' | '/panel'
-  id: '__root__' | '/' | '/_authenticated' | '/auth' | '/instalar' | '/legal/$doc' | '/_authenticated/panel'
+  to: '/' | '/auth' | '/instalar' | '/legal/$doc' | '/rsvp/$token' | '/panel'
+  id: '__root__' | '/' | '/_authenticated' | '/auth' | '/instalar' | '/legal/$doc' | '/rsvp/$token' | '/_authenticated/panel'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -83,6 +92,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   InstalarRoute: typeof InstalarRoute
   LegalDocRoute: typeof LegalDocRoute
+  RsvpTokenRoute: typeof RsvpTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -122,6 +132,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalDocRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rsvp/$token': {
+      id: '/rsvp/$token'
+      path: '/rsvp/$token'
+      fullPath: '/rsvp/$token'
+      preLoaderRoute: typeof RsvpTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/panel': {
       id: '/_authenticated/panel'
       path: '/panel'
@@ -149,6 +166,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   InstalarRoute: InstalarRoute,
   LegalDocRoute: LegalDocRoute,
+  RsvpTokenRoute: RsvpTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
