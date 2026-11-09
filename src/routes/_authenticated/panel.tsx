@@ -235,7 +235,7 @@ function PanelPage() {
     };
     // Igual con las columnas nuevas del checklist (prioridad, pasos, no aplica).
     const loadTasks = async (id: string) => {
-      const cols = "id,title,category,due_date,done,owner,notes";
+      const cols = "id,title,category,due_date,done,owner,notes,created_at";
       const res = await supabase.from("tasks").select(`${cols},priority,steps,not_applicable`).eq("wedding_id", id).order("created_at");
       if (!res.error) return res;
       return supabase.from("tasks").select(cols).eq("wedding_id", id).order("created_at");
@@ -783,7 +783,7 @@ function Resumen({
   const { t: tr } = useI18n();
   const activeTasks = tasks.filter((t) => !t.not_applicable);
   const doneCount = activeTasks.filter((t) => t.done).length;
-  const dueOf = (t: Task) => t.due_date ?? suggestedDue(t.category, wedding.wedding_date);
+  const dueOf = (t: Task) => t.due_date ?? suggestedDue(t.category, wedding.wedding_date, t.created_at);
   const today = new Date().toISOString().slice(0, 10);
   const pending = activeTasks
     .filter((t) => !t.done)

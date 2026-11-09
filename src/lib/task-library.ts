@@ -268,13 +268,25 @@ const OFFSETS: Record<string, { months?: number; days?: number }> = {
   "Día B": { days: 0 },
 };
 
-/** Fecha sugerida (AAAA-MM-DD) según la carpeta y la fecha de la boda. */
-export function suggestedDue(category: string, weddingDate: string | null): string | null {
+/**
+ * Fecha sugerida (AAAA-MM-DD) según la carpeta y la fecha de la boda.
+ * Si la pareja se apunta tarde (p. ej. a 5 meses de la boda), las tareas de "12 meses antes"
+ * no nacen con retraso: se les da un margen de 2 semanas desde que se crearon.
+ */
+export function suggestedDue(category: string, weddingDate: string | null, createdAt?: string | null): string | null {
   const off = OFFSETS[category];
   if (!off || !weddingDate) return null;
-  const d = new Date(`${weddingDate}T12:00:00`);
-  if (Number.isNaN(d.getTime())) return null;
+  const wedding = new Date(`${weddingDate}T12:00:00`);
+  if (Number.isNaN(wedding.getTime())) return null;
+  const d = new Date(wedding);
   if (off.months) d.setMonth(d.getMonth() - off.months);
   if (off.days) d.setDate(d.getDate() - off.days);
+  if (createdAt) {
+    const floor = new Date(createdAt);
+    if (!Number.isNaN(floor.getTime())) {
+      floor.setDate(floor.getDate() + 14);
+      if (d < floor) return (floor < wedding ? floor : wedding).toISOString().slice(0, 10);
+    }
+  }
   return d.toISOString().slice(0, 10);
 }

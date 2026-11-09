@@ -17,6 +17,7 @@ export type ChecklistTask = {
   priority?: string | null;
   steps?: { text: string; done: boolean }[] | null;
   not_applicable?: boolean;
+  created_at?: string;
 };
 
 type ChecklistWedding = {
@@ -92,7 +93,7 @@ export function Checklist({
   const [sheet, setSheet] = useState<ChecklistTask | "new" | null>(null);
 
   const people = [wedding.partner_one || tr("Novia"), wedding.partner_two || tr("Novio"), "Ambos"];
-  const due = (t: ChecklistTask) => t.due_date ?? suggestedDue(t.category, wedding.wedding_date);
+  const due = (t: ChecklistTask) => t.due_date ?? suggestedDue(t.category, wedding.wedding_date, t.created_at);
 
   async function patchTask(id: string, values: Partial<ChecklistTask>) {
     setTasks(tasks.map((t) => (t.id === id ? { ...t, ...values } : t)));
@@ -373,7 +374,7 @@ function TaskSheet({
   const [na, setNa] = useState(!!task?.not_applicable);
   const [saving, setSaving] = useState(false);
 
-  const suggested = suggestedDue(category, wedding.wedding_date);
+  const suggested = suggestedDue(category, wedding.wedding_date, task?.created_at ?? new Date().toISOString());
   const categories = Array.from(new Set([...TASK_CATEGORIES, category]));
 
   const template = guide?.template
