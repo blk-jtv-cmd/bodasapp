@@ -61,8 +61,9 @@ const docs: LegalDocs = {
         h: "2. Que dados tratamos",
         p: [
           "• Dados da conta: email, palavra-passe (guardada cifrada; não a conseguimos ver) e os nomes do casal.",
-          "• Dados que introduzem para organizar o casamento: data, local, orçamento, tarefas, fornecedores, quintas, menu, cronograma e lista de convidados (nome, contactos, grupo, mesa, restrições alimentares e notas).",
+          "• Dados que introduzem para organizar o casamento: data, local, orçamento, tarefas, fornecedores, quintas, menu, cronograma e lista de convidados (nome, grupo, mesa, acompanhantes, se é uma criança, alergias ou dieta, confirmação de presença e notas).",
           "• Dados de pagamento: o pagamento é gerido pela Stripe. Não vemos nem guardamos os dados do cartão; recebemos apenas a confirmação do pagamento, o email e o identificador da operação.",
+          "• Sugestões que nos enviam a partir das Definições: a mensagem e o email da conta.",
           "• Dados técnicos: o idioma escolhido e a sessão iniciada no teu navegador.",
         ],
       },
@@ -73,6 +74,7 @@ const docs: LegalDocs = {
           "• Gerir o pagamento, a faturação e as obrigações contabilísticas e fiscais. Fundamento: contrato e obrigação legal (art. 6.º, n.º 1, als. b) e c) RGPD).",
           "• Responder aos teus pedidos. Fundamento: o teu pedido e o nosso interesse legítimo em ajudar-te (art. 6.º, n.º 1, al. f) RGPD).",
           "• Manter a segurança do serviço e prevenir abusos. Fundamento: interesse legítimo (art. 6.º, n.º 1, al. f) RGPD).",
+          "• Ler as vossas sugestões e usá-las para melhorar a ferramenta. Fundamento: interesse legítimo (art. 6.º, n.º 1, al. f) RGPD).",
           "Não enviamos publicidade sem o teu consentimento, não vendemos dados e não tomamos decisões automatizadas nem fazemos definição de perfis.",
         ],
       },
@@ -80,7 +82,9 @@ const docs: LegalDocs = {
         h: "4. Dados dos vossos convidados e fornecedores",
         p: [
           "Ao adicionar dados de outras pessoas (convidados, fornecedores), garantem que o podem fazer, por exemplo porque vos foram fornecidos para organizar o casamento, e que só os usarão para esse fim. Nós apenas os tratamos para vos prestar o serviço, por vossa conta.",
-          "As restrições alimentares podem revelar informações de saúde (por exemplo, doença celíaca). Introduzam apenas o estritamente necessário para organizar o menu.",
+          "Alergias e dieta: saber que um convidado é celíaco ou alérgico é informação de saúde (art. 9.º RGPD). É um campo opcional que serve apenas para organizar o menu com o catering. Não usamos esta informação para mais nada, não a partilhamos com ninguém e só lhe acedemos se for preciso para resolver um problema que nos comuniquem. Se preferirem, deixem-no em branco e informem diretamente o catering.",
+          "Crianças: podem indicar que um convidado é uma criança para contar os menus infantis. Não pedimos idade nem data de nascimento; basta o nome.",
+          "Se um convidado vos pedir para corrigir ou apagar os seus dados, podem fazê-lo a qualquer momento na lista de convidados.",
         ],
       },
       {
@@ -99,13 +103,13 @@ const docs: LegalDocs = {
       {
         h: "6. Durante quanto tempo os guardamos",
         p: [
-          "Enquanto a tua conta estiver ativa. Se a apagares ou nos pedires a eliminação, apagaremos os teus dados no prazo máximo de 30 dias, exceto os dados de faturação, que temos de conservar durante os prazos previstos na lei (em geral, até 6 anos).",
+          "Enquanto a tua conta estiver ativa. Se a apagares ou nos pedires a eliminação, apagaremos os teus dados no prazo máximo de 30 dias, exceto os dados de faturação, que temos de conservar durante os prazos previstos na lei (em geral, até 6 anos). Se apagares a conta nas Definições, o casamento e todos os seus dados (incluindo as sugestões enviadas) são eliminados de imediato; as cópias de segurança técnicas renovam-se num prazo máximo de 30 dias.",
         ],
       },
       {
         h: "7. Os teus direitos",
         p: [
-          "Podes exercer os direitos de acesso, retificação, apagamento, oposição, limitação do tratamento e portabilidade, e retirar o teu consentimento a qualquer momento, escrevendo para {email}. Indica qual o direito que pretendes exercer.",
+          "Podes exercer os direitos de acesso, retificação, apagamento, oposição, limitação do tratamento e portabilidade, e retirar o teu consentimento a qualquer momento, escrevendo para {email}. Indica qual o direito que pretendes exercer. Nas Definições também podes descarregar uma cópia de todos os vossos dados ou apagar a conta tu mesmo.",
           "Se considerares que o teu pedido não foi bem tratado, podes apresentar reclamação à Agência Espanhola de Proteção de Dados (www.aepd.es) ou à Comissão Nacional de Proteção de Dados (CNPD).",
         ],
       },
@@ -140,6 +144,7 @@ const docs: LegalDocs = {
           "Usamos apenas armazenamento técnico, necessário para o funcionamento do serviço, que não requer consentimento:",
           "• Sessão de utilizador (armazenamento local, Supabase): mantém a sessão iniciada. Dura até terminares a sessão.",
           "• Idioma (armazenamento local): lembra o idioma escolhido. Dura até o apagares.",
+          "• Avisos fechados (armazenamento local): lembra que fechaste o aviso para instalar a app, para não voltar a mostrá-lo. Dura até o apagares.",
           "Não usamos cookies de análise, de publicidade nem de redes sociais.",
         ],
       },

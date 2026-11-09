@@ -786,6 +786,8 @@ const dict: Record<string, string> = {
   "¡Ya la tenéis instalada!": "You've already installed it!",
   "¿Qué echáis de menos?": "What are you missing?",
   "Última prueba del vestido y del traje": "Final dress and suit fitting",
+  "Solo para organizar el menú con el catering.": "Only used to plan the menu with your caterer.",
+  "Más info": "More info",
 };
 
 export default dict;
