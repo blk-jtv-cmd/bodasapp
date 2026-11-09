@@ -1171,6 +1171,16 @@ function Invitados({
 
   const tableName = (id: string | null) => (id ? tables.find((t) => t.id === id)?.name ?? null : null);
   const companionsOf = (id: string) => guests.filter((x) => x.companion_of === id);
+  // Cada acompañante va justo debajo del invitado con el que viene, aunque se añada más tarde.
+  const orderedGuests = (() => {
+    const ids = new Set(guests.map((x) => x.id));
+    const out: Guest[] = [];
+    for (const x of guests) {
+      if (x.companion_of && ids.has(x.companion_of)) continue;
+      out.push(x, ...companionsOf(x.id));
+    }
+    return out;
+  })();
 
   const groupData = Array.from(
     guests.reduce((map, g) => {
@@ -1337,7 +1347,7 @@ function Invitados({
       </form>
 
       <ul className="space-y-2">
-        {guests.map((g) =>
+        {orderedGuests.map((g) =>
           editing?.id === g.id ? (
             <li key={g.id} className="rounded-lg bg-panel px-4 py-3 text-sm ring-1 ring-clay/60">
               <form onSubmit={saveEdit} className="flex flex-wrap items-center gap-3">
