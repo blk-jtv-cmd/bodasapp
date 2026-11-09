@@ -8,7 +8,7 @@ export function BrandName({ className = "" }: { className?: string }) {
   return (
     <Link
       to="/"
-      className={`hidden font-brand text-3xl leading-none sm:inline-block sm:text-4xl ${className}`}
+      className={`font-brand text-[1.7rem] leading-[0.9] sm:text-4xl sm:leading-none ${className}`}
     >
       {BRAND_NAME}
     </Link>

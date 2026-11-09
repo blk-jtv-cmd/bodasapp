@@ -525,6 +525,7 @@ const dict: Record<string, string> = {
   "No se han podido añadir los acompañantes": "Não foi possível adicionar os acompanhantes",
   "¿Borrar {name} y sus {n} acompañantes?": "Apagar {name} e os seus {n} acompanhantes?",
   "Se quitarán estos acompañantes: {names}. ¿Seguir?": "Vão ser retirados estes acompanhantes: {names}. Continuar?",
+  "Fecha de la boda": "Data do casamento",
 };
 
 export default dict;

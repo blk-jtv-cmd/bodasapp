@@ -998,10 +998,12 @@ function Checklist({
                       onChange={() => toggle(t)}
                       className="size-4 shrink-0 accent-clay-ink"
                     />
-                    <span className={`min-w-[12rem] flex-1 ${t.done ? "text-muted-foreground line-through" : ""}`}>
+                    <span className={`min-w-0 flex-1 sm:min-w-[12rem] ${t.done ? "text-muted-foreground line-through" : ""}`}>
                       {tr(t.title)}
                     </span>
-                    <div className="w-32 shrink-0">
+                    {/* En móvil, responsable, notas y botones pasan a una segunda línea */}
+                    <div className="flex w-full items-center gap-2 pl-7 sm:w-auto sm:gap-3 sm:pl-0">
+                    <div className="w-28 shrink-0 sm:w-32">
                       <TextField
                         value={t.owner ?? ""}
                         onSave={(owner) => patchTask(t.id, { owner })}
@@ -1009,7 +1011,7 @@ function Checklist({
                         className="py-1.5 text-xs"
                       />
                     </div>
-                    <div className="w-44 shrink-0">
+                    <div className="min-w-0 flex-1 sm:w-44 sm:flex-none">
                       <TextField
                         value={t.notes ?? ""}
                         onSave={(notes) => patchTask(t.id, { notes })}
@@ -1029,6 +1031,7 @@ function Checklist({
                     >
                       {tr("Borrar")}
                     </button>
+                    </div>
                   </div>
                   )}
                 </li>
@@ -1453,6 +1456,8 @@ function Invitados({
                 {tableName(g.table_number)}
               </span>
             )}
+            {/* En móvil: notas, confirmación y acciones en una segunda línea */}
+            <span className="basis-full sm:hidden" />
             <input
               defaultValue={g.notes ?? ""}
               placeholder={tr("Notas")}
@@ -1462,8 +1467,10 @@ function Invitados({
                 await supabase.from("guests").update({ notes: next }).eq("id", g.id);
                 await reload();
               }}
-              className="w-48 rounded-md border border-transparent bg-transparent px-2 py-1 text-sm outline-none placeholder:text-muted-foreground/60 hover:border-line focus:border-clay-ink focus:bg-background"
+              className="min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-2 py-1 text-sm outline-none placeholder:text-muted-foreground/60 hover:border-line focus:border-clay-ink focus:bg-background sm:w-48 sm:flex-none"
             />
+            {/* Confirmación y acciones: siempre juntas en la misma línea */}
+            <div className="ml-auto flex shrink-0 items-center gap-3">
             <select
               value={g.rsvp}
               onChange={async (e) => {
@@ -1473,7 +1480,7 @@ function Invitados({
                 if (companionsOf(g.id).length) await supabase.from("guests").update({ rsvp }).eq("companion_of", g.id);
                 await reload();
               }}
-              className="ml-auto rounded-lg border border-line bg-background px-2 py-1 text-xs"
+              className="rounded-lg border border-line bg-background px-2 py-1 text-xs"
             >
               {RSVP.map((r) => (
                 <option key={r} value={r}>
@@ -1509,6 +1516,7 @@ function Invitados({
             >
               {tr("Borrar")}
             </button>
+            </div>
           </li>
           ),
         )}
@@ -1943,6 +1951,7 @@ function Proveedores({
                   />
                   {tr("Contrato firmado")}
                 </label>
+                <div className="ml-auto flex items-center gap-3">
                 <button
                   onClick={() =>
                     setEditing({
@@ -1956,7 +1965,7 @@ function Proveedores({
                       price: String(Number(v.price) || ""),
                     })
                   }
-                  className="ml-auto text-xs text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground"
+                  className="text-xs text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground"
                 >
                   {tr("Editar")}
                 </button>
@@ -1970,6 +1979,7 @@ function Proveedores({
                 >
                   {tr("Borrar")}
                 </button>
+                </div>
               </div>
             </div>
           );
@@ -2078,46 +2088,64 @@ function Ajustes({
       <SectionHeader title={tr("Ajustes")} subtitle={tr("Los datos básicos de vuestra boda.")} />
       <form onSubmit={save} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <input
-            value={form.partner_one}
-            onChange={(e) => setForm({ ...form, partner_one: e.target.value })}
-            placeholder={tr("Nombre 1")}
-            className={inputClass}
-          />
-          <input
-            value={form.partner_two}
-            onChange={(e) => setForm({ ...form, partner_two: e.target.value })}
-            placeholder={tr("Nombre 2")}
-            className={inputClass}
-          />
+          <label className="flex flex-col gap-1">
+            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{tr("Nombre 1")}</span>
+            <input
+              value={form.partner_one}
+              onChange={(e) => setForm({ ...form, partner_one: e.target.value })}
+              placeholder={tr("Nombre 1")}
+              className={inputClass}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{tr("Nombre 2")}</span>
+            <input
+              value={form.partner_two}
+              onChange={(e) => setForm({ ...form, partner_two: e.target.value })}
+              placeholder={tr("Nombre 2")}
+              className={inputClass}
+            />
+          </label>
         </div>
-        <input
-          type="date"
-          value={form.wedding_date}
-          onChange={(e) => setForm({ ...form, wedding_date: e.target.value })}
-          className={`${inputClass} w-full`}
-        />
-        <input
-          value={form.venue}
-          onChange={(e) => setForm({ ...form, venue: e.target.value })}
-          placeholder={tr("Lugar")}
-          className={`${inputClass} w-full`}
-        />
+        <label className="flex flex-col gap-1">
+          <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{tr("Fecha de la boda")}</span>
+          <input
+            type="date"
+            value={form.wedding_date}
+            onChange={(e) => setForm({ ...form, wedding_date: e.target.value })}
+            className={`${inputClass} w-full`}
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{tr("Lugar")}</span>
+          <input
+            value={form.venue}
+            onChange={(e) => setForm({ ...form, venue: e.target.value })}
+            placeholder={tr("Lugar")}
+            className={`${inputClass} w-full`}
+          />
+        </label>
         <div className="grid gap-4 sm:grid-cols-2">
-          <input
-            value={form.guest_target}
-            onChange={(e) => setForm({ ...form, guest_target: e.target.value })}
-            placeholder={tr("Invitados previstos")}
-            inputMode="numeric"
-            className={inputClass}
-          />
-          <input
-            value={form.total_budget}
-            onChange={(e) => setForm({ ...form, total_budget: e.target.value })}
-            placeholder={`${tr("Presupuesto total")} ${currencySymbol(form.currency)}`}
-            inputMode="decimal"
-            className={inputClass}
-          />
+          <label className="flex flex-col gap-1">
+            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{tr("Invitados previstos")}</span>
+            <input
+              value={form.guest_target}
+              onChange={(e) => setForm({ ...form, guest_target: e.target.value })}
+              placeholder={tr("Invitados previstos")}
+              inputMode="numeric"
+              className={inputClass}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{`${tr("Presupuesto total")} ${currencySymbol(form.currency)}`}</span>
+            <input
+              value={form.total_budget}
+              onChange={(e) => setForm({ ...form, total_budget: e.target.value })}
+              placeholder={`${tr("Presupuesto total")} ${currencySymbol(form.currency)}`}
+              inputMode="decimal"
+              className={inputClass}
+            />
+          </label>
         </div>
         <label className="flex flex-col gap-1">
           <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
