@@ -518,6 +518,7 @@ const dict: Record<string, string> = {
   "Ya hay una cuenta con {email}. Entrad con vuestra contraseña, o con «Continuar con Google» si os registrasteis así. Si no la recordáis, pulsad «¿Habéis olvidado la contraseña?».": "Un compte existe déjà avec {email}. Connectez-vous avec votre mot de passe, ou avec « Continuer avec Google » si vous vous êtes inscrits ainsi. Si vous ne vous en souvenez plus, cliquez sur « Mot de passe oublié ? ».",
   "¿No os ha llegado? Volver a enviar": "Rien reçu ? Renvoyer l'e-mail",
   "Os lo hemos vuelto a enviar. Mirad también en spam.": "Nous vous l'avons renvoyé. Vérifiez aussi vos spams.",
+  "Editar": "Modifier",
 };
 
 export default dict;
