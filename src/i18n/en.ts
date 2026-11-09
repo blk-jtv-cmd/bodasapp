@@ -107,7 +107,7 @@ const dict: Record<string, string> = {
   "Contras": "Cons",
   "Contraseña": "Password",
   "Contraseña cambiada. ¡Bienvenidos de nuevo!": "Password changed. Welcome back!",
-  "Contraseña nueva (mínimo 6 caracteres)": "New password (at least 6 characters)",
+  "Contraseña nueva (mínimo 8 caracteres)": "New password (at least 8 characters)",
   "Contratar fotógrafo y vídeo": "Book photographer and videographer",
   "Contratar música y flores": "Book music and flowers",
   "Contrato firmado": "Contract signed",
@@ -228,7 +228,7 @@ const dict: Record<string, string> = {
   "Jun 20": "Jun 20",
   "La boda,": "Your wedding,",
   "La ceremonia es a las {time}. ¿Y todo lo demás?": "The ceremony is at {time}. What about everything else?",
-  "La contraseña es demasiado corta. Usad al menos 6 caracteres.": "The password is too short. Use at least 6 characters.",
+  "La contraseña es demasiado corta. Usad al menos 8 caracteres.": "The password is too short. Use at least 8 characters.",
   "La contraseña nueva tiene que ser distinta de la anterior.": "The new password must be different from the old one.",
   "La hora se cambia arriba, en «Hora de la ceremonia».": "Change the time above, under \"Ceremony time\".",
   "Lista de invitados y plano de mesas": "Guest list and seating plan",
@@ -862,6 +862,9 @@ const dict: Record<string, string> = {
   "Añadir niño/a": "Add a child",
   "Dejar que añadan acompañantes y niños": "Let guests add plus-ones and children",
   "Si lo apagáis, solo podrán responder por los acompañantes que vosotros hayáis previsto": "If it's off, they can only reply for the plus-ones you added",
+  "Contraseña (mínimo 8 caracteres)": "Password (at least 8 characters)",
+  "La contraseña no es correcta": "The password is incorrect",
+  "Y vuestra contraseña:": "And your password:",
 };
 
 export default dict;

@@ -107,7 +107,7 @@ const dict: Record<string, string> = {
   "Contras": "Inconvénients",
   "Contraseña": "Mot de passe",
   "Contraseña cambiada. ¡Bienvenidos de nuevo!": "Mot de passe modifié. Bon retour !",
-  "Contraseña nueva (mínimo 6 caracteres)": "Nouveau mot de passe (6 caractères minimum)",
+  "Contraseña nueva (mínimo 8 caracteres)": "Nouveau mot de passe (8 caractères minimum)",
   "Contratar fotógrafo y vídeo": "Réserver photographe et vidéaste",
   "Contratar música y flores": "Réserver musique et fleurs",
   "Contrato firmado": "Contrat signé",
@@ -228,7 +228,7 @@ const dict: Record<string, string> = {
   "Jun 20": "20 juin",
   "La boda,": "Votre mariage,",
   "La ceremonia es a las {time}. ¿Y todo lo demás?": "La cérémonie est à {time}. Et tout le reste ?",
-  "La contraseña es demasiado corta. Usad al menos 6 caracteres.": "Le mot de passe est trop court. Utilisez au moins 6 caractères.",
+  "La contraseña es demasiado corta. Usad al menos 8 caracteres.": "Le mot de passe est trop court. Utilisez au moins 8 caractères.",
   "La contraseña nueva tiene que ser distinta de la anterior.": "Le nouveau mot de passe doit être différent de l'ancien.",
   "La hora se cambia arriba, en «Hora de la ceremonia».": "L'heure se modifie en haut, dans « Heure de la cérémonie ».",
   "Lista de invitados y plano de mesas": "Liste d'invités et plan de table",
@@ -862,6 +862,9 @@ const dict: Record<string, string> = {
   "Añadir niño/a": "Ajouter un enfant",
   "Dejar que añadan acompañantes y niños": "Autoriser l'ajout d'accompagnants et d'enfants",
   "Si lo apagáis, solo podrán responder por los acompañantes que vosotros hayáis previsto": "Désactivé, ils ne pourront répondre que pour les accompagnants que vous avez prévus",
+  "Contraseña (mínimo 8 caracteres)": "Mot de passe (8 caractères minimum)",
+  "La contraseña no es correcta": "Le mot de passe est incorrect",
+  "Y vuestra contraseña:": "Et votre mot de passe :",
 };
 
 export default dict;

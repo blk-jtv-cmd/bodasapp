@@ -107,7 +107,7 @@ const dict: Record<string, string> = {
   "Contras": "Contras",
   "Contraseña": "Palavra-passe",
   "Contraseña cambiada. ¡Bienvenidos de nuevo!": "Palavra-passe alterada. Bem-vindos de volta!",
-  "Contraseña nueva (mínimo 6 caracteres)": "Nova palavra-passe (mínimo 6 caracteres)",
+  "Contraseña nueva (mínimo 8 caracteres)": "Nova palavra-passe (mínimo 8 caracteres)",
   "Contratar fotógrafo y vídeo": "Contratar fotógrafo e vídeo",
   "Contratar música y flores": "Contratar música e flores",
   "Contrato firmado": "Contrato assinado",
@@ -228,7 +228,7 @@ const dict: Record<string, string> = {
   "Jun 20": "20 jun",
   "La boda,": "O casamento,",
   "La ceremonia es a las {time}. ¿Y todo lo demás?": "A cerimónia é às {time}. E tudo o resto?",
-  "La contraseña es demasiado corta. Usad al menos 6 caracteres.": "A palavra-passe é demasiado curta. Usem pelo menos 6 caracteres.",
+  "La contraseña es demasiado corta. Usad al menos 8 caracteres.": "A palavra-passe é demasiado curta. Usem pelo menos 8 caracteres.",
   "La contraseña nueva tiene que ser distinta de la anterior.": "A nova palavra-passe tem de ser diferente da anterior.",
   "La hora se cambia arriba, en «Hora de la ceremonia».": "A hora muda-se em cima, em «Hora da cerimónia».",
   "Lista de invitados y plano de mesas": "Lista de convidados e planta das mesas",
@@ -862,6 +862,9 @@ const dict: Record<string, string> = {
   "Añadir niño/a": "Adicionar criança",
   "Dejar que añadan acompañantes y niños": "Permitir adicionar acompanhantes e crianças",
   "Si lo apagáis, solo podrán responder por los acompañantes que vosotros hayáis previsto": "Se o desligarem, só poderão responder pelos acompanhantes que vocês previram",
+  "Contraseña (mínimo 8 caracteres)": "Palavra-passe (mínimo 8 caracteres)",
+  "La contraseña no es correcta": "A palavra-passe não está correta",
+  "Y vuestra contraseña:": "E a vossa palavra-passe:",
 };
 
 export default dict;
