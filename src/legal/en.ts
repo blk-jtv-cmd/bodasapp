@@ -85,6 +85,7 @@ const docs: LegalDocs = {
           "Allergies and diet: knowing that a guest is coeliac or has an allergy is health information (art. 9 GDPR). This field is optional and is only there to plan the menu with your caterer. We do not use this information for anything else, we do not share it with anyone, and we only access it if needed to solve an issue you raise with us. If you prefer, leave it blank and tell your caterer directly.",
           "Children: you can mark a guest as a child to count children's menus. We do not ask for age or date of birth; the name is enough.",
           "If a guest asks you to correct or delete their data, you can do so at any time from the guest list.",
+          "Online RSVPs: if you share your RSVP link, your guests can reply themselves (whether they're coming, plus-ones, children, allergies or diet, and a comment). Those replies are saved to your list; you decide what happens to them and we process them on your behalf. The form tells each guest what they are used for.",
         ],
       },
       {

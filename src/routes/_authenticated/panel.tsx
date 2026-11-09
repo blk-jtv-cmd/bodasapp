@@ -29,6 +29,8 @@ import { Cronograma } from "@/components/panel/cronograma";
 import { Fincas } from "@/components/panel/fincas";
 import { Menu } from "@/components/panel/menu";
 import { TextField } from "@/components/panel/fields";
+import { AllergyPicker } from "@/components/allergy-picker";
+import { RsvpLinkCard, shareGuestLink } from "@/components/panel/rsvp-online";
 import { CURRENCIES, currencyLabel, formatMoney, currencySymbol } from "@/lib/currency";
 import {
   Bar,
@@ -103,6 +105,11 @@ type Guest = {
   companion_of?: string | null;
   is_child?: boolean;
   allergies?: string[];
+  /** Confirmaciones online. */
+  rsvp_token?: string | null;
+  rsvp_at?: string | null;
+  rsvp_via?: string | null;
+  rsvp_comment?: string;
 };
 type Vendor = {
   id: string;
@@ -227,7 +234,12 @@ function PanelPage() {
     // Si aún no existe la columna companion_of en la base de datos, se cargan igual sin ella.
     const loadGuests = async (id: string) => {
       const cols = "id,name,guest_group,invited_by,rsvp,table_number,companions,notes,seat_order";
-      for (const extra of [",companion_of,is_child,allergies", ",companion_of", ""]) {
+      for (const extra of [
+        ",companion_of,is_child,allergies,rsvp_token,rsvp_at,rsvp_via,rsvp_comment",
+        ",companion_of,is_child,allergies",
+        ",companion_of",
+        "",
+      ]) {
         const res = await supabase.from("guests").select(`${cols}${extra}`).eq("wedding_id", id).order("created_at");
         if (!res.error || !extra) return res;
       }
@@ -1053,58 +1065,6 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle: string })
 const RSVP = ["pendiente", "confirmado", "rechazado"];
 // "Acompañante" ya no se elige: los acompañantes se crean con la casilla «Acompañantes».
 const GUEST_GROUPS = ["Familia", "Amigos", "Trabajo", "Otros"];
-const ALLERGIES = ["Gluten", "Lactosa", "Frutos secos", "Marisco", "Huevo", "Vegetariano", "Vegano"];
-
-/** Botones de alergias / dieta + una casilla para escribir otra. */
-function AllergyPicker({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
-  const { t: tr } = useI18n();
-  const [other, setOther] = useState("");
-  const all = Array.from(new Set([...ALLERGIES, ...value]));
-  const toggle = (a: string) => onChange(value.includes(a) ? value.filter((x) => x !== a) : [...value, a]);
-  return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <span className="mr-1 text-xs text-muted-foreground">{tr("Alergias y dieta")}</span>
-      {all.map((a) => (
-        <button
-          key={a}
-          type="button"
-          onClick={() => toggle(a)}
-          className={`rounded-full px-2.5 py-1 text-[11px] ring-1 ${
-            value.includes(a) ? "bg-clay text-foreground ring-clay" : "bg-background text-muted-foreground ring-line"
-          }`}
-        >
-          {tr(a)}
-        </button>
-      ))}
-      <input
-        value={other}
-        onChange={(e) => setOther(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && other.trim()) {
-            e.preventDefault();
-            onChange([...value, other.trim()]);
-            setOther("");
-          }
-        }}
-        onBlur={() => {
-          if (other.trim()) {
-            onChange([...value, other.trim()]);
-            setOther("");
-          }
-        }}
-        placeholder={tr("Otra…")}
-        className="w-24 rounded-full border border-line bg-background px-2.5 py-1 text-[11px] outline-none focus:border-clay-ink"
-      />
-      <p className="basis-full text-[11px] text-muted-foreground">
-        🔒 {tr("Solo para organizar el menú con el catering.")}{" "}
-        <a href="/legal/privacidad" target="_blank" rel="noreferrer" className="underline underline-offset-2">
-          {tr("Más info")}
-        </a>
-      </p>
-    </div>
-  );
-}
-
 const RSVP_LABEL: Record<string, string> = {
   pendiente: "Pendiente",
   confirmado: "Confirmado",
@@ -1412,6 +1372,12 @@ function Invitados({
           ⚠️ {tr("Alergias y dieta")}: {allergyCounts.map(([a, n]) => `${tr(a)} ${n}`).join(" · ")}
         </p>
       )}
+      <RsvpLinkCard
+        weddingId={wedding.id}
+        online={guests.filter((g) => g.rsvp_at && !g.companion_of).length}
+        fresh={guests.filter((g) => g.rsvp_via === "nuevo" && !g.companion_of).length}
+        reload={reload}
+      />
       {guests.length > 0 && (
         <section className="mb-8 grid gap-6 lg:grid-cols-2">
           <div className="rounded-2xl bg-panel p-6 ring-1 ring-foreground/5">
@@ -1751,6 +1717,26 @@ function Invitados({
                 ⚠️ {tr(a)}
               </span>
             ))}
+            {g.rsvp_via === "nuevo" ? (
+              <span
+                title={tr("Se ha apuntado con el enlace y no estaba en vuestra lista")}
+                className="rounded-full bg-clay-ink px-2 py-0.5 text-[10px] text-background"
+              >
+                ✨ {tr("Nuevo por el enlace")}
+              </span>
+            ) : (
+              g.rsvp_at && (
+                <span
+                  title={new Intl.DateTimeFormat(locale(), { dateStyle: "medium", timeStyle: "short" }).format(new Date(g.rsvp_at))}
+                  className="rounded-full bg-background px-2 py-0.5 text-[10px] text-clay-ink ring-1 ring-clay/40"
+                >
+                  ✉️ {tr("Respondió online")}
+                </span>
+              )
+            )}
+            {g.rsvp_comment && (
+              <span className="basis-full text-xs italic text-muted-foreground">💬 «{g.rsvp_comment}»</span>
+            )}
             {/* En móvil: notas, confirmación y acciones en una segunda línea */}
             <span className="basis-full sm:hidden" />
             <input
@@ -1783,6 +1769,15 @@ function Invitados({
                 </option>
               ))}
             </select>
+            {!g.companion_of && (
+              <button
+                onClick={() => shareGuestLink(g, reload)}
+                title={tr("Enlace personal para que confirme")}
+                className="text-xs text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground"
+              >
+                {tr("Enlace")}
+              </button>
+            )}
             <button
               onClick={() =>
                 setEditing({

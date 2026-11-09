@@ -85,6 +85,7 @@ const docs: LegalDocs = {
           "Alergias y dieta: saber que un invitado es celíaco o alérgico es información de salud (art. 9 RGPD). Es un campo opcional que solo sirve para organizar el menú con el catering. No usamos esa información para nada más, no la compartimos con nadie y solo accedemos a ella si hace falta para resolver una incidencia que nos planteéis. Si lo preferís, podéis dejarlo en blanco y contárselo directamente al catering.",
           "Niños y niñas: podéis marcar a un invitado como niño o niña para calcular los menús infantiles. No pedimos edad ni fecha de nacimiento; basta con el nombre.",
           "Si un invitado os pide corregir o borrar sus datos, podéis hacerlo en cualquier momento desde la lista de invitados.",
+          "Confirmaciones online: si compartís el enlace de confirmación, vuestros invitados pueden responder ellos mismos (si asisten, acompañantes, niños, alergias o dieta y un comentario). Esas respuestas se guardan en vuestra lista; vosotros decidís sobre ellas y nosotros las tratamos por cuenta vuestra. El formulario explica a cada invitado para qué se usan.",
         ],
       },
       {
