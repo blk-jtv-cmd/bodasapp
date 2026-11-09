@@ -53,12 +53,12 @@ function euro(n: number, currency: string = "EUR") {
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: "good" | "bad" }) {
   return (
-    <div className="rounded-2xl bg-panel p-6 ring-1 ring-foreground/5">
+    <div className="rounded-2xl bg-panel p-4 ring-1 ring-foreground/5 sm:p-6">
       <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
         {label}
       </div>
       <div
-        className={`mt-2 font-display text-3xl font-semibold ${
+        className={`mt-2 font-display text-2xl font-semibold sm:text-3xl ${
           tone === "bad" ? "text-destructive" : tone === "good" ? "text-clay-ink" : ""
         }`}
       >
@@ -270,8 +270,8 @@ export function Presupuesto({
         </p>
       </div>
 
-      <div className="mb-4 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl bg-panel p-6 ring-1 ring-foreground/5">
+      <div className="mb-3 grid grid-cols-2 gap-3 sm:mb-4 sm:grid-cols-3 sm:gap-4">
+        <div className="col-span-2 rounded-2xl bg-panel p-4 ring-1 ring-foreground/5 sm:col-span-1 sm:p-6">
           <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
             {tr("Total disponible")}
           </div>
@@ -282,7 +282,7 @@ export function Presupuesto({
               onChange={(e) => setBudgetDraft(e.target.value)}
               onBlur={async () => {
                 if (budgetDraft === null) return;
-                const n = Number(budgetDraft.replace(",", ".")) || 0;
+                const n = parseAmount(budgetDraft);
                 setBudgetDraft(null);
                 if (n !== available) await onBudgetChange(n);
               }}
@@ -299,7 +299,7 @@ export function Presupuesto({
         />
       </div>
 
-      <div className="mb-8 grid gap-4 sm:grid-cols-3">
+      <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         <Stat label={tr("Gasto real")} value={euro(totals.actual, cur)} />
         <Stat label={tr("Pagado")} value={euro(totals.paid, cur)} />
         <Stat label={tr("Pendiente")} value={euro(totals.pending, cur)} />
@@ -422,6 +422,73 @@ export function Presupuesto({
       <div className="space-y-4">
         {byCategory.map((cat) => {
           const isOpen = !collapsed[cat.name];
+          const addBlock = (
+            <>
+              {addingIn === cat.name ? (
+                            <form
+                              onSubmit={async (e) => {
+                                e.preventDefault();
+                                const form = e.currentTarget;
+                                const field = (n: string) => form.elements.namedItem(n) as HTMLInputElement;
+                                const ok = await addRow(cat.name, field("concept").value, field("notes").value, {
+                                  planned: parseAmount(field("planned").value),
+                                  actual_cost: parseAmount(field("actual_cost").value),
+                                  paid: parseAmount(field("paid").value),
+                                });
+                                if (ok) {
+                                  for (const n of ["concept", "notes", "planned", "actual_cost", "paid"]) field(n).value = "";
+                                  field("concept").focus();
+                                }
+                              }}
+                              className="flex flex-wrap gap-3"
+                            >
+                              <input
+                                name="concept"
+                                autoFocus
+                                placeholder={tr("Concepto")}
+                                className={`${inputClass} min-w-[220px]`}
+                              />
+                              {(
+                                [
+                                  ["planned", "Previsto"],
+                                  ["actual_cost", "Gasto real"],
+                                  ["paid", "Pagado"],
+                                ] as const
+                              ).map(([name, label]) => (
+                                <input
+                                  key={name}
+                                  name={name}
+                                  inputMode="decimal"
+                                  placeholder={`${tr(label)} ${currencySymbol(cur)}`}
+                                  className={`${inputClass} w-32 text-right`}
+                                />
+                              ))}
+                              <input
+                                name="notes"
+                                placeholder={tr("Notas (opcional)")}
+                                className={`${inputClass} min-w-[200px]`}
+                              />
+                              <button className="rounded-full bg-clay px-4 py-2 text-xs font-medium text-foreground hover:bg-clay-ink hover:text-background">
+                                {tr("Añadir")}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setAddingIn(null)}
+                                className="text-xs text-muted-foreground hover:text-foreground"
+                              >
+                                {tr("Cerrar")}
+                              </button>
+                            </form>
+                          ) : (
+                            <button
+                              onClick={() => setAddingIn(cat.name)}
+                              className="text-xs text-muted-foreground hover:text-foreground"
+                            >
+                              {tr("+ Añadir partida")}
+                            </button>
+                          )}
+            </>
+          );
           return (
             <section
               key={cat.name}
@@ -460,7 +527,86 @@ export function Presupuesto({
               </header>
 
               {isOpen && (
-                <div className="overflow-x-auto border-t border-line bg-background">
+                <>
+                {/* Móvil: una tarjeta por partida */}
+                <div className="divide-y divide-line border-t border-line bg-background sm:hidden">
+                  {cat.rows.map((x) => {
+                    const pending = Number(x.actual_cost) - Number(x.paid);
+                    return (
+                      <div key={x.id} className="space-y-2 px-3 py-3">
+                        <div className="flex items-center gap-2">
+                          <NoteCell
+                            value={x.concept}
+                            placeholder="Concepto"
+                            className="min-w-0 flex-1 font-medium"
+                            onSave={async (v) => {
+                              if (v.trim()) await updateRow(x.id, { concept: v.trim() });
+                            }}
+                          />
+                          <button
+                            onClick={async () => {
+                              if (!window.confirm(tr("¿Borrar {name}?", { name: x.concept }))) return;
+                              await supabase.from("expenses").delete().eq("id", x.id);
+                              await reload();
+                            }}
+                            className="text-xs text-muted-foreground hover:text-destructive"
+                          >
+                            {tr("Borrar")}
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1">
+                          {(
+                            [
+                              ["Previsto", "planned"],
+                              ["Gasto real", "actual_cost"],
+                              ["Pagado", "paid"],
+                            ] as const
+                          ).map(([label, key]) => (
+                            <label key={key} className="flex flex-col">
+                              <span className="px-2 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
+                                {tr(label)}
+                              </span>
+                              <AmountCell value={Number(x[key])} onSave={(n) => updateRow(x.id, { [key]: n } as Parameters<typeof updateRow>[1])} />
+                            </label>
+                          ))}
+                        </div>
+                        <div className="flex items-center justify-between gap-2 px-2 text-xs">
+                          <span className={pending > 0 ? "text-destructive" : "text-muted-foreground"}>
+                            {tr("Pendiente")}: {euro(pending, cur)}
+                          </span>
+                          <select
+                            value={x.category}
+                            onChange={(e) => updateRow(x.id, { category: e.target.value })}
+                            className="max-w-[55%] truncate rounded-md border border-transparent bg-transparent py-1 text-xs text-muted-foreground outline-none hover:border-line focus:border-clay-ink"
+                          >
+                            {categoryNames.map((n) => (
+                              <option key={n} value={n}>
+                                {catLabel(n, tr)}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <NoteCell
+                          value={x.notes ?? ""}
+                          className="w-full text-xs"
+                          onSave={(v) => updateRow(x.id, { notes: v })}
+                        />
+                      </div>
+                    );
+                  })}
+                  {cat.rows.length > 0 && (
+                    <div className="flex justify-between bg-panel px-5 py-2 text-xs font-medium">
+                      <span>{tr("Subtotal")}</span>
+                      <span>
+                        {euro(cat.actual, cur)} · {tr("Pagado")} {euro(cat.paid, cur)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="px-3 py-3">{addBlock}</div>
+                </div>
+
+                {/* Ordenador y tablet: tabla */}
+                <div className="hidden overflow-x-auto border-t border-line bg-background sm:block">
                   <table className="w-full min-w-[820px] text-sm">
                     <thead className="bg-panel text-left font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
                       <tr>
@@ -572,74 +718,13 @@ export function Presupuesto({
 
                       <tr className="border-t border-line">
                         <td className="px-4 py-2" colSpan={9}>
-                          {addingIn === cat.name ? (
-                            <form
-                              onSubmit={async (e) => {
-                                e.preventDefault();
-                                const form = e.currentTarget;
-                                const field = (n: string) => form.elements.namedItem(n) as HTMLInputElement;
-                                const ok = await addRow(cat.name, field("concept").value, field("notes").value, {
-                                  planned: parseAmount(field("planned").value),
-                                  actual_cost: parseAmount(field("actual_cost").value),
-                                  paid: parseAmount(field("paid").value),
-                                });
-                                if (ok) {
-                                  for (const n of ["concept", "notes", "planned", "actual_cost", "paid"]) field(n).value = "";
-                                  field("concept").focus();
-                                }
-                              }}
-                              className="flex flex-wrap gap-3"
-                            >
-                              <input
-                                name="concept"
-                                autoFocus
-                                placeholder={tr("Concepto")}
-                                className={`${inputClass} min-w-[220px]`}
-                              />
-                              {(
-                                [
-                                  ["planned", "Previsto"],
-                                  ["actual_cost", "Gasto real"],
-                                  ["paid", "Pagado"],
-                                ] as const
-                              ).map(([name, label]) => (
-                                <input
-                                  key={name}
-                                  name={name}
-                                  inputMode="decimal"
-                                  placeholder={`${tr(label)} ${currencySymbol(cur)}`}
-                                  className={`${inputClass} w-32 text-right`}
-                                />
-                              ))}
-                              <input
-                                name="notes"
-                                placeholder={tr("Notas (opcional)")}
-                                className={`${inputClass} min-w-[200px]`}
-                              />
-                              <button className="rounded-full bg-clay px-4 py-2 text-xs font-medium text-foreground hover:bg-clay-ink hover:text-background">
-                                {tr("Añadir")}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setAddingIn(null)}
-                                className="text-xs text-muted-foreground hover:text-foreground"
-                              >
-                                {tr("Cerrar")}
-                              </button>
-                            </form>
-                          ) : (
-                            <button
-                              onClick={() => setAddingIn(cat.name)}
-                              className="text-xs text-muted-foreground hover:text-foreground"
-                            >
-                              {tr("+ Añadir partida")}
-                            </button>
-                          )}
+                          {addBlock}
                         </td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
+                </>
               )}
             </section>
           );
