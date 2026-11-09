@@ -1285,7 +1285,11 @@ function Invitados({
       g.notes ?? "",
     ]);
     // CSV con ";" y BOM: Excel lo abre directamente con tildes y columnas bien separadas.
-    const cell = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+    // Una celda que empieza por = + - @ Excel la ejecuta como fórmula: se le antepone ' para que sea solo texto.
+    const cell = (v: string) => {
+      const text = /^[=+\-@\t\r]/.test(String(v)) ? `'${v}` : String(v);
+      return `"${text.replace(/"/g, '""')}"`;
+    };
     const csv = "\ufeff" + [head, ...rows].map((r) => r.map(cell).join(";")).join("\r\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a");
@@ -2348,7 +2352,17 @@ function Ajustes({
   const [sending, setSending] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  // Las cuentas con contraseña la confirman antes de borrar; las de Google no tienen contraseña.
+  const [hasPassword, setHasPassword] = useState(false);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setHasPassword(!!data.user?.identities?.some((i) => i.provider === "email"));
+    });
+  }, []);
   const deleteWord = tr("BORRAR");
+  const canDelete =
+    confirmText.trim().toUpperCase() === deleteWord.toUpperCase() && (!hasPassword || deletePassword.length > 0);
 
   async function sendFeedback() {
     if (!feedback.trim()) return;
@@ -2379,8 +2393,16 @@ function Ajustes({
   }
 
   async function deleteAccount() {
-    if (confirmText.trim().toUpperCase() !== deleteWord.toUpperCase()) return;
+    if (!canDelete) return;
     setDeleting(true);
+    if (hasPassword) {
+      const { error: wrong } = await supabase.auth.signInWithPassword({ email: email ?? "", password: deletePassword });
+      if (wrong) {
+        setDeleting(false);
+        toast.error(tr("La contraseña no es correcta"));
+        return;
+      }
+    }
     const { error } = await supabase.rpc("delete_my_account" as never);
     if (error) {
       setDeleting(false);
@@ -2573,9 +2595,21 @@ function Ajustes({
                 className={`${inputClass} mt-1 block w-48`}
               />
             </label>
+            {hasPassword && (
+              <label className="mt-3 block text-sm">
+                {tr("Y vuestra contraseña:")}
+                <input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  autoComplete="current-password"
+                  className={`${inputClass} mt-1 block w-64`}
+                />
+              </label>
+            )}
             <button
               onClick={deleteAccount}
-              disabled={deleting || confirmText.trim().toUpperCase() !== deleteWord.toUpperCase()}
+              disabled={deleting || !canDelete}
               className="mt-3 rounded-full bg-destructive px-5 py-2 text-sm font-medium text-background disabled:opacity-40"
             >
               {deleting ? tr("Un momento…") : tr("Borrar mi cuenta")}

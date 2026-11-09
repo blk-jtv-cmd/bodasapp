@@ -280,10 +280,16 @@ function AuthPage() {
             <input
               type="password"
               required
-              minLength={6}
+              minLength={mode === "login" ? undefined : 8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder={mode === "reset" ? tr("Contraseña nueva (mínimo 6 caracteres)") : tr("Contraseña")}
+              placeholder={
+                mode === "reset"
+                  ? tr("Contraseña nueva (mínimo 8 caracteres)")
+                  : mode === "signup"
+                    ? tr("Contraseña (mínimo 8 caracteres)")
+                    : tr("Contraseña")
+              }
               autoComplete={mode === "login" ? "current-password" : "new-password"}
               className={inputCls}
             />
@@ -344,7 +350,7 @@ function translateAuthError(err: unknown): string {
   if (m.includes("already registered") || m.includes("already been registered"))
     return tr("Ya existe una cuenta con este email. Pulsad «Ya tenemos cuenta» para entrar.");
   if (m.includes("password should be at least") || m.includes("weak password"))
-    return tr("La contraseña es demasiado corta. Usad al menos 6 caracteres.");
+    return tr("La contraseña es demasiado corta. Usad al menos 8 caracteres.");
   if (m.includes("rate limit") || m.includes("security purposes"))
     return tr("Demasiados intentos seguidos. Esperad un minuto y volved a probar.");
   if (m.includes("same password") || m.includes("different from the old"))
