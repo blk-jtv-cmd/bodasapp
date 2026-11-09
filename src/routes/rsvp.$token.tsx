@@ -289,7 +289,7 @@ function RsvpPage() {
                     <div className="rounded-3xl bg-panel p-6 ring-1 ring-foreground/5 sm:p-8">
                       <h3 className="font-display text-xl">{t("¿Alguna alergia o dieta especial?")}</h3>
                       <p className="mb-3 mt-1 text-sm text-muted-foreground">{t("Marca lo que necesites, o nada si comes de todo.")}</p>
-                      <AllergyPicker value={allergies} onChange={setAllergies} />
+                      <AllergyPicker value={allergies} onChange={setAllergies} hideLabel />
                     </div>
 
                     {(companions.length > 0 || info.allow_plus) && (

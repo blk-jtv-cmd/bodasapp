@@ -18,7 +18,8 @@ async function copy(text: string) {
     await navigator.clipboard.writeText(text);
     return true;
   } catch {
-    window.prompt("", text);
+    // Sin permiso para el portapapeles: se muestra el texto para copiarlo a mano.
+    toast(text, { duration: 20000 });
     return false;
   }
 }

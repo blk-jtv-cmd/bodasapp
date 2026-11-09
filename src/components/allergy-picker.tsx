@@ -4,14 +4,22 @@ import { useI18n } from "@/i18n";
 export const ALLERGIES = ["Gluten", "Lactosa", "Frutos secos", "Marisco", "Huevo", "Vegetariano", "Vegano"];
 
 /** Botones de alergias / dieta + una casilla para escribir otra. */
-export function AllergyPicker({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+export function AllergyPicker({
+  value,
+  onChange,
+  hideLabel = false,
+}: {
+  value: string[];
+  onChange: (v: string[]) => void;
+  hideLabel?: boolean;
+}) {
   const { t: tr } = useI18n();
   const [other, setOther] = useState("");
   const all = Array.from(new Set([...ALLERGIES, ...value]));
   const toggle = (a: string) => onChange(value.includes(a) ? value.filter((x) => x !== a) : [...value, a]);
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <span className="mr-1 text-xs text-muted-foreground">{tr("Alergias y dieta")}</span>
+      {!hideLabel && <span className="mr-1 text-xs text-muted-foreground">{tr("Alergias y dieta")}</span>}
       {all.map((a) => (
         <button
           key={a}
