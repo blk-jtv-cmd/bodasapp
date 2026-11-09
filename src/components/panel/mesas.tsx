@@ -169,7 +169,7 @@ function TableView({
   isDragging: boolean;
   isDragOver: boolean;
   isSelected: boolean;
-  onDragStart: (e: React.DragEvent) => void;
+  onDragStart?: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDragLeave: () => void;
   onDrop: (e: React.DragEvent) => void;
@@ -205,16 +205,12 @@ function TableView({
 
   return (
     <div
-      draggable={!touchMode}
-      onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       onClick={onClick}
-      onPointerDown={touchMode ? onTouchDragStart : undefined}
-      className={`absolute cursor-move select-none transition-opacity ${
-        isDragging ? "opacity-40" : ""
-      } ${touchMode ? "touch-none" : ""}`}
+      onPointerDown={onTouchDragStart}
+      className={`absolute touch-none cursor-move select-none transition-opacity ${isDragging ? "opacity-40" : ""}`}
       style={{ left: position.x, top: position.y }}
     >
       <div className="relative" style={{ width: tableW, height: tableH }}>
@@ -438,13 +434,25 @@ export function Mesas({
     setSelectedTableId(tableId);
   }
 
+  // Mesas movidas que aún no han vuelto de la base de datos: se quedan donde se soltaron.
+  const [moved, setMoved] = useState<Record<string, { x: number; y: number }>>({});
+  useEffect(() => {
+    setMoved((m) => {
+      const next = { ...m };
+      for (const t of tables) if (next[t.id] && next[t.id].x === t.pos_x && next[t.id].y === t.pos_y) delete next[t.id];
+      return Object.keys(next).length === Object.keys(m).length ? m : next;
+    });
+  }, [tables]);
+
+  // Arrastre de mesas con ratón y con dedo (eventos de puntero: la mesa sigue al cursor).
   function startTouchDrag(e: React.PointerEvent, table: MesaTable) {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || e.button !== 0) return;
+    const start = moved[table.id] ?? { x: table.pos_x, y: table.pos_y };
     const rect = canvasRef.current.getBoundingClientRect();
     touchDrag.current = {
       id: table.id,
-      dx: e.clientX - rect.left - table.pos_x,
-      dy: e.clientY - rect.top - table.pos_y,
+      dx: e.clientX - rect.left - start.x,
+      dy: e.clientY - rect.top - start.y,
       sx: e.clientX,
       sy: e.clientY,
       moved: false,
@@ -471,6 +479,7 @@ export function Mesas({
     if (!d) return;
     lastTouchEnd.current = Date.now();
     if (d.moved && livePos && livePos.id === d.id) {
+      setMoved((m) => ({ ...m, [d.id]: { x: livePos.x, y: livePos.y } }));
       void updateTable(d.id, { pos_x: livePos.x, pos_y: livePos.y });
     } else if (!d.moved) {
       // Toque sin mover: igual que hacer clic en la mesa.
@@ -518,16 +527,7 @@ export function Mesas({
     void reorderGuests(selectedTableId!, reordered);
   }
 
-  const onTableDragStart = useCallback(
-    (e: React.DragEvent, table: MesaTable) => {
-      e.dataTransfer.setData(DRAG_TABLE, table.id);
-      e.dataTransfer.effectAllowed = "move";
-      setDraggingTableId(table.id);
-      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-      setTableDragOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-    },
-    [],
-  );
+
 
   const onCanvasDrop = useCallback(
     (e: React.DragEvent) => {
@@ -697,7 +697,6 @@ export function Mesas({
                 isDragging={isDragging}
                 isDragOver={isDragOver}
                 isSelected={isSelected}
-                onDragStart={(e) => onTableDragStart(e, table)}
                 onDragOver={(e) => {
                   if (e.dataTransfer.types.includes(DRAG_GUEST)) {
                     e.preventDefault();
@@ -714,7 +713,7 @@ export function Mesas({
                 position={
                   livePos?.id === table.id
                     ? { x: livePos.x, y: livePos.y }
-                    : { x: table.pos_x, y: table.pos_y }
+                    : moved[table.id] ?? { x: table.pos_x, y: table.pos_y }
                 }
                 onTouchDragStart={(e) => startTouchDrag(e, table)}
                 pickedGuestId={pickedGuestId}
