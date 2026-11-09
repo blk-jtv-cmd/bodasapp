@@ -1,6 +1,21 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { catLabel } from "@/lib/category-emoji";
+import { Checklist, type ChecklistTask } from "@/components/panel/checklist";
+import {
+  Clock,
+  House,
+  Landmark,
+  LayoutGrid,
+  ListChecks,
+  Lock,
+  Settings,
+  Store,
+  UtensilsCrossed,
+  Users,
+  Wallet,
+} from "lucide-react";
+import { TASK_LIBRARY, suggestedDue } from "@/lib/task-library";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { BrandLogo, BrandName } from "@/components/brand";
@@ -64,15 +79,7 @@ type Wedding = {
   ceremony_time: string | null;
 };
 
-type Task = {
-  id: string;
-  title: string;
-  category: string;
-  due_date: string | null;
-  done: boolean;
-  owner: string;
-  notes: string | null;
-};
+type Task = ChecklistTask;
 type Expense = {
   id: string;
   concept: string;
@@ -94,6 +101,8 @@ type Guest = {
   seat_order: number;
   /** Si es acompañante: id del invitado con el que viene. */
   companion_of?: string | null;
+  is_child?: boolean;
+  allergies?: string[];
 };
 type Vendor = {
   id: string;
@@ -111,19 +120,8 @@ type Vendor = {
 };
 export type TimelineItem = { id: string; time_label: string; title: string; owner: string | null };
 
-const DEFAULT_TASKS: { title: string; category: string }[] = [
-  { title: "Fijar la fecha y el presupuesto total", category: "12 meses antes" },
-  { title: "Elegir y reservar el lugar de la ceremonia", category: "12 meses antes" },
-  { title: "Reservar el espacio del banquete", category: "12 meses antes" },
-  { title: "Cerrar la lista inicial de invitados", category: "10 meses antes" },
-  { title: "Contratar fotógrafo y vídeo", category: "9 meses antes" },
-  { title: "Elegir los trajes y vestidos", category: "8 meses antes" },
-  { title: "Reservar catering y menú de prueba", category: "6 meses antes" },
-  { title: "Enviar las invitaciones", category: "4 meses antes" },
-  { title: "Contratar música y flores", category: "4 meses antes" },
-  { title: "Cerrar el número final de invitados", category: "1 mes antes" },
-  { title: "Repartir el cronograma del día", category: "1 semana antes" },
-];
+// Tareas sugeridas para una boda nueva (con su guía en src/lib/task-library.ts).
+const DEFAULT_TASKS = TASK_LIBRARY.map(({ title, category }) => ({ title, category }));
 
 const TABS = [
   ["resumen", "Resumen"],
@@ -151,6 +149,19 @@ const PAID_TABS: TabKey[] = [
   "proveedores",
   "cronograma",
 ];
+
+const TAB_ICONS: Record<TabKey, typeof House> = {
+  resumen: House,
+  checklist: ListChecks,
+  presupuesto: Wallet,
+  fincas: Landmark,
+  invitados: Users,
+  mesas: LayoutGrid,
+  menu: UtensilsCrossed,
+  proveedores: Store,
+  cronograma: Clock,
+  ajustes: Settings,
+};
 
 const STRIPE_PAYMENT_LINK = import.meta.env.VITE_STRIPE_PAYMENT_LINK as string | undefined;
 
@@ -216,12 +227,21 @@ function PanelPage() {
     // Si aún no existe la columna companion_of en la base de datos, se cargan igual sin ella.
     const loadGuests = async (id: string) => {
       const cols = "id,name,guest_group,invited_by,rsvp,table_number,companions,notes,seat_order";
-      const res = await supabase.from("guests").select(`${cols},companion_of`).eq("wedding_id", id).order("created_at");
-      if (!res.error) return res;
+      for (const extra of [",companion_of,is_child,allergies", ",companion_of", ""]) {
+        const res = await supabase.from("guests").select(`${cols}${extra}`).eq("wedding_id", id).order("created_at");
+        if (!res.error || !extra) return res;
+      }
       return supabase.from("guests").select(cols).eq("wedding_id", id).order("created_at");
     };
+    // Igual con las columnas nuevas del checklist (prioridad, pasos, no aplica).
+    const loadTasks = async (id: string) => {
+      const cols = "id,title,category,due_date,done,owner,notes";
+      const res = await supabase.from("tasks").select(`${cols},priority,steps,not_applicable`).eq("wedding_id", id).order("created_at");
+      if (!res.error) return res;
+      return supabase.from("tasks").select(cols).eq("wedding_id", id).order("created_at");
+    };
     const [t, e, g, v, tl, c, mt] = await Promise.all([
-      supabase.from("tasks").select("id,title,category,due_date,done,owner,notes").eq("wedding_id", weddingId).order("created_at"),
+      loadTasks(weddingId),
       supabase.from("expenses").select("id,concept,category,planned,actual_cost,paid,notes").eq("wedding_id", weddingId).order("created_at"),
       loadGuests(weddingId),
       supabase.from("vendors").select("id,name,service,contact,phone,email,price,status,website,deposit_paid,contract_signed,notes").eq("wedding_id", weddingId).order("created_at"),
@@ -361,6 +381,10 @@ function PanelPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wedding?.id]);
 
+  useEffect(() => {
+    document.getElementById(`navbtn-${tab}`)?.scrollIntoView({ inline: "center", block: "nearest" });
+  }, [tab]);
+
   // Si pagan desde la app de la pantalla de inicio, Stripe se abre aparte: al volver, comprobamos el pago.
   useEffect(() => {
     if (!wedding || wedding.plan_active) return;
@@ -416,7 +440,7 @@ function PanelPage() {
             </button>
           </div>
         </div>
-        <div className="mx-auto flex max-w-6xl gap-5 overflow-x-auto px-4 pb-3 text-sm [scrollbar-width:none] sm:gap-6 sm:px-6">
+        <div className="mx-auto hidden max-w-6xl gap-6 overflow-x-auto px-6 pb-3 text-sm [scrollbar-width:none] sm:flex">
           {TABS.map(([key, label]) => (
             <button
               key={key}
@@ -438,7 +462,7 @@ function PanelPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
+      <main className="mx-auto max-w-6xl px-4 pb-6 pt-6 sm:px-6 sm:py-10">
         {!wedding.plan_active && !locked && (
           <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-clay-soft px-6 py-5">
             <div>
@@ -463,6 +487,15 @@ function PanelPage() {
             confirmed={confirmed}
             guests={guests.length}
             vendors={vendors.length}
+            rsvp={{
+              confirmado: guests.filter((g) => g.rsvp === "confirmado").reduce((s, g) => s + 1 + (g.companions || 0), 0),
+              pendiente: guests.filter((g) => g.rsvp === "pendiente").reduce((s, g) => s + 1 + (g.companions || 0), 0),
+              rechazado: guests.filter((g) => g.rsvp === "rechazado").reduce((s, g) => s + 1 + (g.companions || 0), 0),
+            }}
+            onGo={(t) => {
+              setTab(t);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
           />
         )}
         {tab === "checklist" && <Checklist tasks={tasks} setTasks={setTasks} {...ctx} />}
@@ -514,11 +547,47 @@ function PanelPage() {
             reload={ctx.reload}
           />
         )}
-        {tab === "ajustes" && <Ajustes wedding={wedding} setWedding={setWedding} />}
+        {tab === "ajustes" && <Ajustes wedding={wedding} setWedding={setWedding} email={userEmail} />}
       </main>
-      <footer className="mx-auto max-w-6xl px-6 pb-10">
+      <footer className="mx-auto max-w-6xl px-6 pb-28 sm:pb-10">
         <LegalLinks />
       </footer>
+
+      {/* Móvil: barra de secciones fija abajo, con iconos */}
+      <nav
+        aria-label={tr("Secciones")}
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm sm:hidden"
+      >
+        <div className="flex overflow-x-auto [scrollbar-width:none]">
+          {TABS.map(([key, label]) => {
+            const Icon = TAB_ICONS[key];
+            const active = tab === key;
+            return (
+              <button
+                key={key}
+                id={`navbtn-${key}`}
+                onClick={() => {
+                  setTab(key);
+                  window.scrollTo({ top: 0 });
+                }}
+                aria-current={active ? "page" : undefined}
+                className={`relative flex min-w-[68px] flex-1 flex-col items-center gap-1 px-1 pb-2 pt-2.5 text-[10px] transition-colors ${
+                  active ? "text-clay-ink" : "text-muted-foreground"
+                }`}
+              >
+                {active && <span className="absolute inset-x-4 top-0 h-0.5 rounded-full bg-clay-ink" />}
+                <span className="relative">
+                  <Icon className="size-5" strokeWidth={active ? 2.2 : 1.6} />
+                  {!wedding.plan_active && PAID_TABS.includes(key) && (
+                    <Lock className="absolute -right-2 -top-1 size-2.5 opacity-60" />
+                  )}
+                </span>
+                <span className="whitespace-nowrap">{tr(label)}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }
@@ -660,6 +729,36 @@ function Stat({
   );
 }
 
+/** Cuenta atrás en directo (días, horas, minutos y segundos) hasta la ceremonia. */
+function LiveCountdown({ date, time }: { date: string; time: string | null }) {
+  const { t: tr } = useI18n();
+  const target = new Date(`${date}T${(time || "12:00").slice(0, 5)}:00`).getTime();
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  const diff = Math.max(0, target - now);
+  const parts: [number, string][] = [
+    [Math.floor(diff / 86400000), tr("días")],
+    [Math.floor((diff / 3600000) % 24), tr("horas")],
+    [Math.floor((diff / 60000) % 60), tr("min")],
+    [Math.floor((diff / 1000) % 60), tr("seg")],
+  ];
+  return (
+    <div className="flex items-end gap-3" aria-label={tr("Faltan {n} días", { n: parts[0][0] })}>
+      {parts.map(([n, label], i) => (
+        <div key={label} className="text-center">
+          <div className={`font-display text-3xl font-semibold tabular-nums leading-none ${i === 3 ? "text-clay-ink" : ""}`}>
+            {String(n).padStart(i === 0 ? 1 : 2, "0")}
+          </div>
+          <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.15em] text-muted-foreground">{label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function Resumen({
   wedding,
   tasks,
@@ -668,6 +767,8 @@ function Resumen({
   confirmed,
   guests,
   vendors,
+  rsvp,
+  onGo,
 }: {
   wedding: Wedding;
   tasks: Task[];
@@ -676,10 +777,47 @@ function Resumen({
   confirmed: number;
   guests: number;
   vendors: number;
+  rsvp: { confirmado: number; pendiente: number; rechazado: number };
+  onGo: (tab: TabKey) => void;
 }) {
   const { t: tr } = useI18n();
-  const doneCount = tasks.filter((t) => t.done).length;
-  const pending = tasks.filter((t) => !t.done).slice(0, 5);
+  const activeTasks = tasks.filter((t) => !t.not_applicable);
+  const doneCount = activeTasks.filter((t) => t.done).length;
+  const dueOf = (t: Task) => t.due_date ?? suggestedDue(t.category, wedding.wedding_date);
+  const today = new Date().toISOString().slice(0, 10);
+  const pending = activeTasks
+    .filter((t) => !t.done)
+    .sort((a, b) => (dueOf(a) ?? "9").localeCompare(dueOf(b) ?? "9"))
+    .slice(0, 5);
+  const overdue = activeTasks.filter((t) => !t.done && (dueOf(t) ?? "9") < today).length;
+
+  // Aviso para instalar la app (solo en móvil, si no está ya instalada y no lo han cerrado).
+  const [showInstall, setShowInstall] = useState(false);
+  useEffect(() => {
+    try {
+      const standalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        (navigator as Navigator & { standalone?: boolean }).standalone === true;
+      setShowInstall(!standalone && localStorage.getItem("hideInstall") !== "1");
+    } catch {
+      setShowInstall(false);
+    }
+  }, []);
+
+  // Consejo del día: lo siguiente más útil según lo que falta.
+  const tip: { text: string; go: TabKey; cta: string } = !wedding.wedding_date
+    ? { text: tr("Empezad por poner la fecha de la boda: con ella calculamos los plazos de cada tarea."), go: "ajustes", cta: tr("Ir a Ajustes") }
+    : !Number(wedding.total_budget)
+      ? { text: tr("Decidid cuánto queréis gastar como máximo y apuntadlo: todo el presupuesto parte de ahí."), go: "ajustes", cta: tr("Ir a Ajustes") }
+      : overdue > 0
+        ? { text: tr("Tenéis {n} tareas con la fecha pasada. Echadles un vistazo o marcadlas como «no aplica».", { n: overdue }), go: "checklist", cta: tr("Ver checklist") }
+        : vendors === 0
+          ? { text: tr("Lo primero que se reserva suele ser la finca y el catering. Guardad ahí sus datos y precios."), go: "proveedores", cta: tr("Ir a Proveedores") }
+          : guests === 0
+            ? { text: tr("Apuntad a vuestros primeros invitados: aunque la lista cambie, os dará una idea del tamaño de la boda."), go: "invitados", cta: tr("Ir a Invitados") }
+            : rsvp.pendiente > 0
+              ? { text: tr("Quedan {n} personas por confirmar. Un mensaje a tiempo os ahorra prisas al final.", { n: rsvp.pendiente }), go: "invitados", cta: tr("Ver invitados") }
+              : { text: tr("Vais muy bien. Revisad el cronograma del día para que todo fluya."), go: "cronograma", cta: tr("Ver cronograma") };
 
   async function completar(task: Task) {
     setTasks(tasks.map((t) => (t.id === task.id ? { ...t, done: true } : t)));
@@ -728,7 +866,11 @@ function Resumen({
           </p>
         </div>
         <div className="border-l-2 border-clay pl-5 sm:min-w-64">
-          <p className="font-display text-3xl font-semibold leading-tight">{countdownLabel}</p>
+          {daysLeft !== null && daysLeft > 0 ? (
+            <LiveCountdown date={wedding.wedding_date!} time={wedding.ceremony_time} />
+          ) : (
+            <p className="font-display text-3xl font-semibold leading-tight">{countdownLabel}</p>
+          )}
           <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
             {countdownDetail}
           </p>
@@ -753,6 +895,126 @@ function Resumen({
         <Stat label={tr("Proveedores")} value={`${vendors}`} hint={tr("Fichas guardadas")} />
       </div>
 
+      {showInstall && (
+        <div className="flex items-center gap-3 rounded-2xl border border-dashed border-clay/60 px-4 py-3 text-sm sm:hidden">
+          <span aria-hidden>📱</span>
+          <a href="/instalar" className="min-w-0 flex-1">
+            <span className="font-medium">{tr("Instalad la app")}</span>{" "}
+            <span className="text-muted-foreground">{tr("y abridla con un toque")}</span>
+          </a>
+          <button
+            onClick={() => {
+              try {
+                localStorage.setItem("hideInstall", "1");
+              } catch {
+                /* sin almacenamiento: solo se oculta ahora */
+              }
+              setShowInstall(false);
+            }}
+            aria-label={tr("Cerrar")}
+            className="px-1 text-muted-foreground"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      <section className="flex flex-wrap items-center gap-4 rounded-2xl bg-clay-soft/70 p-5 ring-1 ring-clay/30">
+        <span className="text-2xl" aria-hidden>
+          💡
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">{tr("Vuestro siguiente paso")}</p>
+          <p className="mt-1 text-sm leading-6">{tip.text}</p>
+        </div>
+        <button
+          onClick={() => onGo(tip.go)}
+          className="rounded-full bg-background px-4 py-2 text-xs font-medium ring-1 ring-clay/40 hover:ring-clay-ink"
+        >
+          {tip.cta} →
+        </button>
+      </section>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* Resumen del presupuesto */}
+        <section className="rounded-2xl bg-panel p-6 ring-1 ring-foreground/5">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="font-display text-2xl font-semibold">{tr("Presupuesto")}</h2>
+            <button onClick={() => onGo("presupuesto")} className="text-xs text-clay-ink underline underline-offset-4">
+              {tr("Ver todo")}
+            </button>
+          </div>
+          {(() => {
+            const total = Number(wedding.total_budget) || 0;
+            const spentPct = total ? Math.min(100, Math.round((budget.actual / total) * 100)) : 0;
+            const paidPct = total ? Math.min(100, Math.round((budget.paid / total) * 100)) : 0;
+            return (
+              <>
+                <p className="mt-3 font-display text-3xl font-semibold">
+                  {money(budget.actual, wedding.currency)}{" "}
+                  <span className="text-base font-normal text-muted-foreground">
+                    {tr("de {total}", { total: money(total, wedding.currency) })}
+                  </span>
+                </p>
+                <div className="relative mt-3 h-2.5 overflow-hidden rounded-full bg-clay-soft">
+                  <div className="absolute inset-y-0 left-0 rounded-full bg-clay" style={{ width: `${spentPct}%` }} />
+                  <div className="absolute inset-y-0 left-0 rounded-full bg-clay-ink" style={{ width: `${paidPct}%` }} />
+                </div>
+                <dl className="mt-4 grid grid-cols-3 gap-2 text-sm">
+                  {[
+                    [tr("Pagado"), budget.paid],
+                    [tr("Por pagar"), budget.actual - budget.paid],
+                    [tr("Disponible"), total - budget.actual],
+                  ].map(([label, n]) => (
+                    <div key={String(label)}>
+                      <dt className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{label}</dt>
+                      <dd className="mt-0.5 font-medium">{money(Number(n), wedding.currency)}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </>
+            );
+          })()}
+        </section>
+
+        {/* Confirmaciones */}
+        <section className="rounded-2xl bg-panel p-6 ring-1 ring-foreground/5">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="font-display text-2xl font-semibold">{tr("Confirmaciones")}</h2>
+            <button onClick={() => onGo("invitados")} className="text-xs text-clay-ink underline underline-offset-4">
+              {tr("Ver todo")}
+            </button>
+          </div>
+          {(() => {
+            const all = rsvp.confirmado + rsvp.pendiente + rsvp.rechazado;
+            const pct = all ? Math.round((rsvp.confirmado / all) * 100) : 0;
+            return (
+              <>
+                <p className="mt-3 font-display text-3xl font-semibold">
+                  {pct}% <span className="text-base font-normal text-muted-foreground">{tr("confirmado")}</span>
+                </p>
+                <div className="mt-3 flex h-2.5 overflow-hidden rounded-full bg-muted">
+                  <div className="bg-clay-ink" style={{ width: `${all ? (rsvp.confirmado / all) * 100 : 0}%` }} />
+                  <div className="bg-clay-soft" style={{ width: `${all ? (rsvp.pendiente / all) * 100 : 0}%` }} />
+                </div>
+                <dl className="mt-4 grid grid-cols-3 gap-2 text-sm">
+                  {[
+                    [tr("Confirmados"), rsvp.confirmado],
+                    [tr("Pendientes"), rsvp.pendiente],
+                    [tr("No asisten"), rsvp.rechazado],
+                  ].map(([label, n]) => (
+                    <div key={String(label)}>
+                      <dt className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{label}</dt>
+                      <dd className="mt-0.5 font-medium">{n}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </>
+            );
+          })()}
+        </section>
+      </div>
+
       <section className="rounded-2xl bg-panel p-6 ring-1 ring-foreground/5">
         <h2 className="font-display text-2xl font-semibold">{tr("Lo siguiente")}</h2>
         {pending.length === 0 ? (
@@ -767,9 +1029,17 @@ function Resumen({
                   aria-label={tr("Marcar «{title}» como hecha", { title: tr(t.title) })}
                   className="size-4 shrink-0 rounded-full border border-clay/60 transition hover:border-clay hover:bg-clay/30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-clay-ink"
                 />
-                {tr(t.title)}
-                <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                  {tr(t.category)}
+                <span className="min-w-0 flex-1">{tr(t.title)}</span>
+                <span
+                  className={`ml-auto shrink-0 font-mono text-[10px] uppercase tracking-[0.15em] ${
+                    (dueOf(t) ?? "9") < today ? "text-clay-ink" : "text-muted-foreground"
+                  }`}
+                >
+                  {dueOf(t)
+                    ? new Intl.DateTimeFormat(locale(), { day: "numeric", month: "short" }).format(
+                        new Date(`${dueOf(t)}T12:00:00`),
+                      )
+                    : tr(t.category)}
                 </span>
               </li>
             ))}
@@ -789,265 +1059,55 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle: string })
   );
 }
 
-const TASK_CATEGORIES = [
-  "General",
-  "12 meses antes",
-  "10 meses antes",
-  "9 meses antes",
-  "8 meses antes",
-  "6 meses antes",
-  "4 meses antes",
-  "3 meses antes",
-  "2 meses antes",
-  "1 mes antes",
-  "1 semana antes",
-  "Día antes",
-  "Día B",
-];
+const RSVP = ["pendiente", "confirmado", "rechazado"];
+// "Acompañante" ya no se elige: los acompañantes se crean con la casilla «Acompañantes».
+const GUEST_GROUPS = ["Familia", "Amigos", "Trabajo", "Otros"];
+const ALLERGIES = ["Gluten", "Lactosa", "Frutos secos", "Marisco", "Huevo", "Vegetariano", "Vegano"];
 
-function Checklist({
-  tasks,
-  setTasks,
-  wedding,
-  userId,
-  reload,
-}: {
-  tasks: Task[];
-  setTasks: (t: Task[]) => void;
-  wedding: Wedding;
-  userId: string;
-  reload: () => Promise<void>;
-}) {
+/** Botones de alergias / dieta + una casilla para escribir otra. */
+function AllergyPicker({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
   const { t: tr } = useI18n();
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("General");
-  const [filter, setFilter] = useState<"todas" | "pendientes" | "completadas">("todas");
-  const [editing, setEditing] = useState<{ id: string; title: string; category: string } | null>(null);
-
-  async function saveEdit(e: React.FormEvent, task: Task) {
-    e.preventDefault();
-    if (!editing || !editing.title.trim()) return;
-    const values: Partial<Task> = { category: editing.category };
-    // Las tareas de ejemplo se muestran traducidas: solo se guarda el texto si se ha cambiado.
-    if (editing.title.trim() !== tr(task.title)) values.title = editing.title.trim();
-    setEditing(null);
-    await patchTask(task.id, values);
-  }
-
-  async function toggle(task: Task) {
-    setTasks(tasks.map((t) => (t.id === task.id ? { ...t, done: !t.done } : t)));
-    await supabase.from("tasks").update({ done: !task.done }).eq("id", task.id);
-  }
-
-  async function add(e: React.FormEvent) {
-    e.preventDefault();
-    if (!title.trim()) return;
-    const { error } = await supabase
-      .from("tasks")
-      .insert({ title, category, wedding_id: wedding.id, user_id: userId });
-    if (error) {
-      toast.error(tr("No se ha podido guardar"));
-      return;
-    }
-    setTitle("");
-    await reload();
-  }
-
-  async function remove(task: Task) {
-    if (!window.confirm(tr("¿Borrar {name}?", { name: tr(task.title) }))) return;
-    await supabase.from("tasks").delete().eq("id", task.id);
-    await reload();
-  }
-
-  async function patchTask(id: string, values: Partial<Task>) {
-    setTasks(tasks.map((t) => (t.id === id ? { ...t, ...values } : t)));
-    const { error } = await supabase.from("tasks").update(values).eq("id", id);
-    if (error) toast.error(tr("No se ha podido guardar"));
-  }
-
-  const total = tasks.length;
-  const completed = tasks.filter((t) => t.done).length;
-  const percent = total ? Math.round((completed / total) * 100) : 0;
-
-  const visible = tasks.filter((t) =>
-    filter === "todas" ? true : filter === "pendientes" ? !t.done : t.done,
-  );
-
-  const categoryOptions = Array.from(
-    new Set([...TASK_CATEGORIES, ...tasks.map((t) => t.category)]),
-  );
-
-  const groups = visible.reduce<Record<string, Task[]>>((acc, t) => {
-    (acc[t.category] ||= []).push(t);
-    return acc;
-  }, {});
-
-  const orderedGroups = Object.entries(groups).sort((a, b) => {
-    const ia = categoryOptions.indexOf(a[0]);
-    const ib = categoryOptions.indexOf(b[0]);
-    return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib);
-  });
-
-  const filters: { key: typeof filter; label: string; count: number }[] = [
-    { key: "todas", label: "Todas", count: total },
-    { key: "pendientes", label: "Pendientes", count: total - completed },
-    { key: "completadas", label: "Completadas", count: completed },
-  ];
-
+  const [other, setOther] = useState("");
+  const all = Array.from(new Set([...ALLERGIES, ...value]));
+  const toggle = (a: string) => onChange(value.includes(a) ? value.filter((x) => x !== a) : [...value, a]);
   return (
-    <div>
-      <SectionHeader title={tr("Checklist")} subtitle={tr("Todo lo que hay que hacer, mes a mes.")} />
-
-      <div className="mb-8 rounded-2xl bg-panel px-5 py-4">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">{tr("Progreso")}</span>
-          <span className="text-sm text-muted-foreground">
-            {tr("{done} de {total} tareas", { done: completed, total })} ·{" "}
-            <span className="font-medium text-foreground">{percent}%</span>
-          </span>
-        </div>
-        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-clay-soft">
-          <div
-            className="h-full rounded-full bg-clay transition-all duration-500"
-            style={{ width: `${percent}%` }}
-          />
-        </div>
-      </div>
-
-      <form onSubmit={add} className="mb-6 flex flex-wrap gap-3">
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder={tr("Nueva tarea")}
-          className={`${inputClass} flex-1 min-w-[220px]`}
-        />
-        <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
-          {categoryOptions.map((c) => (
-            <option key={c} value={c}>
-              {catLabel(c, tr)}
-            </option>
-          ))}
-        </select>
-        <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground hover:bg-clay-ink hover:text-background">
-          {tr("Añadir")}
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span className="mr-1 text-xs text-muted-foreground">{tr("Alergias y dieta")}</span>
+      {all.map((a) => (
+        <button
+          key={a}
+          type="button"
+          onClick={() => toggle(a)}
+          className={`rounded-full px-2.5 py-1 text-[11px] ring-1 ${
+            value.includes(a) ? "bg-clay text-foreground ring-clay" : "bg-background text-muted-foreground ring-line"
+          }`}
+        >
+          {tr(a)}
         </button>
-      </form>
-
-      <div className="mb-8 flex flex-wrap gap-2">
-        {filters.map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setFilter(f.key)}
-            className={`rounded-full px-4 py-1.5 text-xs transition-colors ${
-              filter === f.key
-                ? "bg-clay text-foreground"
-                : "bg-panel text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {tr(f.label)} ({f.count})
-          </button>
-        ))}
-      </div>
-
-      <div className="space-y-8">
-        {orderedGroups.length === 0 && (
-          <p className="text-sm text-muted-foreground">{tr("No hay tareas en esta vista.")}</p>
-        )}
-        {orderedGroups.map(([group, items]) => (
-          <div key={group}>
-            <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">{catLabel(group, tr)}</div>
-            <ul className="space-y-2">
-              {items.map((t) => (
-                <li key={t.id} className="rounded-lg bg-panel px-4 py-3 text-sm">
-                  {editing?.id === t.id ? (
-                    <form onSubmit={(e) => saveEdit(e, t)} className="flex flex-wrap items-center gap-3">
-                      <input
-                        value={editing.title}
-                        onChange={(e) => setEditing({ ...editing, title: e.target.value })}
-                        autoFocus
-                        required
-                        className={`${inputClass} min-w-[220px] flex-1`}
-                      />
-                      <select
-                        value={editing.category}
-                        onChange={(e) => setEditing({ ...editing, category: e.target.value })}
-                        className={inputClass}
-                      >
-                        {categoryOptions.map((c) => (
-                          <option key={c} value={c}>
-                            {catLabel(c, tr)}
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        type="button"
-                        onClick={() => setEditing(null)}
-                        className="text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        {tr("Cancelar")}
-                      </button>
-                      <button className="rounded-full bg-clay px-4 py-1.5 text-xs font-medium text-foreground hover:bg-clay-ink hover:text-background">
-                        {tr("Guardar")}
-                      </button>
-                    </form>
-                  ) : (
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                    <input
-                      type="checkbox"
-                      checked={t.done}
-                      onChange={() => toggle(t)}
-                      className="size-4 shrink-0 accent-clay-ink"
-                    />
-                    <span className={`min-w-0 flex-1 sm:min-w-[12rem] ${t.done ? "text-muted-foreground line-through" : ""}`}>
-                      {tr(t.title)}
-                    </span>
-                    {/* En móvil, responsable, notas y botones pasan a una segunda línea */}
-                    <div className="flex w-full items-center gap-2 pl-7 sm:w-auto sm:gap-3 sm:pl-0">
-                    <div className="w-28 shrink-0 sm:w-32">
-                      <TextField
-                        value={t.owner ?? ""}
-                        onSave={(owner) => patchTask(t.id, { owner })}
-                        placeholder={tr("Responsable")}
-                        className="py-1.5 text-xs"
-                      />
-                    </div>
-                    <div className="min-w-0 flex-1 sm:w-44 sm:flex-none">
-                      <TextField
-                        value={t.notes ?? ""}
-                        onSave={(notes) => patchTask(t.id, { notes })}
-                        placeholder={tr("Notas")}
-                        className="py-1.5 text-xs"
-                      />
-                    </div>
-                    <button
-                      onClick={() => setEditing({ id: t.id, title: tr(t.title), category: t.category })}
-                      className="text-xs text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground"
-                    >
-                      {tr("Editar")}
-                    </button>
-                    <button
-                      onClick={() => remove(t)}
-                      className="text-xs text-muted-foreground hover:text-foreground"
-                    >
-                      {tr("Borrar")}
-                    </button>
-                    </div>
-                  </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
+      ))}
+      <input
+        value={other}
+        onChange={(e) => setOther(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && other.trim()) {
+            e.preventDefault();
+            onChange([...value, other.trim()]);
+            setOther("");
+          }
+        }}
+        onBlur={() => {
+          if (other.trim()) {
+            onChange([...value, other.trim()]);
+            setOther("");
+          }
+        }}
+        placeholder={tr("Otra…")}
+        className="w-24 rounded-full border border-line bg-background px-2.5 py-1 text-[11px] outline-none focus:border-clay-ink"
+      />
     </div>
   );
 }
 
-
-const RSVP = ["pendiente", "confirmado", "rechazado"];
-// "Acompañante" ya no se elige: los acompañantes se crean con la casilla «Acompañantes».
-const GUEST_GROUPS = ["Familia", "Amigos", "Trabajo", "Otros"];
 const RSVP_LABEL: Record<string, string> = {
   pendiente: "Pendiente",
   confirmado: "Confirmado",
@@ -1075,6 +1135,8 @@ function Invitados({
     guest_group: "Familia",
     notes: "",
     extra: "0",
+    is_child: false,
+    allergies: [] as string[],
   });
   const [editing, setEditing] = useState<{
     id: string;
@@ -1082,7 +1144,15 @@ function Invitados({
     invited_by: string;
     guest_group: string;
     extra: string;
+    is_child: boolean;
+    allergies: string[];
   } | null>(null);
+  const [query, setQuery] = useState("");
+  const [rsvpFilter, setRsvpFilter] = useState<string | null>(null);
+  const [hostFilter, setHostFilter] = useState<string | null>(null);
+  const [onlyAllergies, setOnlyAllergies] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkText, setBulkText] = useState("");
 
   const companionName = (host: string, n: number, total: number) =>
     total === 1 ? tr("Acompañante de {name}", { name: host }) : `${tr("Acompañante de {name}", { name: host })} ${n}`;
@@ -1117,7 +1187,13 @@ function Invitados({
     const name = editing.name.trim();
     const { error } = await supabase
       .from("guests")
-      .update({ name, invited_by: editing.invited_by, guest_group: editing.guest_group })
+      .update({
+        name,
+        invited_by: editing.invited_by,
+        guest_group: editing.guest_group,
+        is_child: editing.is_child,
+        allergies: editing.allergies,
+      })
       .eq("id", editing.id);
     if (error) {
       toast.error(tr("No se ha podido guardar"));
@@ -1174,6 +1250,8 @@ function Invitados({
         guest_group: form.guest_group,
         invited_by: form.invited_by,
         notes: form.notes.trim(),
+        ...(form.is_child ? { is_child: true } : {}),
+        ...(form.allergies.length ? { allergies: form.allergies } : {}),
         wedding_id: wedding.id,
         user_id: userId,
       })
@@ -1185,11 +1263,80 @@ function Invitados({
     }
     // Cada acompañante es un invitado propio (se puede renombrar y sentar donde se quiera).
     await createCompanions({ id: host.id, name, invited_by: form.invited_by }, 1, extra, extra);
-    setForm({ name: "", invited_by: hosts[0]!, guest_group: "Familia", notes: "", extra: "0" });
+    setForm({
+      name: "",
+      invited_by: form.invited_by,
+      guest_group: form.guest_group,
+      notes: "",
+      extra: "0",
+      is_child: false,
+      allergies: [],
+    });
     await reload();
   }
 
   const tableName = (id: string | null) => (id ? tables.find((t) => t.id === id)?.name ?? null : null);
+
+  async function addMany() {
+    const names = bulkText
+      .split("\n")
+      .map((n) => n.trim())
+      .filter(Boolean)
+      .slice(0, 300);
+    if (!names.length) return;
+    const { error } = await supabase.from("guests").insert(
+      names.map((name) => ({
+        name,
+        guest_group: form.guest_group,
+        invited_by: form.invited_by,
+        notes: "",
+        wedding_id: wedding.id,
+        user_id: userId,
+      })),
+    );
+    if (error) {
+      toast.error(tr("No se ha podido guardar"));
+      return;
+    }
+    toast.success(tr("{n} invitados añadidos", { n: names.length }));
+    setBulkText("");
+    setBulkOpen(false);
+    await reload();
+  }
+
+  function exportExcel() {
+    const head = [
+      tr("Nombre"),
+      tr("Invitado de"),
+      tr("Grupo"),
+      tr("Viene con"),
+      tr("Confirmación"),
+      tr("Mesa"),
+      tr("Niño/a"),
+      tr("Alergias y dieta"),
+      tr("Notas"),
+    ];
+    const rows = orderedGuests.map((g) => [
+      g.name,
+      tr(g.invited_by),
+      tr(g.guest_group),
+      g.companion_of ? guests.find((x) => x.id === g.companion_of)?.name ?? "" : "",
+      tr(RSVP_LABEL[g.rsvp] ?? g.rsvp),
+      tableName(g.table_number) ?? "",
+      g.is_child ? tr("Sí") : "",
+      (g.allergies ?? []).map((a) => tr(a)).join(", "),
+      g.notes ?? "",
+    ]);
+    // CSV con ";" y BOM: Excel lo abre directamente con tildes y columnas bien separadas.
+    const cell = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+    const csv = "\ufeff" + [head, ...rows].map((r) => r.map(cell).join(";")).join("\r\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${tr("invitados")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
   const companionsOf = (id: string) => guests.filter((x) => x.companion_of === id);
   // Cada acompañante va justo debajo del invitado con el que viene, aunque se añada más tarde.
   const orderedGuests = (() => {
@@ -1217,6 +1364,30 @@ function Invitados({
   }));
   const rsvpColors = ["var(--color-clay-soft)", "var(--color-clay)", "var(--color-muted)"];
   const totalSeats = guests.reduce((s, g) => s + 1 + (g.companions || 0), 0);
+  const seatsWhere = (f: (g: Guest) => boolean) => guests.filter(f).reduce((s, g) => s + 1 + (g.companions || 0), 0);
+  const allergyCounts = Array.from(
+    guests.reduce((m, g) => {
+      for (const a of g.allergies ?? []) m.set(a, (m.get(a) ?? 0) + 1);
+      return m;
+    }, new Map<string, number>()),
+  ).sort((a, b) => b[1] - a[1]);
+
+  const q = query.trim().toLowerCase();
+  const filtering = !!(q || rsvpFilter || hostFilter || onlyAllergies);
+  const listed = orderedGuests.filter((g) => {
+    if (rsvpFilter && g.rsvp !== rsvpFilter) return false;
+    if (hostFilter && g.invited_by !== hostFilter) return false;
+    if (onlyAllergies && !(g.allergies ?? []).length) return false;
+    if (q) {
+      const hay = [g.name, tableName(g.table_number) ?? "", tr(g.guest_group), g.notes ?? ""].join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  const chipCls = (on: boolean) =>
+    `rounded-full px-3 py-1.5 text-xs ring-1 transition-colors ${
+      on ? "bg-clay text-foreground ring-clay" : "bg-panel text-muted-foreground ring-line hover:text-foreground"
+    }`;
 
   return (
     <div>
@@ -1226,6 +1397,24 @@ function Invitados({
           Number(wedding.guest_target) ? ` · ${tr("objetivo {n}", { n: wedding.guest_target })}` : ""
         }`}
       />
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          [tr("Plazas"), totalSeats],
+          [tr("Confirmados"), seatsWhere((g) => g.rsvp === "confirmado")],
+          [tr("Pendientes"), seatsWhere((g) => g.rsvp === "pendiente")],
+          [tr("Niños"), guests.filter((g) => g.is_child).length],
+        ].map(([label, n]) => (
+          <div key={String(label)} className="rounded-2xl bg-panel px-4 py-3 ring-1 ring-foreground/5">
+            <div className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{label}</div>
+            <div className="mt-1 font-display text-2xl font-semibold">{n}</div>
+          </div>
+        ))}
+      </div>
+      {allergyCounts.length > 0 && (
+        <p className="-mt-3 mb-6 text-xs text-muted-foreground">
+          ⚠️ {tr("Alergias y dieta")}: {allergyCounts.map(([a, n]) => `${tr(a)} ${n}`).join(" · ")}
+        </p>
+      )}
       {guests.length > 0 && (
         <section className="mb-8 grid gap-6 lg:grid-cols-2">
           <div className="rounded-2xl bg-panel p-6 ring-1 ring-foreground/5">
@@ -1361,13 +1550,102 @@ function Invitados({
           placeholder={tr("Notas (opcional)")}
           className={`${inputClass} min-w-[200px] flex-1`}
         />
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={form.is_child}
+            onChange={(e) => setForm({ ...form, is_child: e.target.checked })}
+            className="size-4 accent-clay-ink"
+          />
+          {tr("Niño/a")}
+        </label>
+        <div className="basis-full">
+          <AllergyPicker value={form.allergies} onChange={(allergies) => setForm({ ...form, allergies })} />
+        </div>
         <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground hover:bg-clay-ink hover:text-background">
           {tr("Añadir")}
         </button>
       </form>
 
+      {/* Añadir varios de golpe */}
+      {bulkOpen && (
+        <div className="mb-6 rounded-2xl bg-panel p-4 ring-1 ring-foreground/5">
+          <p className="mb-2 text-sm text-muted-foreground">
+            {tr("Pegad o escribid un nombre por línea. Se añadirán como «{group}» de {host}.", {
+              group: tr(form.guest_group),
+              host: tr(form.invited_by),
+            })}
+          </p>
+          <textarea
+            value={bulkText}
+            onChange={(e) => setBulkText(e.target.value)}
+            rows={6}
+            placeholder={"Ana García\nLuis Pérez\n…"}
+            className={`${inputClass} w-full`}
+          />
+          <div className="mt-2 flex justify-end gap-3">
+            <button onClick={() => setBulkOpen(false)} className="rounded-full border border-line px-4 py-1.5 text-sm">
+              {tr("Cancelar")}
+            </button>
+            <button
+              onClick={addMany}
+              className="rounded-full bg-clay px-4 py-1.5 text-sm font-medium hover:bg-clay-ink hover:text-background"
+            >
+              {tr("Añadir {n}", { n: bulkText.split("\n").filter((x) => x.trim()).length })}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Buscar, filtrar, añadir varios y exportar */}
+      <div className="mb-4 space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={tr("Buscar por nombre, mesa o grupo…")}
+            className={`${inputClass} min-w-0 flex-1`}
+          />
+          <button
+            onClick={() => setBulkOpen((o) => !o)}
+            className="rounded-full bg-panel px-4 py-2 text-xs ring-1 ring-line hover:ring-clay-ink"
+          >
+            {tr("Añadir varios")}
+          </button>
+          <button
+            onClick={exportExcel}
+            disabled={!guests.length}
+            className="rounded-full bg-panel px-4 py-2 text-xs ring-1 ring-line hover:ring-clay-ink disabled:opacity-50"
+          >
+            {tr("Exportar a Excel")}
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setRsvpFilter(null)} className={chipCls(rsvpFilter === null)}>
+            {tr("Todos")}
+          </button>
+          {RSVP.map((r) => (
+            <button key={r} onClick={() => setRsvpFilter(rsvpFilter === r ? null : r)} className={chipCls(rsvpFilter === r)}>
+              {tr(RSVP_LABEL[r]!)}
+            </button>
+          ))}
+          <span className="mx-1 w-px self-stretch bg-line" />
+          {hosts.map((h) => (
+            <button key={h} onClick={() => setHostFilter(hostFilter === h ? null : h)} className={chipCls(hostFilter === h)}>
+              {tr("de {name}", { name: tr(h) })}
+            </button>
+          ))}
+          <button onClick={() => setOnlyAllergies((v) => !v)} className={chipCls(onlyAllergies)}>
+            ⚠️ {tr("Con alergias")}
+          </button>
+        </div>
+        {filtering && (
+          <p className="text-xs text-muted-foreground">{tr("{n} de {total} invitados", { n: listed.length, total: guests.length })}</p>
+        )}
+      </div>
+
       <ul className="space-y-2">
-        {orderedGuests.map((g) =>
+        {listed.map((g) =>
           editing?.id === g.id ? (
             <li key={g.id} className="rounded-lg bg-panel px-4 py-3 text-sm ring-1 ring-clay/60">
               <form onSubmit={saveEdit} className="flex flex-wrap items-center gap-3">
@@ -1419,6 +1697,18 @@ function Invitados({
                     </label>
                   </>
                 )}
+                <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={editing.is_child}
+                    onChange={(e) => setEditing({ ...editing, is_child: e.target.checked })}
+                    className="size-4 accent-clay-ink"
+                  />
+                  {tr("Niño/a")}
+                </label>
+                <div className="basis-full">
+                  <AllergyPicker value={editing.allergies} onChange={(allergies) => setEditing({ ...editing, allergies })} />
+                </div>
                 <button
                   type="button"
                   onClick={() => setEditing(null)}
@@ -1456,6 +1746,14 @@ function Invitados({
                 {tableName(g.table_number)}
               </span>
             )}
+            {g.is_child && (
+              <span className="rounded-full bg-clay-soft px-2 py-0.5 text-[10px] text-foreground/80">🧒 {tr("Niño/a")}</span>
+            )}
+            {(g.allergies ?? []).map((a) => (
+              <span key={a} className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] text-amber-800 ring-1 ring-amber-200">
+                ⚠️ {tr(a)}
+              </span>
+            ))}
             {/* En móvil: notas, confirmación y acciones en una segunda línea */}
             <span className="basis-full sm:hidden" />
             <input
@@ -1496,6 +1794,8 @@ function Invitados({
                   invited_by: g.invited_by,
                   guest_group: g.guest_group,
                   extra: String(companionsOf(g.id).length),
+                  is_child: !!g.is_child,
+                  allergies: g.allergies ?? [],
                 })
               }
               className="text-xs text-muted-foreground underline decoration-clay/40 underline-offset-4 hover:text-foreground"
@@ -2044,11 +2344,61 @@ function parseAmount(value: string): number {
 function Ajustes({
   wedding,
   setWedding,
+  email,
 }: {
   wedding: Wedding;
   setWedding: (w: Wedding) => void;
+  email: string | null;
 }) {
   const { t: tr } = useI18n();
+  const navigate = useNavigate();
+  const [feedback, setFeedback] = useState("");
+  const [sending, setSending] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const deleteWord = tr("BORRAR");
+
+  async function sendFeedback() {
+    if (!feedback.trim()) return;
+    setSending(true);
+    const { error } = await supabase.from("feedback").insert({ message: feedback.trim().slice(0, 4000), email });
+    setSending(false);
+    if (error) {
+      toast.error(tr("No se ha podido enviar. Escribidnos a hola@tubodaenorden.com"));
+      return;
+    }
+    setFeedback("");
+    toast.success(tr("¡Gracias! Lo leeremos con calma."));
+  }
+
+  async function exportData() {
+    const tables = ["tasks", "expenses", "expense_categories", "guests", "wedding_tables", "vendors", "venues", "menu_items", "timeline_items"];
+    const out: Record<string, unknown> = { exported_at: new Date().toISOString(), wedding };
+    for (const t of tables) {
+      const { data } = await supabase.from(t as "tasks").select("*").eq("wedding_id", wedding.id);
+      out[t] = data ?? [];
+    }
+    const url = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: "application/json" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "tu-boda-en-orden-datos.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function deleteAccount() {
+    if (confirmText.trim().toUpperCase() !== deleteWord.toUpperCase()) return;
+    setDeleting(true);
+    const { error } = await supabase.rpc("delete_my_account" as never);
+    if (error) {
+      setDeleting(false);
+      toast.error(tr("No se ha podido borrar la cuenta. Escribidnos a hola@tubodaenorden.com"));
+      return;
+    }
+    await supabase.auth.signOut();
+    toast.success(tr("Cuenta borrada. ¡Os deseamos una boda preciosa!"));
+    navigate({ to: "/" });
+  }
   const [form, setForm] = useState({
     partner_one: wedding.partner_one,
     partner_two: wedding.partner_two,
@@ -2170,6 +2520,77 @@ function Ajustes({
           {saving ? tr("Guardando…") : tr("Guardar")}
         </button>
       </form>
+
+      <div className="mt-12 space-y-4">
+        <a
+          href="/instalar"
+          className="flex items-center gap-4 rounded-2xl bg-panel p-5 ring-1 ring-foreground/5 hover:ring-clay-ink"
+        >
+          <span className="text-2xl" aria-hidden>
+            📱
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-display text-lg font-semibold">{tr("Instalar la app")}</span>
+            <span className="block text-sm text-muted-foreground">
+              {tr("Tenedla en la pantalla de inicio del móvil y abridla con un toque.")}
+            </span>
+          </span>
+          <span className="text-clay-ink">→</span>
+        </a>
+
+        <section className="rounded-2xl bg-panel p-5 ring-1 ring-foreground/5">
+          <h3 className="font-display text-lg font-semibold">{tr("¿Qué echáis de menos?")}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {tr("Contadnos qué mejoraríais o qué os falta. Leemos todos los mensajes.")}
+          </p>
+          <textarea
+            value={feedback}
+            onChange={(e) => setFeedback(e.target.value)}
+            rows={3}
+            maxLength={4000}
+            className={`${inputClass} mt-3 w-full`}
+          />
+          <button
+            onClick={sendFeedback}
+            disabled={sending || !feedback.trim()}
+            className="mt-2 rounded-full bg-clay px-5 py-2 text-sm font-medium hover:bg-clay-ink hover:text-background disabled:opacity-60"
+          >
+            {sending ? tr("Un momento…") : tr("Enviar")}
+          </button>
+        </section>
+
+        <section className="rounded-2xl bg-panel p-5 ring-1 ring-foreground/5">
+          <h3 className="font-display text-lg font-semibold">{tr("Vuestros datos")}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {tr("Descargad una copia de todo lo que habéis guardado: tareas, presupuesto, invitados, mesas, proveedores…")}
+          </p>
+          <button onClick={exportData} className="mt-3 rounded-full border border-line px-5 py-2 text-sm hover:border-clay-ink">
+            {tr("Descargar mis datos")}
+          </button>
+
+          <div className="mt-6 border-t border-line pt-5">
+            <h4 className="font-medium text-destructive">{tr("Borrar la cuenta")}</h4>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {tr("Se borrarán para siempre la cuenta y todos los datos de vuestra boda. No se puede deshacer y el pago no se devuelve.")}
+            </p>
+            <label className="mt-3 block text-sm">
+              {tr("Para confirmar, escribid {word}:", { word: deleteWord })}
+              <input
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                className={`${inputClass} mt-1 block w-48`}
+              />
+            </label>
+            <button
+              onClick={deleteAccount}
+              disabled={deleting || confirmText.trim().toUpperCase() !== deleteWord.toUpperCase()}
+              className="mt-3 rounded-full bg-destructive px-5 py-2 text-sm font-medium text-background disabled:opacity-40"
+            >
+              {deleting ? tr("Un momento…") : tr("Borrar mi cuenta")}
+            </button>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
