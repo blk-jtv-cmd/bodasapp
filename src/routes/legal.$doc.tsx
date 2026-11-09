@@ -48,7 +48,7 @@ function LegalPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background font-body text-foreground">
       <header className="border-b border-line">
-        <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 py-2">
+        <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-2 sm:gap-4 sm:px-6">
           <BrandName className="justify-self-start" />
           <BrandLogo />
           <div className="justify-self-end">

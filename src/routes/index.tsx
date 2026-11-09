@@ -74,7 +74,7 @@ function Index() {
     <div className="min-h-screen bg-background font-body text-foreground antialiased">
       {/* Nav */}
       <header className="sticky top-0 z-30 border-b border-line bg-background/85 backdrop-blur-sm">
-        <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 py-2">
+        <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-2 sm:gap-4 sm:px-6">
           <div className="flex min-w-0 flex-col justify-self-start">
             <BrandName />
             <span className="hidden font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground sm:inline">

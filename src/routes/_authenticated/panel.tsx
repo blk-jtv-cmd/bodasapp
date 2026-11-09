@@ -361,6 +361,23 @@ function PanelPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wedding?.id]);
 
+  // Si pagan desde la app de la pantalla de inicio, Stripe se abre aparte: al volver, comprobamos el pago.
+  useEffect(() => {
+    if (!wedding || wedding.plan_active) return;
+    const onVisible = async () => {
+      if (document.visibilityState !== "visible") return;
+      const { data } = await supabase.from("weddings").select("plan_active").eq("id", wedding.id).maybeSingle();
+      if (data?.plan_active) {
+        setWedding((w) => (w ? { ...w, plan_active: true } : w));
+        await loadAll(wedding.id);
+        toast.success(tr("¡Pago recibido! Ya tenéis el plan completo."));
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wedding?.id, wedding?.plan_active]);
+
   async function signOut() {
     await supabase.auth.signOut();
     navigate({ to: "/" });
@@ -381,7 +398,7 @@ function PanelPage() {
   return (
     <div className="min-h-screen bg-background font-body text-foreground">
       <header className="sticky top-0 z-30 border-b border-line bg-background/90 backdrop-blur-sm">
-        <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-6 py-2">
+        <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-2 sm:gap-4 sm:px-6">
           <BrandName className="justify-self-start" />
           <BrandLogo />
           <div className="flex items-center gap-3 justify-self-end sm:gap-5">
@@ -399,7 +416,7 @@ function PanelPage() {
             </button>
           </div>
         </div>
-        <div className="mx-auto flex max-w-6xl gap-6 overflow-x-auto px-6 pb-3 text-sm">
+        <div className="mx-auto flex max-w-6xl gap-5 overflow-x-auto px-4 pb-3 text-sm [scrollbar-width:none] sm:gap-6 sm:px-6">
           {TABS.map(([key, label]) => (
             <button
               key={key}
@@ -421,7 +438,7 @@ function PanelPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-10">
+      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
         {!wedding.plan_active && !locked && (
           <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-clay-soft px-6 py-5">
             <div>
