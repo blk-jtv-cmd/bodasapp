@@ -480,7 +480,7 @@ function PanelPage() {
             <div>
               <div className="font-display text-lg font-semibold">{tr("Plan gratuito")}</div>
               <p className="text-sm text-muted-foreground">
-                {tr("Tenéis el Resumen y el Checklist. Desbloquead presupuesto, fincas, invitados, mesas, menú, proveedores, cronograma y la plantilla en Excel con un pago único de 37€, sin suscripciones.")}
+                {tr("Tenéis el Resumen y el Checklist. Desbloquead presupuesto, fincas, invitados, mesas, menú, proveedores y cronograma con un pago único de 37€, sin suscripciones. Y de regalo, la plantilla en Excel. 🎁")}
               </p>
             </div>
             <PayButton url={payUrl} />
@@ -643,20 +643,28 @@ function ExcelDownload() {
   }
 
   return (
-    <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-panel px-6 py-5 ring-1 ring-foreground/5">
-      <div>
-        <div className="font-display text-lg font-semibold">{tr("¿Preferís trabajar en Excel?")}</div>
-        <p className="text-sm text-muted-foreground">
-          {tr("Descargad nuestra plantilla completa para usarla en Excel, Numbers o Google Sheets.")}
-        </p>
+    <div className="relative mb-8 flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-2xl bg-clay-soft/70 px-6 py-5 ring-1 ring-clay/40">
+      {/* Lazo de regalo en la esquina */}
+      <span className="pointer-events-none absolute inset-y-0 right-16 w-3 bg-clay/40 max-sm:hidden" aria-hidden />
+      <div className="relative flex items-center gap-4">
+        <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-background text-2xl ring-1 ring-clay/50" aria-hidden>
+          🎁
+        </span>
+        <div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">{tr("Vuestro regalo")}</div>
+          <div className="font-display text-lg font-semibold">{tr("La plantilla en Excel es vuestra")}</div>
+          <p className="text-sm text-muted-foreground">
+            {tr("Gracias por confiar en nosotros. Descargadla y usadla en Excel, Numbers o Google Sheets.")}
+          </p>
+        </div>
       </div>
       <button
         type="button"
         onClick={download}
         disabled={loading}
-        className="whitespace-nowrap rounded-full border border-line bg-background px-5 py-2.5 text-sm font-medium transition-colors hover:border-clay-ink hover:text-clay-ink disabled:opacity-60"
+        className="relative w-full whitespace-nowrap rounded-full bg-clay px-5 py-2.5 text-sm font-medium transition-colors hover:bg-clay-ink hover:text-background disabled:opacity-60 sm:w-auto"
       >
-        {loading ? tr("Preparando…") : tr("Descargar plantilla Excel")}
+        {loading ? tr("Preparando…") : tr("Descargar mi regalo")}
       </button>
     </div>
   );
@@ -713,11 +721,14 @@ function Paywall({ url }: { url: string | null }) {
       <div className="text-3xl">🔒</div>
       <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight">{tr("Parte del plan completo")}</h2>
       <p className="mt-3 text-sm text-muted-foreground">
-        {tr("Con un pago único de 37€ tendréis presupuesto, comparador de fincas, invitados, plano de mesas, menú, proveedores, el cronograma del día y la plantilla en Excel para descargar. Para siempre, sin suscripciones.")}
+        {tr("Con un pago único de 37€ tendréis presupuesto, comparador de fincas, invitados, plano de mesas, menú, proveedores y el cronograma del día. Para siempre, sin suscripciones.")}
       </p>
       <div className="mt-8 flex justify-center">
         <PayButton url={url} />
       </div>
+      <p className="mx-auto mt-6 inline-flex items-center gap-2 rounded-full border border-dashed border-clay/60 px-4 py-2 text-sm">
+        <span aria-hidden>🎁</span> {tr("Y de regalo, la plantilla en Excel")}
+      </p>
       <p className="mt-4 text-xs text-muted-foreground">{tr("Pago seguro con tarjeta a través de Stripe.")}</p>
     </div>
   );

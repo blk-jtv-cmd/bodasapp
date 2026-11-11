@@ -865,6 +865,23 @@ const dict: Record<string, string> = {
   "Contraseña (mínimo 8 caracteres)": "Password (at least 8 characters)",
   "La contraseña no es correcta": "The password is incorrect",
   "Y vuestra contraseña:": "And your password:",
+  "Al comprar el plan os regalamos nuestro planificador completo en hoja de cálculo: presupuesto, proveedores, fincas, invitados, mesas, menú, checklist y horario del día. Es vuestro para siempre, para usarlo en Excel, Numbers o Google Sheets cuando os apetezca.": "When you buy the plan, we give you our complete planner as a spreadsheet: budget, suppliers, venues, guests, tables, menu, checklist and the day's schedule. It's yours forever, to use in Excel, Numbers or Google Sheets whenever you like.",
+  "Con un pago único de 37€ tendréis presupuesto, comparador de fincas, invitados, plano de mesas, menú, proveedores y el cronograma del día. Para siempre, sin suscripciones.": "With a one-off payment of €37 you get the budget, venue comparison, guests, seating plan, menu, suppliers and the day's timeline. Forever, no subscriptions.",
+  "Descargar mi regalo": "Download my gift",
+  "Gracias por confiar en nosotros. Descargadla y usadla en Excel, Numbers o Google Sheets.": "Thank you for trusting us. Download it and use it in Excel, Numbers or Google Sheets.",
+  "La plantilla en Excel con todo el planificador": "The Excel template with the whole planner",
+  "La plantilla en Excel es vuestra": "The Excel template is yours",
+  "Plantilla Excel de regalo": "Free Excel template as a gift",
+  "Plantilla en Excel de regalo": "An Excel template, as a gift",
+  "Al comprar el plan os regalamos nuestro planificador completo en hoja de cálculo.": "When you buy the plan, we give you our complete planner as a spreadsheet.",
+  "Regalo": "Gift",
+  "Tenéis el Resumen y el Checklist. Desbloquead presupuesto, fincas, invitados, mesas, menú, proveedores y cronograma con un pago único de 37€, sin suscripciones. Y de regalo, la plantilla en Excel. 🎁": "You have the Overview and the Checklist. Unlock budget, venues, guests, tables, menu, suppliers and timeline with a one-off payment of €37, no subscriptions. And as a gift, the Excel template. 🎁",
+  "Un regalo por confiar en nosotros": "A gift for trusting us",
+  "Vuestro regalo": "Your gift",
+  "Y de regalo": "And as a gift",
+  "Y de regalo, la plantilla en Excel": "And as a gift, the Excel template",
+  "Y de regalo, la plantilla en Excel.": "And as a gift, the Excel template.",
+  "Es nuestro regalo al comprar el plan: el planificador completo en una hoja de cálculo, por si alguna vez preferís trabajar en Excel, Numbers o Google Sheets. Se descarga desde el Resumen de la app.": "It's our gift when you buy the plan: the complete planner as a spreadsheet, in case you ever prefer to work in Excel, Numbers or Google Sheets. You download it from the Overview in the app.",
 };
 
 export default dict;
