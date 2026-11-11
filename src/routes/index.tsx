@@ -44,7 +44,7 @@ const features = [
   { num: "05", tag: "Menú", title: "Menú y catering", text: "Menús cerrados con sus platos, bebida y barra libre, con el total calculado." },
   { num: "06", tag: "Proveedores", title: "Proveedores", text: "Contacto, precio, señal pagada, contrato y estado de cada proveedor." },
   { num: "07", tag: "Cronograma", title: "El gran día, hora a hora", text: "Desde la peluquería hasta el primer baile, con quién se encarga de qué." },
-  { num: "08", tag: "Excel", title: "Plantilla en Excel", text: "Nuestro planificador completo para descargar, por si preferís la hoja de cálculo." },
+  { num: "08", tag: "Regalo", title: "Plantilla en Excel de regalo", text: "Al comprar el plan os regalamos nuestro planificador completo en hoja de cálculo.", gift: true },
   { num: "09", tag: "Móvil", title: "En el móvil y el ordenador", text: "Es una web: entráis desde cualquier dispositivo, sin instalar nada." },
 ];
 
@@ -56,7 +56,6 @@ const included = [
   "Menú y catering",
   "Fichas de proveedores",
   "Cronograma del gran día",
-  "Plantilla en Excel descargable",
 ];
 
 function Index() {
@@ -149,7 +148,7 @@ function Index() {
             >
               <span>{tr("Pago único")}</span>
               <span className="h-px w-6 bg-line" />
-              <span>{tr("Plantilla Excel incluida")}</span>
+              <span>🎁 {tr("Plantilla Excel de regalo")}</span>
             </div>
           </div>
 
@@ -238,7 +237,8 @@ function Index() {
         </div>
         <div className="grid gap-px overflow-hidden rounded-2xl bg-line ring-1 ring-foreground/5 md:grid-cols-3">
           {features.map((f) => (
-            <div key={f.num} className="bg-panel p-7">
+            <div key={f.num} className={f.gift ? "relative bg-clay-soft p-7" : "bg-panel p-7"}>
+              {f.gift && <span className="absolute right-6 top-6 text-2xl" aria-hidden>🎁</span>}
               <div className="mb-4 font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">
                 {f.num} — {tr(f.tag)}
               </div>
@@ -256,22 +256,36 @@ function Index() {
 
       {/* Excel */}
       <section className="border-t border-line bg-clay-soft/40">
-        <div className="mx-auto max-w-4xl px-6 py-20 text-center">
+        <div className="mx-auto grid max-w-5xl items-center gap-12 px-6 py-20 md:grid-cols-[260px_1fr]">
+          {/* Caja de regalo: lazo cruzado sobre la tarjeta */}
+          <div className="relative mx-auto aspect-square w-56 md:w-full" aria-hidden>
+            <div className="absolute inset-0 rotate-[-4deg] rounded-[2rem] bg-panel shadow-[0_20px_50px_-20px_rgba(120,60,70,0.35)] ring-1 ring-clay/30" />
+            <div className="absolute inset-y-0 left-1/2 w-7 -translate-x-1/2 rotate-[-4deg] bg-clay/80" />
+            <div className="absolute inset-x-0 top-1/2 h-7 -translate-y-1/2 rotate-[-4deg] bg-clay/80" />
+            <div className="absolute left-1/2 top-1/2 grid size-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-background text-4xl ring-4 ring-clay">
+              🎁
+            </div>
+            <span className="absolute -right-2 top-4 rotate-[8deg] rounded-full bg-clay-ink px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-background">
+              {tr("Regalo")}
+            </span>
+          </div>
+          <div className="text-center md:text-left">
           <div className="mb-4 font-mono text-[11px] uppercase tracking-[0.25em] text-clay-ink">
-            {tr("¿Te gusta más el Excel?")}
+            {tr("Un regalo por confiar en nosotros")}
           </div>
           <h2 className="text-balance font-display text-4xl tracking-tight md:text-5xl">
-            {tr("También te llevas la plantilla en Excel.")}
+            {tr("Y de regalo, la plantilla en Excel.")}
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-pretty text-muted-foreground">
-            {tr("Con el plan descargáis nuestro planificador completo en hoja de cálculo: presupuesto, proveedores, fincas, invitados, mesas, menú, checklist y horario del día. Para usarlo en Excel, Numbers o Google Sheets cuando os apetezca.")}
+          <p className="mt-4 max-w-2xl text-pretty text-muted-foreground">
+            {tr("Al comprar el plan os regalamos nuestro planificador completo en hoja de cálculo: presupuesto, proveedores, fincas, invitados, mesas, menú, checklist y horario del día. Es vuestro para siempre, para usarlo en Excel, Numbers o Google Sheets cuando os apetezca.")}
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          <div className="mt-8 flex flex-wrap justify-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground md:justify-start">
             {["Excel", "Numbers", "Google Sheets"].map((t) => (
               <span key={t} className="rounded-full bg-panel px-4 py-2 ring-1 ring-line">
                 {t}
               </span>
             ))}
+          </div>
           </div>
         </div>
       </section>
@@ -313,6 +327,13 @@ function Index() {
                   </li>
                 ))}
               </ul>
+              <div className="mt-6 flex items-center gap-3 rounded-2xl border border-dashed border-clay/60 px-4 py-3 text-sm">
+                <span className="text-2xl" aria-hidden>🎁</span>
+                <span>
+                  <span className="block font-mono text-[10px] uppercase tracking-[0.2em] text-clay">{tr("Y de regalo")}</span>
+                  {tr("La plantilla en Excel con todo el planificador")}
+                </span>
+              </div>
             </div>
           </div>
         </div>

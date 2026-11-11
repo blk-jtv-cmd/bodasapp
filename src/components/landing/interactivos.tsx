@@ -466,7 +466,7 @@ const FAQ: [string, string][] = [
   ],
   [
     "¿Qué es la plantilla en Excel?",
-    "Es nuestro planificador completo en una hoja de cálculo, por si alguna vez preferís trabajar en Excel, Numbers o Google Sheets. Se descarga desde la app una vez pagado el plan.",
+    "Es nuestro regalo al comprar el plan: el planificador completo en una hoja de cálculo, por si alguna vez preferís trabajar en Excel, Numbers o Google Sheets. Se descarga desde el Resumen de la app.",
   ],
   ["¿Sirve si tenemos wedding planner?", "Sí. Os ayuda a tener vuestra propia visión de todo y a compartir datos claros con ella."],
   ["¿Quién puede ver mis datos?", "Solo vosotros. Cada pareja ve únicamente su propia boda."],

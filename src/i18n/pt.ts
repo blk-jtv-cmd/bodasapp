@@ -865,6 +865,23 @@ const dict: Record<string, string> = {
   "Contraseña (mínimo 8 caracteres)": "Palavra-passe (mínimo 8 caracteres)",
   "La contraseña no es correcta": "A palavra-passe não está correta",
   "Y vuestra contraseña:": "E a vossa palavra-passe:",
+  "Al comprar el plan os regalamos nuestro planificador completo en hoja de cálculo: presupuesto, proveedores, fincas, invitados, mesas, menú, checklist y horario del día. Es vuestro para siempre, para usarlo en Excel, Numbers o Google Sheets cuando os apetezca.": "Ao comprarem o plano, oferecemos-vos o nosso planeador completo em folha de cálculo: orçamento, fornecedores, quintas, convidados, mesas, menu, checklist e horário do dia. É vosso para sempre, para usar no Excel, Numbers ou Google Sheets quando quiserem.",
+  "Con un pago único de 37€ tendréis presupuesto, comparador de fincas, invitados, plano de mesas, menú, proveedores y el cronograma del día. Para siempre, sin suscripciones.": "Com um pagamento único de 37€ terão orçamento, comparador de quintas, convidados, plano de mesas, menu, fornecedores e o cronograma do dia. Para sempre, sem subscrições.",
+  "Descargar mi regalo": "Descarregar o meu presente",
+  "Gracias por confiar en nosotros. Descargadla y usadla en Excel, Numbers o Google Sheets.": "Obrigado por confiarem em nós. Descarreguem-na e usem-na no Excel, Numbers ou Google Sheets.",
+  "La plantilla en Excel con todo el planificador": "O modelo em Excel com todo o planeador",
+  "La plantilla en Excel es vuestra": "O modelo em Excel é vosso",
+  "Plantilla Excel de regalo": "Modelo Excel de oferta",
+  "Plantilla en Excel de regalo": "Modelo em Excel de oferta",
+  "Al comprar el plan os regalamos nuestro planificador completo en hoja de cálculo.": "Ao comprarem o plano, oferecemos-vos o nosso planeador completo em folha de cálculo.",
+  "Regalo": "Oferta",
+  "Tenéis el Resumen y el Checklist. Desbloquead presupuesto, fincas, invitados, mesas, menú, proveedores y cronograma con un pago único de 37€, sin suscripciones. Y de regalo, la plantilla en Excel. 🎁": "Têm o Resumo e a Checklist. Desbloqueiem orçamento, quintas, convidados, mesas, menu, fornecedores e cronograma com um pagamento único de 37€, sem subscrições. E de oferta, o modelo em Excel. 🎁",
+  "Un regalo por confiar en nosotros": "Uma oferta por confiarem em nós",
+  "Vuestro regalo": "A vossa oferta",
+  "Y de regalo": "E de oferta",
+  "Y de regalo, la plantilla en Excel": "E de oferta, o modelo em Excel",
+  "Y de regalo, la plantilla en Excel.": "E de oferta, o modelo em Excel.",
+  "Es nuestro regalo al comprar el plan: el planificador completo en una hoja de cálculo, por si alguna vez preferís trabajar en Excel, Numbers o Google Sheets. Se descarga desde el Resumen de la app.": "É a nossa oferta ao comprarem o plano: o planeador completo numa folha de cálculo, caso prefiram trabalhar no Excel, Numbers ou Google Sheets. Descarrega-se a partir do Resumo da app.",
 };
 
 export default dict;
