@@ -30,6 +30,8 @@ import { Fincas } from "@/components/panel/fincas";
 import { Menu } from "@/components/panel/menu";
 import { TextField } from "@/components/panel/fields";
 import { AllergyPicker } from "@/components/allergy-picker";
+import { PromoBanner } from "@/components/promo-banner";
+import { pricedText, Priced, promoCodeForCheckout, usePromo } from "@/lib/promo";
 import { RsvpLinkCard, shareGuestLink } from "@/components/panel/rsvp-online";
 import { CURRENCIES, currencyLabel, formatMoney, currencySymbol } from "@/lib/currency";
 import {
@@ -177,6 +179,9 @@ function paymentUrl(userId: string, email: string | null) {
   const url = new URL(STRIPE_PAYMENT_LINK);
   url.searchParams.set("client_reference_id", userId);
   if (email) url.searchParams.set("prefilled_email", email);
+  // Durante una oferta, el código va ya puesto en la página de pago de Stripe.
+  const promoCode = promoCodeForCheckout();
+  if (promoCode) url.searchParams.set("prefilled_promo_code", promoCode);
   return url.toString();
 }
 
@@ -216,6 +221,7 @@ function weddingDateLabel(date: string | null) {
 
 function PanelPage() {
   const { t: tr } = useI18n();
+  const promo = usePromo();
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -475,12 +481,20 @@ function PanelPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 pb-6 pt-6 sm:px-6 sm:py-10">
+        {!wedding.plan_active && (
+          <div className="mb-4 overflow-hidden rounded-2xl">
+            <PromoBanner />
+          </div>
+        )}
         {!wedding.plan_active && !locked && (
           <div className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-clay-soft px-6 py-5">
             <div>
               <div className="font-display text-lg font-semibold">{tr("Plan gratuito")}</div>
               <p className="text-sm text-muted-foreground">
-                {tr("Tenéis el Resumen y el Checklist. Desbloquead presupuesto, fincas, invitados, mesas, menú, proveedores y cronograma con un pago único de 37€, sin suscripciones. Y de regalo, la plantilla en Excel. 🎁")}
+                {pricedText(
+                  tr("Tenéis el Resumen y el Checklist. Desbloquead presupuesto, fincas, invitados, mesas, menú, proveedores y cronograma con un pago único de 37€, sin suscripciones. Y de regalo, la plantilla en Excel. 🎁"),
+                  promo,
+                )}
               </p>
             </div>
             <PayButton url={payUrl} />
@@ -672,6 +686,7 @@ function ExcelDownload() {
 
 function PayButton({ url }: { url: string | null }) {
   const { t: tr } = useI18n();
+  const promo = usePromo();
   // Renuncia expresa al desistimiento (contenido digital): obligatoria antes de pagar.
   const [accepted, setAccepted] = useState(false);
   if (!url) {
@@ -703,11 +718,11 @@ function PayButton({ url }: { url: string | null }) {
       </label>
       {accepted ? (
         <a href={url} className={`${buttonClass} hover:bg-clay-ink hover:text-background`}>
-          {tr("Desbloquear por 37€")}
+          <Priced text={tr("Desbloquear por 37€")} active={promo} />
         </a>
       ) : (
         <button type="button" disabled className={`${buttonClass} cursor-not-allowed opacity-50`}>
-          {tr("Desbloquear por 37€")}
+          <Priced text={tr("Desbloquear por 37€")} active={promo} />
         </button>
       )}
     </div>
@@ -716,12 +731,16 @@ function PayButton({ url }: { url: string | null }) {
 
 function Paywall({ url }: { url: string | null }) {
   const { t: tr } = useI18n();
+  const promo = usePromo();
   return (
     <div className="mx-auto max-w-lg rounded-3xl bg-panel px-8 py-12 text-center ring-1 ring-foreground/5">
       <div className="text-3xl">🔒</div>
       <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight">{tr("Parte del plan completo")}</h2>
       <p className="mt-3 text-sm text-muted-foreground">
-        {tr("Con un pago único de 37€ tendréis presupuesto, comparador de fincas, invitados, plano de mesas, menú, proveedores y el cronograma del día. Para siempre, sin suscripciones.")}
+        {pricedText(
+          tr("Con un pago único de 37€ tendréis presupuesto, comparador de fincas, invitados, plano de mesas, menú, proveedores y el cronograma del día. Para siempre, sin suscripciones."),
+          promo,
+        )}
       </p>
       <div className="mt-8 flex justify-center">
         <PayButton url={url} />

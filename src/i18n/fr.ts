@@ -882,6 +882,8 @@ const dict: Record<string, string> = {
   "Y de regalo, la plantilla en Excel": "Et en cadeau, le modèle Excel",
   "Y de regalo, la plantilla en Excel.": "Et en cadeau, le modèle Excel.",
   "Es nuestro regalo al comprar el plan: el planificador completo en una hoja de cálculo, por si alguna vez preferís trabajar en Excel, Numbers o Google Sheets. Se descarga desde el Resumen de la app.": "C'est notre cadeau quand vous achetez le plan : le planificateur complet en tableur, si vous préférez parfois travailler dans Excel, Numbers ou Google Sheets. Il se télécharge depuis le Résumé de l'app.",
+  "El plan completo a 37€ solo hasta el 27 de noviembre.": "Le plan complet à 37 € jusqu'au 27 novembre seulement.",
+  "hasta el 27 de noviembre": "jusqu'au 27 novembre",
 };
 
 export default dict;

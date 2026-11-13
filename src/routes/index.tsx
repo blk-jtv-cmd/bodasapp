@@ -12,6 +12,8 @@ import {
   TimelineDemo,
 } from "@/components/landing/interactivos";
 import { t as tr, useI18n } from "@/i18n";
+import { PromoBanner } from "@/components/promo-banner";
+import { BASE_PRICE, Priced, PROMO, pricedText, usePromo } from "@/lib/promo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -60,6 +62,7 @@ const included = [
 
 function Index() {
   const { t: tr } = useI18n();
+  const promo = usePromo();
   // Los enlaces de los correos (confirmar, enlace mágico, contraseña) pueden llegar aquí
   // con la sesión en la dirección (#access_token=...). Los pasamos a /auth, que sabe leerlos.
   useEffect(() => {
@@ -71,13 +74,14 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-background font-body text-foreground antialiased">
+      <PromoBanner />
       {/* Nav */}
       <header className="sticky top-0 z-30 border-b border-line bg-background/85 backdrop-blur-sm">
         <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-2 sm:gap-4 sm:px-6">
           <div className="flex min-w-0 flex-col justify-self-start">
             <BrandName />
             <span className="hidden font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground sm:inline">
-              {tr("Plan · 37€")}
+              <Priced text={tr("Plan · 37€")} active={promo} />
             </span>
           </div>
           <BrandLogo />
@@ -133,7 +137,7 @@ function Index() {
                 to="/auth"
                 className="inline-flex items-center gap-2 rounded-full bg-clay px-6 py-3 font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background"
               >
-                {tr("Empezar mi plan · 37€")}
+                <Priced text={tr("Empezar mi plan · 37€")} active={promo} />
               </Link>
               <a
                 href="#pruebalo"
@@ -298,8 +302,16 @@ function Index() {
               <div className="mb-6 font-mono text-[10px] uppercase tracking-[0.25em] text-background/50">
                 {tr("(c) El precio")}
               </div>
+              {promo && (
+                <div className="mb-3 inline-flex rounded-full bg-clay px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-foreground">
+                  {PROMO.label} · {tr("hasta el 27 de noviembre")}
+                </div>
+              )}
               <div className="flex items-end gap-2">
-                <span className="font-display text-[6rem] font-semibold leading-none">37</span>
+                {promo && (
+                  <span className="mb-4 mr-2 font-display text-4xl text-background/50 line-through">{BASE_PRICE}€</span>
+                )}
+                <span className="font-display text-[6rem] font-semibold leading-none">{promo ? PROMO.price : BASE_PRICE}</span>
                 <span className="mb-3 font-display text-4xl">€</span>
               </div>
               <div className="mt-2 text-sm text-background/70">
@@ -346,7 +358,7 @@ function Index() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 md:flex-row">
           <span className="font-brand text-4xl leading-none">{BRAND_NAME}</span>
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-            {tr("Un plan, una boda, 37€")}
+            {pricedText(tr("Un plan, una boda, 37€"), promo)}
           </span>
         </div>
         <div className="mx-auto max-w-6xl px-6 pb-8">

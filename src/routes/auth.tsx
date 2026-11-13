@@ -8,6 +8,8 @@ import { GoogleButton } from "@/components/google-button";
 import { LegalLinks, withLegalLinks } from "@/components/legal-links";
 import { getLang, t as tr, useI18n } from "@/i18n";
 import { rememberLangInAccount } from "@/i18n/remember";
+import { PromoBanner } from "@/components/promo-banner";
+import { Priced, usePromo } from "@/lib/promo";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -37,6 +39,7 @@ const inputCls =
 
 function AuthPage() {
   const { t: tr } = useI18n();
+  const promo = usePromo();
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("signup");
   const [email, setEmail] = useState("");
@@ -182,13 +185,14 @@ function AuthPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background font-body text-foreground">
+      <PromoBanner />
       <header className="border-b border-line">
         <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-2 sm:gap-4 sm:px-6">
           <BrandName className="justify-self-start" />
           <BrandLogo />
           <div className="flex items-center gap-3 justify-self-end">
             <span className="hidden font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground sm:inline">
-              {tr("Plan · 37€")}
+              <Priced text={tr("Plan · 37€")} active={promo} />
             </span>
             <LanguageSwitcher />
           </div>
