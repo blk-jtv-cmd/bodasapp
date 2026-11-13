@@ -189,7 +189,7 @@ const docs: LegalDocs = {
       {
         h: "3. Prix et paiement",
         p: [
-          "Le plan coûte 37 € en un paiement unique, taxes comprises. Il n'y a ni abonnement ni mensualités. Le prix applicable est celui affiché sur le site au moment de l'achat.",
+          "Le plan coûte 37 € en un paiement unique, taxes comprises. Il n'y a ni abonnement ni mensualités. Le prix applicable est celui affiché sur le site au moment de l'achat. Des offres temporaires peuvent être annoncées sur le site (par exemple, Black Friday), avec leurs dates de début et de fin ; pendant une offre, c'est le prix de l'offre qui est facturé.",
           "Le paiement s'effectue par carte via Stripe, de façon sécurisée. Tu recevras la confirmation de l'achat par e-mail.",
         ],
       },

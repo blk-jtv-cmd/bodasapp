@@ -189,7 +189,7 @@ const docs: LegalDocs = {
       {
         h: "3. Prezzo e pagamento",
         p: [
-          "Il piano costa 37 € in un unico pagamento, imposte incluse. Non ci sono abbonamenti né rate. Il prezzo applicabile è quello indicato sul sito al momento dell'acquisto.",
+          "Il piano costa 37 € in un unico pagamento, imposte incluse. Non ci sono abbonamenti né rate. Il prezzo applicabile è quello indicato sul sito al momento dell'acquisto. Possono esserci offerte temporanee annunciate sul sito (per esempio, Black Friday), con date di inizio e fine; durante un'offerta si addebita il prezzo dell'offerta.",
           "Il pagamento avviene con carta tramite Stripe, in modo sicuro. Riceverai la conferma dell'acquisto via email.",
         ],
       },

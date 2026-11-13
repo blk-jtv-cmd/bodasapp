@@ -1,10 +1,15 @@
 // Recibe los avisos de Stripe y activa el plan de la pareja cuando el pago se ha completado.
 // Secretos necesarios en Supabase (Edge Functions → Secrets):
-//   STRIPE_WEBHOOK_SECRET  → el "Signing secret" del webhook en Stripe (empieza por whsec_)
+//   STRIPE_WEBHOOK_SECRET       → el "Signing secret" del webhook en Stripe, modo real (empieza por whsec_)
+//   STRIPE_WEBHOOK_SECRET_TEST  → (opcional) el del webhook en modo de prueba, para las compras de prueba
 // SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY los pone Supabase automáticamente.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET") ?? "";
+const WEBHOOK_SECRETS = [Deno.env.get("STRIPE_WEBHOOK_SECRET"), Deno.env.get("STRIPE_WEBHOOK_SECRET_TEST")].filter(
+  (s): s is string => !!s,
+);
+// Importes válidos del plan, en céntimos: 37 € normal y 27 € de oferta.
+const VALID_AMOUNTS = [3700, 2700];
 const TOLERANCE_SECONDS = 300;
 
 const supabase = createClient(
@@ -25,7 +30,14 @@ function safeEqual(a: string, b: string) {
 
 // Comprueba que el aviso viene de verdad de Stripe (firma HMAC-SHA256).
 async function isValidSignature(payload: string, header: string | null) {
-  if (!header || !WEBHOOK_SECRET) return false;
+  if (!header) return false;
+  for (const secret of WEBHOOK_SECRETS) {
+    if (await isValidSignatureFor(payload, header, secret)) return true;
+  }
+  return false;
+}
+
+async function isValidSignatureFor(payload: string, header: string, secret: string) {
   const parts = header.split(",").map((p) => p.split("=") as [string, string]);
   const timestamp = parts.find(([k]) => k === "t")?.[1];
   const signatures = parts.filter(([k]) => k === "v1").map(([, v]) => v);
@@ -34,7 +46,7 @@ async function isValidSignature(payload: string, header: string | null) {
 
   const key = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(WEBHOOK_SECRET),
+    new TextEncoder().encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"],
@@ -59,6 +71,12 @@ Deno.serve(async (req) => {
 
   const session = event.data.object;
   if (session.payment_status !== "paid") return Response.json({ received: true, pending: true });
+
+  // Solo se activa con un pago completo del plan: 37 € o 27 € (oferta), en euros.
+  if (session.currency !== "eur" || !VALID_AMOUNTS.includes(session.amount_total)) {
+    console.error("Importe no válido, no se activa", session.id, session.amount_total, session.currency);
+    return Response.json({ received: true, warning: "unexpected amount" });
+  }
 
   const userId: string | null = session.client_reference_id ?? null;
   if (!userId) {

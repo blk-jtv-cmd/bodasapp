@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
 import { locale, t as tr, useI18n } from "@/i18n";
+import { withPrice } from "@/lib/pricing";
+import { usePricing } from "@/lib/pricing-context";
 
 const eyebrow = "mb-4 font-mono text-[11px] uppercase tracking-[0.25em] text-clay-ink";
 const h2 = "text-balance font-display text-4xl tracking-tight md:text-5xl";
@@ -474,6 +476,7 @@ const FAQ: [string, string][] = [
 
 export function Faq() {
   const { t: tr } = useI18n();
+  const pricing = usePricing();
   return (
     <section id="preguntas" className="scroll-mt-24 border-t border-line">
       <div className="mx-auto max-w-3xl px-6 py-20">
@@ -486,7 +489,7 @@ export function Faq() {
                 {tr(q)}
                 <span className="text-clay-ink transition-transform group-open:rotate-45">+</span>
               </summary>
-              <p className="mt-3 text-sm text-muted-foreground">{tr(a)}</p>
+              <p className="mt-3 text-sm text-muted-foreground">{withPrice(tr(a), pricing)}</p>
             </details>
           ))}
         </div>

@@ -10,6 +10,7 @@ import en from "@/legal/en";
 import it from "@/legal/it";
 import fr from "@/legal/fr";
 import pt from "@/legal/pt";
+import { OfferBanner } from "@/components/offer-banner";
 
 const DOCS: Record<Lang, LegalDocs> = { es, en, it, fr, pt };
 
@@ -47,6 +48,7 @@ function LegalPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background font-body text-foreground">
+      <OfferBanner />
       <header className="border-b border-line">
         <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-2 sm:gap-4 sm:px-6">
           <BrandName className="justify-self-start" />

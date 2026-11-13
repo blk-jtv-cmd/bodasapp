@@ -8,6 +8,9 @@ import { GoogleButton } from "@/components/google-button";
 import { LegalLinks, withLegalLinks } from "@/components/legal-links";
 import { getLang, t as tr, useI18n } from "@/i18n";
 import { rememberLangInAccount } from "@/i18n/remember";
+import { OfferBanner } from "@/components/offer-banner";
+import { withPrice } from "@/lib/pricing";
+import { usePricing } from "@/lib/pricing-context";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -21,7 +24,7 @@ export const Route = createFileRoute("/auth")({
       { property: "og:title", content: "Entrar o crear cuenta — Tu Boda en Orden" },
       {
         property: "og:description",
-        content: "Crea tu cuenta y empieza a organizar tu boda con Tu Boda en Orden por 37€.",
+        content: "Crea tu cuenta y empieza a organizar tu boda con Tu Boda en Orden.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -37,6 +40,7 @@ const inputCls =
 
 function AuthPage() {
   const { t: tr } = useI18n();
+  const pricing = usePricing();
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("signup");
   const [email, setEmail] = useState("");
@@ -182,13 +186,14 @@ function AuthPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background font-body text-foreground">
+      <OfferBanner />
       <header className="border-b border-line">
         <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-2 sm:gap-4 sm:px-6">
           <BrandName className="justify-self-start" />
           <BrandLogo />
           <div className="flex items-center gap-3 justify-self-end">
             <span className="hidden font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground sm:inline">
-              {tr("Plan · 37€")}
+              {withPrice(tr("Plan · 37€"), pricing)}
             </span>
             <LanguageSwitcher />
           </div>

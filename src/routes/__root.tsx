@@ -13,6 +13,10 @@ import { Toaster } from "@/components/ui/sonner";
 import { initLang } from "@/i18n";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { getPricing } from "@/lib/pricing.functions";
+import { PRODUCTION_HOSTS, SIMULATE_COOKIE, withPrice, type Pricing } from "@/lib/pricing";
+import { PricingProvider } from "@/lib/pricing-context";
+import { SimulationNotice } from "@/components/offer-banner";
 
 function NotFoundComponent() {
   return (
@@ -75,7 +79,19 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
+  // El precio (y si hay oferta) lo decide el servidor con su hora. En la web de pruebas
+  // se puede simular la fecha con ?fecha=2026-11-20T10:00 (y ?fecha=off para quitarla).
+  loader: async ({ location }): Promise<Pricing | undefined> => {
+    const fecha = (location.search as Record<string, unknown> | undefined)?.fecha;
+    try {
+      return await getPricing({ data: { simulate: typeof fecha === "string" ? fecha : undefined } });
+    } catch (e) {
+      console.error("No se pudo obtener el precio", e);
+      return undefined;
+    }
+  },
+  staleTime: 60_000,
+  head: ({ loaderData }) => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
@@ -86,14 +102,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-title", content: "Boda en Orden" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "application-name", content: "Tu Boda en Orden" },
-      { title: "Tu Boda en Orden — Organiza tu boda completa por 37€" },
+      { title: withPrice("Tu Boda en Orden — Organiza tu boda completa por 37€", { price: loaderData?.price ?? 37 }) },
       {
         name: "description",
-        content:
+        content: withPrice(
           "Checklist, presupuesto, invitados, proveedores y cronograma de tu boda en un solo plan. Pago único de 37€.",
+          { price: loaderData?.price ?? 37 },
+        ),
       },
       { name: "author", content: "Tu Boda en Orden" },
-      { property: "og:title", content: "Tu Boda en Orden — Organiza tu boda completa por 37€" },
+      {
+        property: "og:title",
+        content: withPrice("Tu Boda en Orden — Organiza tu boda completa por 37€", { price: loaderData?.price ?? 37 }),
+      },
       {
         property: "og:description",
         content:
@@ -136,14 +157,24 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pricing = Route.useLoaderData();
   useEffect(() => {
     initLang();
+    // Web de pruebas: ?fecha=... se guarda en una cookie para que la simulación siga al navegar
+    // y al pagar. En la web real no se hace nada (y el servidor la ignoraría igualmente).
+    if (PRODUCTION_HOSTS.includes(window.location.host)) return;
+    const fecha = new URLSearchParams(window.location.search).get("fecha");
+    if (fecha === "off") document.cookie = `${SIMULATE_COOKIE}=; path=/; max-age=0`;
+    else if (fecha) document.cookie = `${SIMULATE_COOKIE}=${encodeURIComponent(fecha)}; path=/; max-age=86400`;
   }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <PricingProvider value={pricing}>
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <Outlet />
+        <SimulationNotice />
+      </PricingProvider>
       <Toaster />
     </QueryClientProvider>
   );

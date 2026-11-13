@@ -12,26 +12,12 @@ import {
   TimelineDemo,
 } from "@/components/landing/interactivos";
 import { t as tr, useI18n } from "@/i18n";
+import { OfferBanner } from "@/components/offer-banner";
+import { BASE_PRICE, OFFER, withPrice } from "@/lib/pricing";
+import { usePricing } from "@/lib/pricing-context";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Tu Boda en Orden — Organiza tu boda completa por 37€" },
-      {
-        name: "description",
-        content:
-          "Checklist, presupuesto, invitados, proveedores y cronograma de tu boda en un solo plan. Un pago único de 37€, sin suscripciones.",
-      },
-      { property: "og:title", content: "Tu Boda en Orden — Organiza tu boda completa por 37€" },
-      {
-        property: "og:description",
-        content:
-          "Todo lo que los novios deben tener en cuenta, ordenado desde el primer día. Pago único de 37€.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  // Título, descripción y vista previa al compartir: los pone __root.tsx con el precio del momento.
   component: Index,
 });
 
@@ -60,6 +46,7 @@ const included = [
 
 function Index() {
   const { t: tr } = useI18n();
+  const pricing = usePricing();
   // Los enlaces de los correos (confirmar, enlace mágico, contraseña) pueden llegar aquí
   // con la sesión en la dirección (#access_token=...). Los pasamos a /auth, que sabe leerlos.
   useEffect(() => {
@@ -71,13 +58,14 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-background font-body text-foreground antialiased">
+      <OfferBanner />
       {/* Nav */}
       <header className="sticky top-0 z-30 border-b border-line bg-background/85 backdrop-blur-sm">
         <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-2 sm:gap-4 sm:px-6">
           <div className="flex min-w-0 flex-col justify-self-start">
             <BrandName />
             <span className="hidden font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground sm:inline">
-              {tr("Plan · 37€")}
+              {withPrice(tr("Plan · 37€"), pricing)}
             </span>
           </div>
           <BrandLogo />
@@ -133,7 +121,7 @@ function Index() {
                 to="/auth"
                 className="inline-flex items-center gap-2 rounded-full bg-clay px-6 py-3 font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background"
               >
-                {tr("Empezar mi plan · 37€")}
+                {withPrice(tr("Empezar mi plan · 37€"), pricing)}
               </Link>
               <a
                 href="#pruebalo"
@@ -299,9 +287,14 @@ function Index() {
                 {tr("(c) El precio")}
               </div>
               <div className="flex items-end gap-2">
-                <span className="font-display text-[6rem] font-semibold leading-none">37</span>
+                <span className="font-display text-[6rem] font-semibold leading-none">{pricing.price}</span>
                 <span className="mb-3 font-display text-4xl">€</span>
               </div>
+              {pricing.offer && (
+                <div className="mt-3 inline-flex rounded-full bg-clay px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground">
+                  {tr("Oferta {label} · después {price} €", { label: OFFER.label, price: BASE_PRICE })}
+                </div>
+              )}
               <div className="mt-2 text-sm text-background/70">
                 {tr("Un solo pago. Sin suscripciones ni cuotas.")}
               </div>
@@ -346,7 +339,7 @@ function Index() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 md:flex-row">
           <span className="font-brand text-4xl leading-none">{BRAND_NAME}</span>
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-            {tr("Un plan, una boda, 37€")}
+            {withPrice(tr("Un plan, una boda, 37€"), pricing)}
           </span>
         </div>
         <div className="mx-auto max-w-6xl px-6 pb-8">

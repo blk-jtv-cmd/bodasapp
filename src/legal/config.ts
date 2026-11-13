@@ -7,5 +7,5 @@ export const LEGAL = {
   address: "Av. Algorta 4-1, 28830 San Fernando de Henares (Madrid), España",
   email: "hola@tubodaenorden.com",
   brand: "Tu Boda en Orden",
-  updated: "2026-11-09",
+  updated: "2026-11-13",
 };
