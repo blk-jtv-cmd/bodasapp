@@ -189,7 +189,7 @@ const docs: LegalDocs = {
       {
         h: "3. Price and payment",
         p: [
-          "The plan costs €37 as a single payment, taxes included. There are no subscriptions or instalments. The applicable price is the one shown on the website at the time of purchase.",
+          "The plan costs €37 as a single payment, taxes included. There are no subscriptions or instalments. The applicable price is the one shown on the website at the time of purchase. There may be temporary offers announced on the website (for example, Black Friday), with their start and end dates; during an offer, the offer price is charged.",
           "Payment is made securely by card through Stripe. You will receive confirmation of your purchase by email.",
         ],
       },

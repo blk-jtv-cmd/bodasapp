@@ -189,7 +189,7 @@ const docs: LegalDocs = {
       {
         h: "3. Preço e pagamento",
         p: [
-          "O plano custa 37 € num único pagamento, impostos incluídos. Não há subscrições nem prestações. O preço aplicável é o indicado no site no momento da compra.",
+          "O plano custa 37 € num único pagamento, impostos incluídos. Não há subscrições nem prestações. O preço aplicável é o indicado no site no momento da compra. Pode haver ofertas temporárias anunciadas no site (por exemplo, Black Friday), com datas de início e fim; durante uma oferta, é cobrado o preço da oferta.",
           "O pagamento é feito com cartão através da Stripe, de forma segura. Receberás a confirmação da compra por email.",
         ],
       },

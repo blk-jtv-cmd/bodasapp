@@ -30,6 +30,9 @@ import { Fincas } from "@/components/panel/fincas";
 import { Menu } from "@/components/panel/menu";
 import { TextField } from "@/components/panel/fields";
 import { AllergyPicker } from "@/components/allergy-picker";
+import { createCheckout } from "@/lib/pricing.functions";
+import { BASE_PRICE, OFFER, withPrice } from "@/lib/pricing";
+import { usePricing } from "@/lib/pricing-context";
 import { RsvpLinkCard, shareGuestLink } from "@/components/panel/rsvp-online";
 import { CURRENCIES, currencyLabel, formatMoney, currencySymbol } from "@/lib/currency";
 import {
@@ -216,6 +219,7 @@ function weddingDateLabel(date: string | null) {
 
 function PanelPage() {
   const { t: tr } = useI18n();
+  const pricing = usePricing();
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -480,7 +484,10 @@ function PanelPage() {
             <div>
               <div className="font-display text-lg font-semibold">{tr("Plan gratuito")}</div>
               <p className="text-sm text-muted-foreground">
-                {tr("Tenéis el Resumen y el Checklist. Desbloquead presupuesto, fincas, invitados, mesas, menú, proveedores y cronograma con un pago único de 37€, sin suscripciones. Y de regalo, la plantilla en Excel. 🎁")}
+                {withPrice(
+                  tr("Tenéis el Resumen y el Checklist. Desbloquead presupuesto, fincas, invitados, mesas, menú, proveedores y cronograma con un pago único de 37€, sin suscripciones. Y de regalo, la plantilla en Excel. 🎁"),
+                  pricing,
+                )}
               </p>
             </div>
             <PayButton url={payUrl} />
@@ -670,17 +677,45 @@ function ExcelDownload() {
   );
 }
 
-function PayButton({ url }: { url: string | null }) {
-  const { t: tr } = useI18n();
+function PayButton({ url: fallbackUrl }: { url: string | null }) {
+  const { t: tr, lang } = useI18n();
+  const pricing = usePricing();
   // Renuncia expresa al desistimiento (contenido digital): obligatoria antes de pagar.
   const [accepted, setAccepted] = useState(false);
-  if (!url) {
-    return (
-      <span className="rounded-full bg-foreground/10 px-5 py-2.5 text-sm text-muted-foreground">
-        {tr("Pago no disponible todavía")}
-      </span>
-    );
+  const [busy, setBusy] = useState(false);
+
+  // El pago lo crea el servidor con el precio que toca en ese momento (27 € en la oferta, 37 € fuera).
+  async function pay() {
+    setBusy(true);
+    try {
+      const r = await createCheckout({ data: { lang } });
+      if (r.ok) {
+        window.location.href = r.url;
+        return;
+      }
+      if (r.reason === "already_paid") {
+        window.location.reload();
+        return;
+      }
+      // Sin configurar el pago en el servidor: fuera de la oferta se usa el enlace de pago de siempre (37 €).
+      // Durante la oferta nunca, para no cobrar 37 € cuando la web dice 27 €.
+      if (r.reason === "not_configured" && !pricing.offer && fallbackUrl) {
+        window.location.href = fallbackUrl;
+        return;
+      }
+      toast.error(tr("No hemos podido abrir el pago. Volved a intentarlo en un momento; si sigue igual, escribidnos."));
+    } catch (e) {
+      console.error(e);
+      if (!pricing.offer && fallbackUrl) {
+        window.location.href = fallbackUrl;
+        return;
+      }
+      toast.error(tr("No hemos podido abrir el pago. Volved a intentarlo en un momento; si sigue igual, escribidnos."));
+    } finally {
+      setBusy(false);
+    }
   }
+
   const buttonClass =
     "whitespace-nowrap rounded-full bg-clay px-5 py-2.5 text-sm font-medium text-foreground transition-colors";
   return (
@@ -701,14 +736,18 @@ function PayButton({ url }: { url: string | null }) {
           )}
         </span>
       </label>
-      {accepted ? (
-        <a href={url} className={`${buttonClass} hover:bg-clay-ink hover:text-background`}>
-          {tr("Desbloquear por 37€")}
-        </a>
-      ) : (
-        <button type="button" disabled className={`${buttonClass} cursor-not-allowed opacity-50`}>
-          {tr("Desbloquear por 37€")}
-        </button>
+      <button
+        type="button"
+        onClick={pay}
+        disabled={!accepted || busy}
+        className={`${buttonClass} enabled:hover:bg-clay-ink enabled:hover:text-background disabled:cursor-not-allowed disabled:opacity-50`}
+      >
+        {busy ? tr("Un momento…") : withPrice(tr("Desbloquear por 37€"), pricing)}
+      </button>
+      {pricing.offer && (
+        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-clay-ink">
+          {tr("Oferta {label} · después {price} €", { label: OFFER.label, price: BASE_PRICE })}
+        </span>
       )}
     </div>
   );
@@ -716,12 +755,16 @@ function PayButton({ url }: { url: string | null }) {
 
 function Paywall({ url }: { url: string | null }) {
   const { t: tr } = useI18n();
+  const pricing = usePricing();
   return (
     <div className="mx-auto max-w-lg rounded-3xl bg-panel px-8 py-12 text-center ring-1 ring-foreground/5">
       <div className="text-3xl">🔒</div>
       <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight">{tr("Parte del plan completo")}</h2>
       <p className="mt-3 text-sm text-muted-foreground">
-        {tr("Con un pago único de 37€ tendréis presupuesto, comparador de fincas, invitados, plano de mesas, menú, proveedores y el cronograma del día. Para siempre, sin suscripciones.")}
+        {withPrice(
+          tr("Con un pago único de 37€ tendréis presupuesto, comparador de fincas, invitados, plano de mesas, menú, proveedores y el cronograma del día. Para siempre, sin suscripciones."),
+          pricing,
+        )}
       </p>
       <div className="mt-8 flex justify-center">
         <PayButton url={url} />

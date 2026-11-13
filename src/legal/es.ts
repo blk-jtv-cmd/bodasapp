@@ -192,7 +192,7 @@ const docs: LegalDocs = {
       {
         h: "3. Precio y pago",
         p: [
-          "El plan cuesta 37 € en un único pago, impuestos incluidos. No hay suscripciones ni cuotas. El precio aplicable es el que aparece en la web en el momento de la compra.",
+          "El plan cuesta 37 € en un único pago, impuestos incluidos. No hay suscripciones ni cuotas. El precio aplicable es el que aparece en la web en el momento de la compra. Puede haber ofertas temporales anunciadas en la web (por ejemplo, Black Friday), con sus fechas de inicio y fin; durante una oferta se cobra el precio de la oferta.",
           "El pago se hace con tarjeta a través de Stripe, de forma segura. Recibirás la confirmación de la compra por email.",
         ],
       },

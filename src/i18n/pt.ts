@@ -882,6 +882,10 @@ const dict: Record<string, string> = {
   "Y de regalo, la plantilla en Excel": "E de oferta, o modelo em Excel",
   "Y de regalo, la plantilla en Excel.": "E de oferta, o modelo em Excel.",
   "Es nuestro regalo al comprar el plan: el planificador completo en una hoja de cálculo, por si alguna vez preferís trabajar en Excel, Numbers o Google Sheets. Se descarga desde el Resumen de la app.": "É a nossa oferta ao comprarem o plano: o planeador completo numa folha de cálculo, caso prefiram trabalhar no Excel, Numbers ou Google Sheets. Descarrega-se a partir do Resumo da app.",
+  "El plan completo a {price} € hasta el 30 de noviembre": "O plano completo a {price} € até 30 de novembro",
+  "Termina en": "Termina em",
+  "Oferta {label} · después {price} €": "Oferta {label} · depois {price} €",
+  "No hemos podido abrir el pago. Volved a intentarlo en un momento; si sigue igual, escribidnos.": "Não conseguimos abrir o pagamento. Tentem de novo daqui a pouco; se continuar, escrevam-nos.",
 };
 
 export default dict;
