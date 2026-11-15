@@ -291,7 +291,7 @@ function Index() {
                 <span className="mb-3 font-display text-4xl">€</span>
               </div>
               {pricing.offer && (
-                <div className="mt-3 inline-flex rounded-full bg-clay px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-foreground">
+                <div className="mt-3 inline-flex rounded-xl bg-clay px-3 py-1.5 font-mono text-[10px] uppercase leading-relaxed tracking-[0.18em] text-foreground">
                   {tr("Oferta {label} · después {price} €", { label: OFFER.label, price: BASE_PRICE })}
                 </div>
               )}
