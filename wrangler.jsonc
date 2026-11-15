@@ -1,0 +1,5 @@
+// Solo para las webs de pruebas de Cloudflare (`npx wrangler preview` necesita este bloque).
+// El resto de la configuración la genera nitro al compilar.
+{
+  "previews": {}
+}
