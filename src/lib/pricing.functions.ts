@@ -22,7 +22,7 @@ export const getPricing = createServerFn({ method: "GET" })
 
 type CheckoutResult =
   | { ok: true; url: string; price: number }
-  | { ok: false; reason: "unauthorized" | "already_paid" | "not_configured" | "stripe_error" };
+  | { ok: false; reason: "unauthorized" | "already_paid" | "not_configured" | "stripe_error"; detail?: string };
 
 /**
  * Crea el pago en Stripe con el precio que toca AHORA según el servidor.
@@ -70,8 +70,12 @@ export const createCheckout = createServerFn({ method: "POST" })
     const priceId = production
       ? env(pricing.offer ? "STRIPE_PRICE_ID_OFERTA" : "STRIPE_PRICE_ID")
       : env(pricing.offer ? "STRIPE_TEST_PRICE_ID_OFERTA" : "STRIPE_TEST_PRICE_ID");
-    if (!key || !priceId) return { ok: false, reason: "not_configured" };
-    if (!production && key.startsWith("sk_live")) return { ok: false, reason: "not_configured" };
+    // En la web de pruebas se devuelve el motivo concreto para poder arreglarlo; en la real, no.
+    const why = (d: string) => (production ? undefined : d);
+    if (!key) return { ok: false, reason: "not_configured", detail: why("falta la clave de Stripe") };
+    if (!priceId) return { ok: false, reason: "not_configured", detail: why("falta el price_ de Stripe") };
+    if (!production && /^(sk|rk)_live/.test(key))
+      return { ok: false, reason: "not_configured", detail: why("clave real en la web de pruebas") };
 
     const stripe = (path: string, init?: RequestInit) =>
       fetch(`https://api.stripe.com/v1/${path}`, {
@@ -81,12 +85,20 @@ export const createCheckout = createServerFn({ method: "POST" })
 
     // Comprobación de seguridad: el precio configurado tiene que ser exactamente el que toca.
     const priceRes = await stripe(`prices/${encodeURIComponent(priceId)}`);
-    if (!priceRes.ok) return { ok: false, reason: "stripe_error" };
+    if (!priceRes.ok) {
+      const err = (await priceRes.text()).slice(0, 300);
+      console.error("Stripe price error", priceRes.status, err);
+      return { ok: false, reason: "stripe_error", detail: why(`leer precio ${priceRes.status}: ${err}`) };
+    }
     const price = (await priceRes.json()) as { unit_amount: number; currency: string };
     const expected = (pricing.offer ? OFFER_PRICE : BASE_PRICE) * 100;
     if (price.unit_amount !== expected || price.currency !== "eur") {
       console.error("Precio de Stripe mal configurado", priceId, price.unit_amount, "esperado", expected);
-      return { ok: false, reason: "not_configured" };
+      return {
+        ok: false,
+        reason: "not_configured",
+        detail: why(`el precio ${priceId} vale ${price.unit_amount / 100} ${price.currency}, se esperaba ${expected / 100} eur`),
+      };
     }
 
     const locale = ["es", "en", "it", "fr", "pt"].includes(data.lang ?? "") ? data.lang! : "auto";
@@ -109,8 +121,9 @@ export const createCheckout = createServerFn({ method: "POST" })
     }
     const res = await stripe("checkout/sessions", { method: "POST", body });
     if (!res.ok) {
-      console.error("Stripe checkout error", res.status, await res.text());
-      return { ok: false, reason: "stripe_error" };
+      const err = (await res.text()).slice(0, 300);
+      console.error("Stripe checkout error", res.status, err);
+      return { ok: false, reason: "stripe_error", detail: why(`crear pago ${res.status}: ${err}`) };
     }
     const session = (await res.json()) as { url: string };
     return { ok: true, url: session.url, price: pricing.price };

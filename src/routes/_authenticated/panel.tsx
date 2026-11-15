@@ -703,7 +703,11 @@ function PayButton({ url: fallbackUrl }: { url: string | null }) {
         window.location.href = fallbackUrl;
         return;
       }
-      toast.error(tr("No hemos podido abrir el pago. Volved a intentarlo en un momento; si sigue igual, escribidnos."));
+      console.error("Pago:", r.reason, "detail" in r ? r.detail : "");
+      toast.error(tr("No hemos podido abrir el pago. Volved a intentarlo en un momento; si sigue igual, escribidnos."), {
+        description: "detail" in r && r.detail ? `${r.reason}: ${r.detail}` : r.reason,
+        duration: 20000,
+      });
     } catch (e) {
       console.error(e);
       if (!pricing.offer && fallbackUrl) {
