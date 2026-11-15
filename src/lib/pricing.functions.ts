@@ -39,7 +39,17 @@ export const createCheckout = createServerFn({ method: "POST" })
     const url = new URL(req.url);
     const host = url.host.toLowerCase();
     const production = PRODUCTION_HOSTS.includes(host);
-    const env = (k: string) => (process.env[k] ?? "").trim();
+    // Las variables de Cloudflare pueden llegar por process.env o por el módulo "cloudflare:workers".
+    let cfEnv: Record<string, unknown> = {};
+    try {
+      const specifier = "cloudflare:workers";
+      cfEnv = ((await import(/* @vite-ignore */ specifier)) as { env?: Record<string, unknown> }).env ?? {};
+    } catch {
+      /* fuera de Cloudflare */
+    }
+    const procEnv = (typeof process !== "undefined" ? process.env : {}) as Record<string, string | undefined>;
+    const env = (k: string) => String(procEnv[k] ?? cfEnv[k] ?? "").trim();
+    const seen = (k: string) => `${k}:${procEnv[k] ? "P" : "-"}${cfEnv[k] ? "C" : "-"}`;
 
     // 1) Quién paga: se comprueba el token con Supabase.
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
@@ -72,7 +82,17 @@ export const createCheckout = createServerFn({ method: "POST" })
       : env(pricing.offer ? "STRIPE_TEST_PRICE_ID_OFERTA" : "STRIPE_TEST_PRICE_ID");
     // En la web de pruebas se devuelve el motivo concreto para poder arreglarlo; en la real, no.
     const why = (d: string) => (production ? undefined : d);
-    if (!key) return { ok: false, reason: "not_configured", detail: why("falta la clave de Stripe") };
+    if (!key) {
+      const names = production
+        ? ["STRIPE_SECRET_KEY", "STRIPE_PRICE_ID", "STRIPE_PRICE_ID_OFERTA"]
+        : ["STRIPE_TEST_SECRET_KEY", "STRIPE_TEST_PRICE_ID", "STRIPE_TEST_PRICE_ID_OFERTA", "STRIPE_SECRET_KEY"];
+      const stripeVars = [...Object.keys(procEnv), ...Object.keys(cfEnv)].filter((k) => k.startsWith("STRIPE")).length;
+      return {
+        ok: false,
+        reason: "not_configured",
+        detail: why(`falta la clave de Stripe [${names.map(seen).join(" ")}] vars STRIPE*: ${stripeVars}`),
+      };
+    }
     if (!priceId) return { ok: false, reason: "not_configured", detail: why("falta el price_ de Stripe") };
     if (!production && /^(sk|rk)_live/.test(key))
       return { ok: false, reason: "not_configured", detail: why("clave real en la web de pruebas") };
