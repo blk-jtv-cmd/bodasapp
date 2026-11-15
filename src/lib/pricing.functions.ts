@@ -48,8 +48,23 @@ export const createCheckout = createServerFn({ method: "POST" })
       /* fuera de Cloudflare */
     }
     const procEnv = (typeof process !== "undefined" ? process.env : {}) as Record<string, string | undefined>;
-    const env = (k: string) => String(procEnv[k] ?? cfEnv[k] ?? "").trim();
-    const seen = (k: string) => `${k}:${procEnv[k] ? "P" : "-"}${cfEnv[k] ? "C" : "-"}`;
+    const g = globalThis as Record<string, unknown>;
+    const entryEnv = (g.__TBO_ENV__ ?? {}) as Record<string, unknown>;
+    const nitroEnv = (g.__env__ ?? {}) as Record<string, unknown>;
+    const runtimeEnv = ((req as unknown as { runtime?: { cloudflare?: { env?: Record<string, unknown> } } }).runtime
+      ?.cloudflare?.env ?? {}) as Record<string, unknown>;
+    const sources = { P: procEnv, C: cfEnv, E: entryEnv, N: nitroEnv, R: runtimeEnv } as Record<string, Record<string, unknown>>;
+    const env = (k: string) => {
+      for (const src of Object.values(sources)) {
+        const v = src[k];
+        if (typeof v === "string" && v.trim()) return v.trim();
+      }
+      return "";
+    };
+    const seen = (k: string) =>
+      `${k}:${Object.entries(sources)
+        .map(([n, src]) => (src[k] ? n : "-"))
+        .join("")}`;
 
     // 1) Quién paga: se comprueba el token con Supabase.
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
@@ -86,11 +101,20 @@ export const createCheckout = createServerFn({ method: "POST" })
       const names = production
         ? ["STRIPE_SECRET_KEY", "STRIPE_PRICE_ID", "STRIPE_PRICE_ID_OFERTA"]
         : ["STRIPE_TEST_SECRET_KEY", "STRIPE_TEST_PRICE_ID", "STRIPE_TEST_PRICE_ID_OFERTA", "STRIPE_SECRET_KEY"];
-      const stripeVars = [...Object.keys(procEnv), ...Object.keys(cfEnv)].filter((k) => k.startsWith("STRIPE")).length;
+      const count = (src: Record<string, unknown>) => {
+        try {
+          return Object.keys(src).length;
+        } catch {
+          return -1;
+        }
+      };
+      const stripeVars = Object.entries(sources)
+        .map(([n, src]) => `${n}${count(src)}`)
+        .join(" ");
       return {
         ok: false,
         reason: "not_configured",
-        detail: why(`falta la clave de Stripe [${names.map(seen).join(" ")}] vars STRIPE*: ${stripeVars}`),
+        detail: why(`falta la clave de Stripe [${names.map(seen).join(" ")}] fuentes: ${stripeVars}`),
       };
     }
     if (!priceId) return { ok: false, reason: "not_configured", detail: why("falta el price_ de Stripe") };

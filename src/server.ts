@@ -65,6 +65,8 @@ function withSecurityHeaders(response: Response): Response {
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    // Variables de Cloudflare (claves de Stripe, etc.) para las funciones de servidor.
+    if (env && typeof env === "object") (globalThis as Record<string, unknown>).__TBO_ENV__ = env;
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
