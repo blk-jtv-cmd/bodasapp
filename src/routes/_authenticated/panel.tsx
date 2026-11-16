@@ -31,6 +31,7 @@ import { Menu } from "@/components/panel/menu";
 import { TextField } from "@/components/panel/fields";
 import { AllergyPicker } from "@/components/allergy-picker";
 import { createCheckout } from "@/lib/pricing.functions";
+import { PENDING_GIFT_KEY } from "@/lib/gift";
 import { BASE_PRICE, OFFER, withPrice } from "@/lib/pricing";
 import { usePricing } from "@/lib/pricing-context";
 import { RsvpLinkCard, shareGuestLink } from "@/components/panel/rsvp-online";
@@ -400,6 +401,55 @@ function PanelPage() {
   useEffect(() => {
     document.getElementById(`navbtn-${tab}`)?.scrollIntoView({ inline: "center", block: "nearest" });
   }, [tab]);
+
+  // Tarjeta regalo pendiente (?regalo=CODIGO o guardada al abrir el enlace del regalo): se activa al entrar.
+  useEffect(() => {
+    if (!wedding) return;
+    let code = new URLSearchParams(window.location.search).get("regalo");
+    try {
+      code = code || localStorage.getItem(PENDING_GIFT_KEY);
+    } catch {
+      /* sin almacenamiento */
+    }
+    if (!code) return;
+    const forget = () => {
+      try {
+        localStorage.removeItem(PENDING_GIFT_KEY);
+      } catch {
+        /* nada */
+      }
+      if (window.location.search.includes("regalo=")) window.history.replaceState(null, "", window.location.pathname);
+    };
+    (async () => {
+      const { data, error } = await supabase.rpc("redeem_gift" as never, { p_code: code } as never);
+      const r = (data ?? {}) as { status?: string; from_name?: string };
+      if (error) {
+        toast.error(tr("No hemos podido activar el regalo. Recargad la página; si sigue igual, escribidnos."));
+        return;
+      }
+      forget();
+      if (r.status === "ok") {
+        setWedding((w) => (w ? { ...w, plan_active: true } : w));
+        await loadAll(wedding.id);
+        toast.success(tr("🎁 ¡Regalo activado! {from} os ha regalado el plan completo.", { from: r.from_name ?? "" }), {
+          duration: 10000,
+        });
+      } else if (r.status === "already_paid") {
+        toast(tr("Vuestra cuenta ya tenía el plan completo, así que el regalo no se ha usado: podéis regalárselo a otra pareja."), {
+          duration: 12000,
+        });
+      } else if (r.status === "already_yours") {
+        /* ya canjeado por esta misma cuenta: nada que decir */
+      } else if (r.status === "redeemed") {
+        toast.error(tr("Ese regalo ya lo ha activado otra cuenta."));
+      } else if (r.status === "expired") {
+        toast.error(tr("Ese regalo ha caducado."));
+      } else {
+        toast.error(tr("Ese código de regalo no es válido."));
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wedding?.id]);
 
   // Si pagan desde la app de la pantalla de inicio, Stripe se abre aparte: al volver, comprobamos el pago.
   useEffect(() => {

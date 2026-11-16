@@ -16,6 +16,9 @@ import { Route as AuthenticatedPanelRouteImport } from './routes/_authenticated/
 import { Route as LegalDocRouteImport } from './routes/legal.$doc'
 import { Route as InstalarRouteImport } from './routes/instalar'
 import { Route as RsvpTokenRouteImport } from './routes/rsvp.$token'
+import { Route as RegalarRouteImport } from './routes/regalar'
+import { Route as RegaloListoRouteImport } from './routes/regalo-listo'
+import { Route as RegaloCodeRouteImport } from './routes/regalo.$code'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -41,6 +44,21 @@ const InstalarRoute = InstalarRouteImport.update({
   path: '/instalar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RegalarRoute = RegalarRouteImport.update({
+  id: '/regalar',
+  path: '/regalar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegaloListoRoute = RegaloListoRouteImport.update({
+  id: '/regalo-listo',
+  path: '/regalo-listo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegaloCodeRoute = RegaloCodeRouteImport.update({
+  id: '/regalo/$code',
+  path: '/regalo/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RsvpTokenRoute = RsvpTokenRouteImport.update({
   id: '/rsvp/$token',
   path: '/rsvp/$token',
@@ -58,6 +76,9 @@ export interface FileRoutesByFullPath {
   '/instalar': typeof InstalarRoute
   '/legal/$doc': typeof LegalDocRoute
   '/rsvp/$token': typeof RsvpTokenRoute
+  '/regalar': typeof RegalarRoute
+  '/regalo-listo': typeof RegaloListoRoute
+  '/regalo/$code': typeof RegaloCodeRoute
   '/panel': typeof AuthenticatedPanelRoute
 }
 export interface FileRoutesByTo {
@@ -66,6 +87,9 @@ export interface FileRoutesByTo {
   '/instalar': typeof InstalarRoute
   '/legal/$doc': typeof LegalDocRoute
   '/rsvp/$token': typeof RsvpTokenRoute
+  '/regalar': typeof RegalarRoute
+  '/regalo-listo': typeof RegaloListoRoute
+  '/regalo/$code': typeof RegaloCodeRoute
   '/panel': typeof AuthenticatedPanelRoute
 }
 export interface FileRoutesById {
@@ -76,14 +100,17 @@ export interface FileRoutesById {
   '/instalar': typeof InstalarRoute
   '/legal/$doc': typeof LegalDocRoute
   '/rsvp/$token': typeof RsvpTokenRoute
+  '/regalar': typeof RegalarRoute
+  '/regalo-listo': typeof RegaloListoRoute
+  '/regalo/$code': typeof RegaloCodeRoute
   '/_authenticated/panel': typeof AuthenticatedPanelRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/instalar' | '/legal/$doc' | '/rsvp/$token' | '/panel'
+  fullPaths: '/' | '/auth' | '/instalar' | '/legal/$doc' | '/rsvp/$token' | '/regalar' | '/regalo-listo' | '/regalo/$code' | '/panel'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/instalar' | '/legal/$doc' | '/rsvp/$token' | '/panel'
-  id: '__root__' | '/' | '/_authenticated' | '/auth' | '/instalar' | '/legal/$doc' | '/rsvp/$token' | '/_authenticated/panel'
+  to: '/' | '/auth' | '/instalar' | '/legal/$doc' | '/rsvp/$token' | '/regalar' | '/regalo-listo' | '/regalo/$code' | '/panel'
+  id: '__root__' | '/' | '/_authenticated' | '/auth' | '/instalar' | '/legal/$doc' | '/rsvp/$token' | '/regalar' | '/regalo-listo' | '/regalo/$code' | '/_authenticated/panel'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -93,6 +120,9 @@ export interface RootRouteChildren {
   InstalarRoute: typeof InstalarRoute
   LegalDocRoute: typeof LegalDocRoute
   RsvpTokenRoute: typeof RsvpTokenRoute
+  RegalarRoute: typeof RegalarRoute
+  RegaloListoRoute: typeof RegaloListoRoute
+  RegaloCodeRoute: typeof RegaloCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -132,6 +162,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalDocRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/regalar': {
+      id: '/regalar'
+      path: '/regalar'
+      fullPath: '/regalar'
+      preLoaderRoute: typeof RegalarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/regalo-listo': {
+      id: '/regalo-listo'
+      path: '/regalo-listo'
+      fullPath: '/regalo-listo'
+      preLoaderRoute: typeof RegaloListoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/regalo/$code': {
+      id: '/regalo/$code'
+      path: '/regalo/$code'
+      fullPath: '/regalo/$code'
+      preLoaderRoute: typeof RegaloCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rsvp/$token': {
       id: '/rsvp/$token'
       path: '/rsvp/$token'
@@ -167,6 +218,9 @@ const rootRouteChildren: RootRouteChildren = {
   InstalarRoute: InstalarRoute,
   LegalDocRoute: LegalDocRoute,
   RsvpTokenRoute: RsvpTokenRoute,
+  RegalarRoute: RegalarRoute,
+  RegaloListoRoute: RegaloListoRoute,
+  RegaloCodeRoute: RegaloCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
