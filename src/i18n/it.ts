@@ -941,6 +941,9 @@ const dict: Record<string, string> = {
   "🎁 {from} te regala Tu Boda en Orden para organizar vuestra boda. Ábrelo aquí:": "🎁 {from} ti regala Tu Boda en Orden per organizzare il vostro matrimonio. Aprilo qui:",
   "🎁 ¡Regalo activado! {from} os ha regalado el plan completo.": "🎁 Regalo attivato! {from} vi ha regalato il piano completo.",
   "Regalar Tu Boda en Orden": "Regala Tu Boda en Orden",
+  "Regalar": "Regala",
+  "¿Se casa alguien que quieres?": "Si sposa qualcuno a cui vuoi bene?",
+  "Regálale el plan con una tarjeta regalo": "Regalagli il piano con una carta regalo",
 };
 
 export default dict;
