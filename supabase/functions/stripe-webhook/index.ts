@@ -66,6 +66,12 @@ Deno.serve(async (req) => {
   }
 
   const event = JSON.parse(payload);
+
+  // Devolución completa o disputa perdida: se vuelve a bloquear el plan.
+  if (event.type === "charge.refunded" || event.type === "charge.dispute.closed") {
+    return await lockOnRefund(event);
+  }
+
   const handled = ["checkout.session.completed", "checkout.session.async_payment_succeeded"];
   if (!handled.includes(event.type)) return Response.json({ received: true });
 
@@ -90,6 +96,7 @@ Deno.serve(async (req) => {
       plan_active: true,
       paid_at: new Date().toISOString(),
       stripe_session_id: session.id,
+      stripe_payment_intent: session.payment_intent ?? null,
       updated_at: new Date().toISOString(),
     })
     .eq("user_id", userId)
@@ -104,3 +111,34 @@ Deno.serve(async (req) => {
   console.log("Plan activado", userId, session.id);
   return Response.json({ received: true });
 });
+
+// deno-lint-ignore no-explicit-any
+async function lockOnRefund(event: any) {
+  const obj = event.data.object;
+  let paymentIntent: string | null = null;
+
+  if (event.type === "charge.refunded") {
+    // Solo devoluciones completas (una parcial no quita el plan).
+    const full = obj.refunded === true || (obj.amount_refunded ?? 0) >= (obj.amount ?? Infinity);
+    if (!full) return Response.json({ received: true, partial: true });
+    paymentIntent = obj.payment_intent ?? null;
+  } else {
+    // charge.dispute.closed: solo si la disputa se ha perdido.
+    if (obj.status !== "lost") return Response.json({ received: true, dispute: obj.status });
+    paymentIntent = obj.payment_intent ?? null;
+  }
+  if (!paymentIntent) return Response.json({ received: true, warning: "missing payment_intent" });
+
+  const { data, error } = await supabase
+    .from("weddings")
+    .update({ plan_active: false, updated_at: new Date().toISOString() })
+    .eq("stripe_payment_intent", paymentIntent)
+    .select("id");
+
+  if (error) {
+    console.error("No se pudo bloquear el plan", paymentIntent, error);
+    return new Response("Could not lock plan", { status: 500 });
+  }
+  console.log("Plan bloqueado por", event.type, paymentIntent, data?.length ?? 0);
+  return Response.json({ received: true, locked: data?.length ?? 0 });
+}
