@@ -9,6 +9,7 @@ import { LegalLinks, withLegalLinks } from "@/components/legal-links";
 import { getLang, t as tr, useI18n } from "@/i18n";
 import { rememberLangInAccount } from "@/i18n/remember";
 import { OfferBanner } from "@/components/offer-banner";
+import { PENDING_GIFT_KEY } from "@/lib/gift";
 import { withPrice } from "@/lib/pricing";
 import { usePricing } from "@/lib/pricing-context";
 
@@ -187,6 +188,7 @@ function AuthPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background font-body text-foreground">
       <OfferBanner />
+      <GiftNotice />
       <header className="border-b border-line">
         <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-2 sm:gap-4 sm:px-6">
           <BrandName className="justify-self-start" />
@@ -365,4 +367,26 @@ function translateAuthError(err: unknown): string {
   if (m.includes("invalid email") || m.includes("unable to validate email"))
     return tr("Ese email no parece válido.");
   return message || tr("Algo no ha salido bien. Volved a intentarlo.");
+}
+
+/** Si viene de abrir una tarjeta regalo: se guarda el código y se avisa de que se activará al entrar. */
+function GiftNotice() {
+  const { t } = useI18n();
+  const [code, setCode] = useState<string | null>(null);
+  useEffect(() => {
+    let c = new URLSearchParams(window.location.search).get("regalo");
+    try {
+      if (c) localStorage.setItem(PENDING_GIFT_KEY, c);
+      else c = localStorage.getItem(PENDING_GIFT_KEY);
+    } catch {
+      /* sin almacenamiento */
+    }
+    setCode(c);
+  }, []);
+  if (!code) return null;
+  return (
+    <div className="bg-clay-soft px-4 py-2.5 text-center text-sm">
+      🎁 {t("Crea vuestra cuenta o entrad con la que ya tenéis: el regalo se activará solo al llegar al panel.")}
+    </div>
+  );
 }

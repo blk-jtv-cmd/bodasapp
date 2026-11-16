@@ -64,6 +64,7 @@ const docs: LegalDocs = {
           "• Dados que introduzem para organizar o casamento: data, local, orçamento, tarefas, fornecedores, quintas, menu, cronograma e lista de convidados (nome, grupo, mesa, acompanhantes, se é uma criança, alergias ou dieta, confirmação de presença e notas).",
           "• Dados de pagamento: o pagamento é gerido pela Stripe. Não vemos nem guardamos os dados do cartão; recebemos apenas a confirmação do pagamento, o email e o identificador da operação.",
           "• Sugestões que nos enviam a partir das Definições: a mensagem e o email da conta.",
+          "• Se ofereceres o plano: o teu email (recolhido pela Stripe no pagamento), os nomes e a mensagem que escreves no cartão, para criar a oferta e enviar-ta.",
           "• Dados técnicos: o idioma escolhido e a sessão iniciada no teu navegador.",
         ],
       },
@@ -206,6 +207,8 @@ const docs: LegalDocs = {
         p: [
           "Em regra, os consumidores dispõem de 14 dias de calendário para resolver uma compra online. No entanto, tratando-se de conteúdo digital fornecido de imediato e sem suporte material, nos termos do artigo 103.º, alínea m), da lei geral espanhola de defesa dos consumidores e utilizadores (Real Decreto Legislativo 1/2007) e da Diretiva 2011/83/UE, o direito de livre resolução não se aplica quando, antes de pagares, dás o teu consentimento expresso para que o acesso comece de imediato e reconheces que, por isso, perdes esse direito.",
           "Este consentimento é recolhido através de uma caixa obrigatória antes do pagamento.",
+          "Cartões-oferta: podes comprar o plano para o oferecer a outra pessoa. Receberás um cartão com um código de utilização única, válido durante 12 meses a partir da compra. Quem o recebe ativa-o na sua conta e obtém o plano completo, como se o tivesse comprado.",
+          "Como a oferta não é usada no momento da compra, quem a compra mantém o direito de livre resolução de 14 dias enquanto o código não tiver sido ativado; para o exercer, escreve-nos para {email}. Se o montante for reembolsado, o código deixa de ser válido. O código não pode ser trocado por dinheiro.",
         ],
       },
       {

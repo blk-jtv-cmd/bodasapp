@@ -2,6 +2,8 @@
 // Secretos necesarios en Supabase (Edge Functions → Secrets):
 //   STRIPE_WEBHOOK_SECRET       → el "Signing secret" del webhook en Stripe, modo real (empieza por whsec_)
 //   STRIPE_WEBHOOK_SECRET_TEST  → (opcional) el del webhook en modo de prueba, para las compras de prueba
+//   RESEND_API_KEY              → (opcional) para mandar por email la tarjeta regalo a quien la compra
+//   RESEND_FROM                 → (opcional) remitente, p. ej. "Tu Boda en Orden <hola@tubodaenorden.com>"
 // SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY los pone Supabase automáticamente.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -84,6 +86,9 @@ Deno.serve(async (req) => {
     return Response.json({ received: true, warning: "unexpected amount" });
   }
 
+  // Tarjeta regalo: se guarda el código (que viene en los metadatos) y se manda por email.
+  if (session.metadata?.tipo === "regalo") return await saveGift(session);
+
   const userId: string | null = session.client_reference_id ?? null;
   if (!userId) {
     console.error("Pago sin client_reference_id", session.id);
@@ -129,6 +134,9 @@ async function lockOnRefund(event: any) {
   }
   if (!paymentIntent) return Response.json({ received: true, warning: "missing payment_intent" });
 
+  // Si era una tarjeta regalo, el código deja de valer (y si ya se canjeó, se bloquea esa boda abajo).
+  await supabase.from("gift_codes").update({ voided_at: new Date().toISOString() }).eq("stripe_payment_intent", paymentIntent);
+
   const { data, error } = await supabase
     .from("weddings")
     .update({ plan_active: false, updated_at: new Date().toISOString() })
@@ -141,4 +149,116 @@ async function lockOnRefund(event: any) {
   }
   console.log("Plan bloqueado por", event.type, paymentIntent, data?.length ?? 0);
   return Response.json({ received: true, locked: data?.length ?? 0 });
+}
+
+// deno-lint-ignore no-explicit-any
+async function saveGift(session: any) {
+  const m = session.metadata ?? {};
+  const code = String(m.codigo ?? "");
+  if (!/^BODA-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)) {
+    console.error("Regalo sin código válido", session.id);
+    return Response.json({ received: true, warning: "missing gift code" });
+  }
+  const expires = new Date();
+  expires.setMonth(expires.getMonth() + 12);
+  const buyerEmail: string | null = session.customer_details?.email ?? session.customer_email ?? null;
+
+  const { error } = await supabase.from("gift_codes").upsert(
+    {
+      code,
+      stripe_session_id: session.id,
+      stripe_payment_intent: session.payment_intent ?? null,
+      buyer_email: buyerEmail,
+      from_name: String(m.de ?? "").slice(0, 60),
+      to_name: String(m.para ?? "").slice(0, 60),
+      message: String(m.mensaje ?? "").slice(0, 300),
+      amount: session.amount_total,
+      expires_at: expires.toISOString(),
+    },
+    { onConflict: "stripe_session_id", ignoreDuplicates: true },
+  );
+  if (error) {
+    console.error("No se pudo guardar el regalo", session.id, error);
+    return new Response("Could not save gift", { status: 500 });
+  }
+  console.log("Regalo creado", code, session.id);
+  if (buyerEmail) await sendGiftEmail(buyerEmail, code, m, expires).catch((e) => console.error("Email regalo", e));
+  return Response.json({ received: true, gift: true });
+}
+
+const GIFT_EMAIL: Record<string, { subject: string; hi: string; intro: string; link: string; code: string; until: string; tip: string }> = {
+  es: {
+    subject: "Tu tarjeta regalo de Tu Boda en Orden",
+    hi: "¡Gracias por tu regalo!",
+    intro: "Aquí tienes la tarjeta para {to}. Pásale este enlace (por WhatsApp, por email o impreso) y podrá activar el plan completo:",
+    link: "Abrir el regalo",
+    code: "Código",
+    until: "Válida hasta el {date}. Se puede usar una sola vez.",
+    tip: "Desde el enlace también puedes descargar la tarjeta como imagen para imprimirla.",
+  },
+  en: {
+    subject: "Your Tu Boda en Orden gift card",
+    hi: "Thank you for your gift!",
+    intro: "Here is the card for {to}. Send them this link (by WhatsApp, email or printed) to activate the full plan:",
+    link: "Open the gift",
+    code: "Code",
+    until: "Valid until {date}. It can be used once.",
+    tip: "From the link you can also download the card as an image to print it.",
+  },
+  it: {
+    subject: "La tua carta regalo di Tu Boda en Orden",
+    hi: "Grazie per il tuo regalo!",
+    intro: "Ecco la carta per {to}. Mandale questo link (su WhatsApp, per email o stampato) per attivare il piano completo:",
+    link: "Apri il regalo",
+    code: "Codice",
+    until: "Valida fino al {date}. Si può usare una sola volta.",
+    tip: "Dal link puoi anche scaricare la carta come immagine per stamparla.",
+  },
+  fr: {
+    subject: "Ta carte cadeau Tu Boda en Orden",
+    hi: "Merci pour ton cadeau !",
+    intro: "Voici la carte pour {to}. Envoie-lui ce lien (par WhatsApp, e-mail ou imprimé) pour activer le plan complet :",
+    link: "Ouvrir le cadeau",
+    code: "Code",
+    until: "Valable jusqu'au {date}. Utilisable une seule fois.",
+    tip: "Depuis le lien, tu peux aussi télécharger la carte en image pour l'imprimer.",
+  },
+  pt: {
+    subject: "O teu cartão-oferta Tu Boda en Orden",
+    hi: "Obrigado pela tua oferta!",
+    intro: "Aqui tens o cartão para {to}. Envia-lhe este link (por WhatsApp, email ou impresso) para ativar o plano completo:",
+    link: "Abrir a oferta",
+    code: "Código",
+    until: "Válido até {date}. Só pode ser usado uma vez.",
+    tip: "A partir do link também podes descarregar o cartão como imagem para o imprimir.",
+  },
+};
+
+// deno-lint-ignore no-explicit-any
+async function sendGiftEmail(to: string, code: string, m: any, expires: Date) {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  if (!apiKey) return;
+  const from = Deno.env.get("RESEND_FROM") ?? "Tu Boda en Orden <hola@tubodaenorden.com>";
+  const lang = GIFT_EMAIL[m.idioma] ? m.idioma : "es";
+  const t = GIFT_EMAIL[lang];
+  const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+  const link = `https://tubodaenorden.com/regalo/${code}`;
+  const date = expires.toLocaleDateString(lang === "pt" ? "pt-PT" : lang, { day: "numeric", month: "long", year: "numeric" });
+  const html = `<div style="background:#f8f2e4;padding:32px 16px;font-family:Georgia,serif;color:#2b2420">
+  <div style="max-width:520px;margin:0 auto;background:#fffaf1;border:1px solid #e8c9cf;border-radius:20px;padding:32px;text-align:center">
+    <div style="font-size:40px">🎁</div>
+    <h1 style="font-weight:normal;font-size:28px;margin:12px 0">${esc(t.hi)}</h1>
+    <p style="font-family:Arial,sans-serif;font-size:15px;line-height:1.5;color:#5c524c">${esc(t.intro.replace("{to}", String(m.para ?? "")))}</p>
+    <p style="margin:28px 0"><a href="${link}" style="background:#e8b7c0;color:#2b2420;text-decoration:none;padding:14px 28px;border-radius:999px;font-family:Arial,sans-serif;font-weight:bold">${esc(t.link)}</a></p>
+    <p style="font-family:Arial,sans-serif;font-size:13px;color:#5c524c;margin:0">${esc(t.code)}: <strong style="font-family:monospace;font-size:15px;color:#2b2420">${code}</strong></p>
+    <p style="font-family:Arial,sans-serif;font-size:13px;color:#5c524c">${esc(t.until.replace("{date}", date))}</p>
+    <p style="font-family:Arial,sans-serif;font-size:12px;color:#8a7f78;margin-top:24px">${esc(t.tip)}</p>
+  </div>
+</div>`;
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from, to: [to], subject: t.subject, html }),
+  });
+  if (!res.ok) console.error("Resend", res.status, await res.text());
 }

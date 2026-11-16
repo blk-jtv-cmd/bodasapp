@@ -64,6 +64,7 @@ const docs: LegalDocs = {
           "• Data you enter to plan your wedding: date, venue, budget, tasks, suppliers, venues, menu, timeline and guest list (name, group, table, plus-ones, whether they are a child, allergies or diet, RSVP status and notes).",
           "• Payment data: payments are handled by Stripe. We do not see or store card details; we only receive the payment confirmation, the email address and the transaction ID.",
           "• Suggestions you send us from Settings: the message and your account email.",
+          "• If you give the plan as a gift: your email (collected by Stripe at payment), and the names and message you write on the card, to create the gift and send it to you.",
           "• Technical data: your chosen language and the logged-in session in your browser.",
         ],
       },
@@ -206,6 +207,8 @@ const docs: LegalDocs = {
         p: [
           "As a general rule, consumers have 14 calendar days to withdraw from an online purchase. However, because this is digital content supplied immediately and not on a tangible medium, under article 103(m) of the Spanish General Law for the Protection of Consumers and Users (Royal Legislative Decree 1/2007) and Directive 2011/83/EU, the right of withdrawal does not apply when, before paying, you expressly consent to access starting immediately and acknowledge that you thereby lose that right.",
           "This consent is collected through a mandatory checkbox before payment.",
+          "Gift cards: you can buy the plan as a gift for someone else. You will receive a card with a single-use code, valid for 12 months from purchase. The recipient activates it in their account and gets the full plan, just as if they had bought it.",
+          "Because a gift is not used at the time of purchase, the buyer keeps the 14-day right of withdrawal as long as the code has not been activated; to exercise it, write to us at {email}. If the amount is refunded, the code stops being valid. The code cannot be exchanged for cash.",
         ],
       },
       {

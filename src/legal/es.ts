@@ -64,6 +64,7 @@ const docs: LegalDocs = {
           "• Datos que introducís para organizar la boda: fecha, lugar, presupuesto, tareas, proveedores, fincas, menú, cronograma y lista de invitados (nombre, grupo, mesa, acompañantes, si es un niño o una niña, alergias o dieta, confirmación de asistencia y notas).",
           "• Datos del pago: el pago lo gestiona Stripe. Nosotros no vemos ni guardamos los datos de la tarjeta; solo recibimos la confirmación del pago, el email y el identificador de la operación.",
           "• Sugerencias que nos enviáis desde Ajustes: el mensaje y el email de la cuenta.",
+          "• Si regalas el plan: tu email (lo recoge Stripe al pagar), los nombres y el mensaje que escribes en la tarjeta, para crear el regalo y enviártelo.",
           "• Datos técnicos: el idioma elegido y la sesión iniciada en tu navegador.",
         ],
       },
@@ -209,6 +210,8 @@ const docs: LegalDocs = {
         p: [
           "Con carácter general, los consumidores tienen 14 días naturales para desistir de una compra online. Sin embargo, al tratarse de contenido digital que se entrega al momento y sin soporte material, según el artículo 103.m) de la Ley General para la Defensa de los Consumidores y Usuarios (Real Decreto Legislativo 1/2007) y la Directiva 2011/83/UE, el derecho de desistimiento no se aplica cuando, antes de pagar, das tu consentimiento expreso para que el acceso empiece de inmediato y reconoces que, por ello, pierdes ese derecho.",
           "Ese consentimiento se recoge con una casilla obligatoria antes del pago.",
+          "Tarjetas regalo: puedes comprar el plan para regalárselo a otra persona. Recibirás una tarjeta con un código de un solo uso, válido durante 12 meses desde la compra. Quien lo recibe lo activa en su cuenta y obtiene el plan completo, igual que si lo hubiera comprado.",
+          "Como el regalo no se usa en el momento de la compra, quien lo compra conserva el derecho de desistimiento de 14 días naturales mientras el código no se haya activado; para ejercerlo, escríbenos a {email}. Si se devuelve el importe, el código deja de ser válido. El código no se puede cambiar por dinero.",
         ],
       },
       {

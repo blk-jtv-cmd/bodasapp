@@ -307,6 +307,12 @@ function Index() {
               <div className="mt-6 font-mono text-[10px] uppercase tracking-[0.18em] text-background/50">
                 {tr("Pruébala gratis · paga solo si te convence")}
               </div>
+              <Link
+                to="/regalar"
+                className="mt-6 inline-flex items-center gap-2 rounded-full border border-background/30 px-5 py-2.5 text-sm text-background hover:border-clay hover:text-clay"
+              >
+                🎁 {tr("¿Es para otra persona? Regala el plan")}
+              </Link>
             </div>
             <div className="border-t border-background/15 p-10 lg:border-l lg:border-t-0 lg:p-14">
               <div className="mb-5 font-mono text-[10px] uppercase tracking-[0.2em] text-background/50">
@@ -341,6 +347,9 @@ function Index() {
           <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
             {withPrice(tr("Un plan, una boda, 37€"), pricing)}
           </span>
+          <Link to="/regalar" className="text-sm underline decoration-clay underline-offset-4 hover:text-clay-ink">
+            🎁 {tr("Regalar el plan")}
+          </Link>
         </div>
         <div className="mx-auto max-w-6xl px-6 pb-8">
           <LegalLinks />

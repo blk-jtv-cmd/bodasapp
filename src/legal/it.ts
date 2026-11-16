@@ -64,6 +64,7 @@ const docs: LegalDocs = {
           "• Dati che inserite per organizzare il matrimonio: data, luogo, budget, attività, fornitori, location, menù, programma e lista degli invitati (nome, gruppo, tavolo, accompagnatori, se è un bambino o una bambina, allergie o dieta, conferma di partecipazione e note).",
           "• Dati di pagamento: il pagamento è gestito da Stripe. Non vediamo né conserviamo i dati della carta; riceviamo solo la conferma del pagamento, l'email e l'identificativo dell'operazione.",
           "• Suggerimenti che ci inviate dalle Impostazioni: il messaggio e l'email dell'account.",
+          "• Se regali il piano: la tua email (raccolta da Stripe al pagamento), i nomi e il messaggio che scrivi sulla carta, per creare il regalo e inviartelo.",
           "• Dati tecnici: la lingua scelta e la sessione aperta nel tuo browser.",
         ],
       },
@@ -206,6 +207,8 @@ const docs: LegalDocs = {
         p: [
           "In generale i consumatori hanno 14 giorni di calendario per recedere da un acquisto online. Tuttavia, trattandosi di contenuto digitale fornito immediatamente e non su supporto materiale, ai sensi dell'articolo 103, lettera m), della legge generale spagnola per la tutela dei consumatori e degli utenti (Real Decreto Legislativo 1/2007) e della Direttiva 2011/83/UE, il diritto di recesso non si applica quando, prima di pagare, dai il tuo consenso espresso all'inizio immediato dell'accesso e riconosci di perdere così tale diritto.",
           "Questo consenso viene raccolto con una casella obbligatoria prima del pagamento.",
+          "Carte regalo: puoi acquistare il piano per regalarlo a un'altra persona. Riceverai una carta con un codice monouso, valido 12 mesi dall'acquisto. Chi lo riceve lo attiva nel proprio account e ottiene il piano completo, come se lo avesse acquistato.",
+          "Poiché il regalo non viene usato al momento dell'acquisto, chi lo acquista conserva il diritto di recesso di 14 giorni finché il codice non è stato attivato; per esercitarlo, scrivici a {email}. Se l'importo viene rimborsato, il codice non è più valido. Il codice non è convertibile in denaro.",
         ],
       },
       {

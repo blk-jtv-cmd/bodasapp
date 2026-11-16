@@ -64,6 +64,7 @@ const docs: LegalDocs = {
           "• Données que vous saisissez pour organiser le mariage : date, lieu, budget, tâches, prestataires, lieux, menu, planning et liste d'invités (nom, groupe, table, accompagnants, s'il s'agit d'un enfant, allergies ou régime, réponse à l'invitation et notes).",
           "• Données de paiement : le paiement est géré par Stripe. Nous ne voyons ni ne conservons les données de carte ; nous recevons uniquement la confirmation du paiement, l'e-mail et l'identifiant de la transaction.",
           "• Suggestions que vous nous envoyez depuis les Réglages : le message et l'e-mail du compte.",
+          "• Si tu offres le plan : ton e-mail (collecté par Stripe lors du paiement), les noms et le message écrits sur la carte, pour créer le cadeau et te l'envoyer.",
           "• Données techniques : la langue choisie et la session ouverte dans ton navigateur.",
         ],
       },
@@ -206,6 +207,8 @@ const docs: LegalDocs = {
         p: [
           "En règle générale, les consommateurs disposent de 14 jours calendaires pour se rétracter d'un achat en ligne. Toutefois, s'agissant d'un contenu numérique fourni immédiatement et sans support matériel, conformément à l'article 103, point m), de la loi générale espagnole pour la défense des consommateurs et des usagers (Real Decreto Legislativo 1/2007) et à la directive 2011/83/UE, le droit de rétractation ne s'applique pas lorsque, avant de payer, tu donnes ton consentement exprès au commencement immédiat de l'accès et reconnais perdre ainsi ce droit.",
           "Ce consentement est recueilli au moyen d'une case obligatoire avant le paiement.",
+          "Cartes cadeaux : tu peux acheter le plan pour l'offrir à quelqu'un. Tu recevras une carte avec un code à usage unique, valable 12 mois à compter de l'achat. La personne qui le reçoit l'active dans son compte et obtient le plan complet, comme si elle l'avait acheté.",
+          "Comme le cadeau n'est pas utilisé au moment de l'achat, l'acheteur conserve le droit de rétractation de 14 jours tant que le code n'a pas été activé ; pour l'exercer, écris-nous à {email}. Si le montant est remboursé, le code n'est plus valable. Le code n'est pas échangeable contre de l'argent.",
         ],
       },
       {
