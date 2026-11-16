@@ -81,6 +81,9 @@ function Index() {
             <a href="#precio" className="transition-colors hover:text-foreground">
               {tr("Precio")}
             </a>
+            <Link to="/regalar" className="text-clay-ink transition-colors hover:text-foreground">
+              🎁 {tr("Regalar")}
+            </Link>
           </nav>
           <Link
             to="/auth"
@@ -130,6 +133,22 @@ function Index() {
                 {tr("Ver cómo funciona")}
               </a>
             </div>
+            <Link
+              to="/regalar"
+              className="group mt-6 inline-flex max-w-full items-center gap-3 rounded-2xl bg-clay-soft py-2.5 pl-3 pr-4 text-sm ring-1 ring-clay/50 transition-colors hover:bg-clay/40"
+              style={{ animation: "rise 700ms var(--ease-soft) both", animationDelay: "270ms" }}
+            >
+              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-background text-base" aria-hidden>
+                🎁
+              </span>
+              <span className="min-w-0">
+                <span className="font-medium">{tr("¿Se casa alguien que quieres?")}</span>{" "}
+                <span className="text-muted-foreground">{tr("Regálale el plan con una tarjeta regalo")}</span>
+              </span>
+              <span className="shrink-0 text-clay-ink transition-transform group-hover:translate-x-0.5" aria-hidden>
+                →
+              </span>
+            </Link>
             <div
               className="mt-8 flex items-center gap-6 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground"
               style={{ animation: "rise 700ms var(--ease-soft) both", animationDelay: "320ms" }}
