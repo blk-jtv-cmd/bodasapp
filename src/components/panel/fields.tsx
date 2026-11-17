@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { parseAmount } from "./use-rows";
 
 export const fieldClass =
-  "w-full rounded-lg border border-line bg-background px-3 py-2 text-sm outline-none focus:border-clay-ink";
+  "w-full rounded-lg border border-line bg-background px-3 py-2 text-base outline-none focus:border-clay-ink sm:text-sm";
 
 /** Texto que se guarda al salir de la casilla. */
 export function TextField({

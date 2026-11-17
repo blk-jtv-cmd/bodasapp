@@ -25,7 +25,7 @@ export type MesaGuest = {
 };
 
 const inputClass =
-  "rounded-lg border border-line bg-background px-3 py-2 text-sm outline-none focus:border-clay-ink";
+  "rounded-lg border border-line bg-background px-3 py-2 text-base outline-none focus:border-clay-ink sm:text-sm";
 
 const RSVP_LABEL: Record<string, string> = {
   pendiente: "Pendiente",
