@@ -142,10 +142,8 @@ export function Menu({
         <>
           {/* Resumen */}
           <div className="mb-6 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-3xl bg-foreground p-5 text-background sm:col-span-1">
-              <Label>
-                <span className="text-background/60">{tr("Total catering")}</span>
-              </Label>
+            <div className="rounded-3xl bg-clay-soft p-5 ring-1 ring-clay/50 sm:col-span-1">
+              <Label>{tr("Total catering")}</Label>
               <div className="mt-2 font-display text-4xl font-semibold leading-none">{formatMoney(total, currency)}</div>
             </div>
             <div className="rounded-3xl bg-panel p-5 ring-1 ring-foreground/5">
