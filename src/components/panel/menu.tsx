@@ -78,7 +78,7 @@ export function Menu({
   async function create(moment: string, extra: Partial<MenuItem> = {}) {
     const people = extra.restriction === "Infantil" ? guests?.kids : guests?.adults;
     const row = await add(
-      { moment, courses: moment === "Menú" ? [] : null, people: people || 0, ...extra } as Partial<MenuItem>,
+      { moment, courses: [], people: people || 0, ...extra } as Partial<MenuItem>,
       userId,
     );
     if (row) setEditing(row.id);
