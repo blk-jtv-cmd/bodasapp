@@ -3,7 +3,7 @@ import { ChevronDown, Copy, Lightbulb, Plus, Search, Trash2, X } from "lucide-re
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { locale, useI18n } from "@/i18n";
-import { catLabel } from "@/lib/category-emoji";
+import { catLabel, categoryEmoji } from "@/lib/category-emoji";
 import { TASK_LIBRARY, guideFor, suggestedDue, type Priority } from "@/lib/task-library";
 
 export type ChecklistTask = {
@@ -220,99 +220,129 @@ export function Checklist({
         </div>
       </div>
 
-      {/* Carpetas: se abren al pulsarlas (o solas al buscar) */}
-      <div className="space-y-3">
+      {/* Carpetas en tarjetas: cada etapa con su progreso y sus próximas tareas. Al abrir una, ocupa todo el ancho. */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {folders.map((f) => {
           const isOpen = !!open[f.cat] || !!q;
           const pct = f.total ? Math.round((f.done / f.total) * 100) : 0;
+          const complete = f.total > 0 && f.done === f.total;
+          const pending = f.shown.filter((t) => !t.done && !t.not_applicable);
+          const preview = (pending.length ? pending : f.shown).slice(0, 3);
+          const folderDue = suggestedDue(f.cat, wedding.wedding_date, undefined);
+          const visibleTasks = isOpen ? f.shown : preview;
           return (
-            <section key={f.cat} className="overflow-hidden rounded-2xl bg-panel ring-1 ring-foreground/5">
+            <section
+              key={f.cat}
+              className={`flex flex-col overflow-hidden rounded-3xl ring-1 transition-shadow ${
+                isOpen ? "sm:col-span-2 xl:col-span-3" : ""
+              } ${complete ? "bg-clay-soft/70 ring-clay/40" : "bg-panel ring-foreground/5 hover:shadow-[0_12px_30px_-18px_rgba(120,60,70,0.35)]"}`}
+            >
               <button
                 onClick={() => setOpen({ ...open, [f.cat]: !open[f.cat] })}
-                className="flex w-full items-center gap-3 px-4 py-4 text-left sm:px-5"
+                className="flex items-start gap-4 p-5 text-left"
+                aria-expanded={isOpen}
               >
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span className="font-display text-lg font-semibold">{catLabel(f.cat, tr)}</span>
-                    <span className="font-mono text-[10px] text-muted-foreground">
-                      {f.done}/{f.total}
-                    </span>
-                    {f.late > 0 && (
-                      <span className="rounded-full bg-clay-ink/10 px-2 py-0.5 font-mono text-[10px] text-clay-ink">
-                        {tr("{n} con retraso", { n: f.late })}
-                      </span>
+                <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-background text-2xl ring-1 ring-foreground/5" aria-hidden>
+                  {categoryEmoji(f.cat)}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-display text-xl font-semibold leading-tight">{tr(f.cat)}</span>
+                  <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                    {complete ? (
+                      <span className="font-medium text-clay-ink">✓ {tr("Completado")}</span>
+                    ) : (
+                      <span>{tr("{done} de {total} tareas", { done: f.done, total: f.total })}</span>
                     )}
-                  </div>
-                  <div className="mt-2 h-1 w-full max-w-xs overflow-hidden rounded-full bg-clay-soft">
-                    <div className="h-full rounded-full bg-clay" style={{ width: `${pct}%` }} />
-                  </div>
-                </div>
-                <ChevronDown className={`size-5 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                    {!complete && folderDue && <span>· {tr("hasta el {date}", { date: shortDate(folderDue) })}</span>}
+                  </span>
+                  {f.late > 0 && (
+                    <span className="mt-2 inline-block rounded-full bg-clay-ink/10 px-2 py-0.5 font-mono text-[10px] text-clay-ink">
+                      {tr("{n} con retraso", { n: f.late })}
+                    </span>
+                  )}
+                </span>
+                {/* Anillo de progreso */}
+                <span className="relative grid size-12 shrink-0 place-items-center" aria-label={`${pct}%`}>
+                  <svg viewBox="0 0 36 36" className="absolute inset-0 -rotate-90">
+                    <circle cx="18" cy="18" r="15.5" fill="none" strokeWidth="3" className="stroke-clay-soft" />
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="15.5"
+                      fill="none"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      className="stroke-clay-ink transition-all duration-500"
+                      strokeDasharray={`${(pct / 100) * 97.4} 97.4`}
+                    />
+                  </svg>
+                  <span className="font-mono text-[10px] font-semibold">{pct}%</span>
+                </span>
               </button>
 
-              {isOpen && (
-                <ul className="space-y-2 border-t border-line bg-background/60 p-3 sm:p-4">
-                  {f.shown.map((t) => {
-                    const d = due(t);
-                    const late = !t.done && !t.not_applicable && d !== null && d < todayIso();
-                    const steps = effectiveSteps(t);
-                    const pr = PRIORITIES.find((p) => p.key === effectivePriority(t))!;
-                    return (
-                      <li key={t.id} className="flex items-start gap-3 rounded-xl bg-panel px-3 py-3 ring-1 ring-foreground/5">
-                        <input
-                          type="checkbox"
-                          checked={t.done}
-                          disabled={t.not_applicable}
-                          onChange={() => patchTask(t.id, { done: !t.done })}
-                          className="mt-1 size-4 shrink-0 accent-clay-ink"
-                          aria-label={tr(t.title)}
-                        />
-                        <button onClick={() => setSheet(t)} className="min-w-0 flex-1 text-left">
-                          <div
-                            className={`text-sm ${
-                              t.done || t.not_applicable ? "text-muted-foreground line-through" : "font-medium"
-                            }`}
-                          >
-                            {tr(t.title)}
-                          </div>
-                          <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px]">
-                            {t.not_applicable ? (
-                              <span className="rounded-full bg-background px-2 py-0.5 text-muted-foreground ring-1 ring-line">
-                                {tr("No aplica")}
-                              </span>
-                            ) : (
-                              <>
-                                {d && (
-                                  <span className={late ? "font-medium text-clay-ink" : "text-muted-foreground"}>
-                                    {tr("Límite: {date}", { date: shortDate(d) })}
-                                  </span>
-                                )}
-                                <span className="rounded-full bg-background px-2 py-0.5 text-muted-foreground ring-1 ring-line">
-                                  {t.owner ? tr(t.owner) : tr("Sin asignar")}
+              <ul className={`flex-1 space-y-1.5 px-3 pb-3 ${isOpen ? "sm:grid sm:grid-cols-2 sm:gap-2 sm:space-y-0 xl:grid-cols-3" : ""}`}>
+                {visibleTasks.map((t) => {
+                  const d = due(t);
+                  const late = !t.done && !t.not_applicable && d !== null && d < todayIso();
+                  const steps = effectiveSteps(t);
+                  const pr = PRIORITIES.find((p) => p.key === effectivePriority(t))!;
+                  return (
+                    <li key={t.id} className="flex items-start gap-3 rounded-2xl bg-background/80 px-3 py-2.5 ring-1 ring-foreground/5">
+                      <input
+                        type="checkbox"
+                        checked={t.done}
+                        disabled={t.not_applicable}
+                        onChange={() => patchTask(t.id, { done: !t.done })}
+                        className="mt-0.5 size-4 shrink-0 accent-clay-ink"
+                        aria-label={tr(t.title)}
+                      />
+                      <button onClick={() => setSheet(t)} className="min-w-0 flex-1 text-left">
+                        <div
+                          className={`text-sm leading-snug ${
+                            t.done || t.not_applicable ? "text-muted-foreground line-through" : "font-medium"
+                          }`}
+                        >
+                          {tr(t.title)}
+                        </div>
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+                          {t.not_applicable ? (
+                            <span className="text-muted-foreground">{tr("No aplica")}</span>
+                          ) : (
+                            <>
+                              {d && (
+                                <span className={late ? "font-medium text-clay-ink" : "text-muted-foreground"}>
+                                  {shortDate(d)}
                                 </span>
-                                <span className={`rounded-full px-2 py-0.5 ring-1 ${pr.cls}`}>{tr(pr.label)}</span>
-                                {steps.length > 0 && (
-                                  <span className="text-muted-foreground">
-                                    ✓ {steps.filter((s) => s.done).length}/{steps.length}
-                                  </span>
-                                )}
-                                {guideFor(t.title) && (
-                                  <span className="text-muted-foreground">· {tr("Con guía")}</span>
-                                )}
-                              </>
-                            )}
-                          </div>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
+                              )}
+                              {t.owner && <span className="text-muted-foreground">· {tr(t.owner)}</span>}
+                              {isOpen && <span className={`rounded-full px-2 py-0.5 ring-1 ${pr.cls}`}>{tr(pr.label)}</span>}
+                              {steps.length > 0 && (
+                                <span className="text-muted-foreground">
+                                  · ✓ {steps.filter((s) => s.done).length}/{steps.length}
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {f.shown.length > preview.length && (
+                <button
+                  onClick={() => setOpen({ ...open, [f.cat]: !open[f.cat] })}
+                  className="border-t border-line px-5 py-3 text-left text-xs font-medium text-clay-ink hover:bg-background/40"
+                >
+                  {isOpen ? tr("Ver menos") : tr("Ver las {n} tareas", { n: f.shown.length })} →
+                </button>
               )}
             </section>
           );
         })}
         {folders.length === 0 && (
-          <p className="rounded-2xl bg-panel p-6 text-center text-sm text-muted-foreground">
+          <p className="rounded-2xl bg-panel p-6 text-center text-sm text-muted-foreground sm:col-span-2 xl:col-span-3">
             {q ? tr("No hay tareas que coincidan.") : tr("No hay tareas en este filtro.")}
           </p>
         )}

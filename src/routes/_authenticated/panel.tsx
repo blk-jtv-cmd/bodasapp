@@ -592,7 +592,17 @@ function PanelPage() {
           <Fincas weddingId={wedding.id} userId={userId} currency={wedding.currency} />
         )}
         {!locked && tab === "menu" && (
-          <Menu weddingId={wedding.id} userId={userId} currency={wedding.currency} />
+          <Menu
+            weddingId={wedding.id}
+            userId={userId}
+            currency={wedding.currency}
+            guests={{
+              adults: guests
+                .filter((g) => g.rsvp !== "rechazado" && !g.is_child)
+                .reduce((n, g) => n + 1 + (g.companions || 0), 0),
+              kids: guests.filter((g) => g.rsvp !== "rechazado" && g.is_child).length,
+            }}
+          />
         )}
         {!locked && tab === "invitados" && <Invitados guests={guests} tables={mesas} {...ctx} />}
         {!locked && tab === "mesas" && (

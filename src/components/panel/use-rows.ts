@@ -36,9 +36,10 @@ export function useWeddingRows<T extends Row>(table: "venues" | "menu_items", we
       .single();
     if (error || !data) {
       toast.error(tr("No se ha podido añadir"));
-      return;
+      return null;
     }
     setRows((r) => [...r, data as unknown as T]);
+    return data as unknown as T;
   }
 
   async function patch(id: string, values: Partial<T>) {
