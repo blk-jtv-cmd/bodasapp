@@ -78,7 +78,7 @@ export function Menu({
   async function create(moment: string, extra: Partial<MenuItem> = {}) {
     const people = extra.restriction === "Infantil" ? guests?.kids : guests?.adults;
     const row = await add(
-      { moment, courses: moment === "Menú" ? [] : null, people: people || 0, ...extra } as Partial<MenuItem>,
+      { moment, courses: [], people: people || 0, ...extra } as Partial<MenuItem>,
       userId,
     );
     if (row) setEditing(row.id);
@@ -240,6 +240,17 @@ function RestrictionChip({ r }: { r: MenuItem }) {
   );
 }
 
+/** Agrupa los platos por tipo (todos los entrantes juntos…), en el orden en que aparece cada tipo por primera vez. */
+function groupCourses(courses: Course[]) {
+  const groups: { course: string; dishes: string[] }[] = [];
+  for (const c of courses) {
+    const g = groups.find((x) => x.course === c.course);
+    if (g) g.dishes.push(c.dish);
+    else groups.push({ course: c.course, dishes: [c.dish] });
+  }
+  return groups;
+}
+
 /** Un menú cerrado, presentado como la carta impresa de una boda. */
 function MenuCard({ r, currency, onEdit }: { r: MenuItem; currency: string; onEdit: () => void }) {
   const { t: tr } = useI18n();
@@ -261,10 +272,14 @@ function MenuCard({ r, currency, onEdit }: { r: MenuItem; currency: string; onEd
         </span>
         {courses.length > 0 ? (
           <span className="space-y-3">
-            {courses.map((c, i) => (
-              <span key={i} className="block">
-                <span className="block font-mono text-[9px] uppercase tracking-[0.25em] text-muted-foreground">{tr(c.course)}</span>
-                <span className="mt-0.5 block font-display text-lg italic leading-snug">{c.dish}</span>
+            {groupCourses(courses).map((g) => (
+              <span key={g.course} className="block">
+                <span className="block font-mono text-[9px] uppercase tracking-[0.25em] text-muted-foreground">{tr(g.course)}</span>
+                {g.dishes.map((dish, i) => (
+                  <span key={i} className="mt-0.5 block font-display text-lg italic leading-snug">
+                    {dish}
+                  </span>
+                ))}
               </span>
             ))}
           </span>
