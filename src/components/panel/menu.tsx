@@ -333,7 +333,7 @@ function EditSheet({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/30 sm:items-center sm:p-6" onClick={onClose}>
       <div
-        className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-t-3xl bg-background p-5 shadow-2xl sm:rounded-3xl sm:p-7"
+        className="max-h-[92vh] w-full max-w-xl overflow-y-auto overflow-x-hidden rounded-t-3xl bg-background p-5 shadow-2xl sm:rounded-3xl sm:p-7"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -410,11 +410,14 @@ function EditSheet({
                   <p className="text-sm text-muted-foreground">{tr("Añadid los platos que incluye este menú.")}</p>
                 )}
                 {courses.map((c, i) => (
-                  <div key={i} className="flex items-center gap-2">
+                  <div
+                    key={i}
+                    className="grid grid-cols-[1fr_auto] items-center gap-2 rounded-xl bg-background p-2 ring-1 ring-line sm:grid-cols-[8.5rem_1fr_auto] sm:bg-transparent sm:p-0 sm:ring-0"
+                  >
                     <select
                       value={c.course}
                       onChange={(e) => setCourses(courses.map((x, j) => (j === i ? { ...x, course: e.target.value } : x)))}
-                      className={`${fieldClass} w-32 shrink-0`}
+                      className="w-full min-w-0 rounded-lg border border-line bg-panel px-3 py-2 text-base outline-none focus:border-clay-ink sm:bg-background sm:text-sm"
                     >
                       {(COURSES.includes(c.course) ? COURSES : [c.course, ...COURSES]).map((o) => (
                         <option key={o} value={o}>
@@ -422,20 +425,20 @@ function EditSheet({
                         </option>
                       ))}
                     </select>
-                    <TextField
-                      value={c.dish}
-                      onSave={(dish) => setCourses(courses.map((x, j) => (j === i ? { ...x, dish } : x)))}
-                      placeholder={tr("Plato")}
-                      className="min-w-0 flex-1"
-                    />
                     <button
                       type="button"
                       onClick={() => setCourses(courses.filter((_, j) => j !== i))}
-                      className="shrink-0 p-1 text-muted-foreground hover:text-destructive"
+                      className="shrink-0 p-1 text-muted-foreground hover:text-destructive sm:order-last"
                       aria-label={tr("Quitar plato")}
                     >
                       <Trash2 className="size-4" />
                     </button>
+                    <TextField
+                      value={c.dish}
+                      onSave={(dish) => setCourses(courses.map((x, j) => (j === i ? { ...x, dish } : x)))}
+                      placeholder={tr("Plato")}
+                      className="col-span-2 min-w-0 sm:col-span-1"
+                    />
                   </div>
                 ))}
               </div>

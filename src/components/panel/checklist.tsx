@@ -46,7 +46,7 @@ export const TASK_CATEGORIES = [
 ];
 
 const inputClass =
-  "rounded-lg border border-line bg-background px-3 py-2 text-sm outline-none focus:border-clay-ink";
+  "rounded-lg border border-line bg-background px-3 py-2 text-base outline-none focus:border-clay-ink sm:text-sm";
 const labelClass = "font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground";
 
 const PRIORITIES: { key: Priority; label: string; cls: string }[] = [

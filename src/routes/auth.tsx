@@ -37,7 +37,7 @@ export const Route = createFileRoute("/auth")({
 type Mode = "signup" | "login" | "forgot" | "reset";
 
 const inputCls =
-  "w-full rounded-xl border border-line bg-panel px-4 py-3 text-sm outline-none focus:border-clay-ink";
+  "w-full rounded-xl border border-line bg-panel px-4 py-3 text-base outline-none focus:border-clay-ink sm:text-sm";
 
 function AuthPage() {
   const { t: tr } = useI18n();

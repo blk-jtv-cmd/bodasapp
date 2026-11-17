@@ -45,7 +45,7 @@ export const DEFAULT_EXPENSE_CATEGORIES = [
 ];
 
 const inputClass =
-  "rounded-lg border border-line bg-background px-3 py-2 text-sm outline-none focus:border-clay-ink";
+  "rounded-lg border border-line bg-background px-3 py-2 text-base outline-none focus:border-clay-ink sm:text-sm";
 
 function euro(n: number, currency: string = "EUR") {
   return formatMoney(n, currency);
