@@ -33,6 +33,19 @@ const RSVP_LABEL: Record<string, string> = {
   rechazado: "Rechazado",
 };
 
+// Borde del nombre de cada invitado sentado según su confirmación.
+const RSVP_RING: Record<string, string> = {
+  confirmado: "ring-2 ring-emerald-500",
+  pendiente: "ring-2 ring-amber-500",
+  rechazado: "ring-2 ring-red-500",
+};
+const RSVP_DOT: Record<string, string> = {
+  confirmado: "bg-emerald-500",
+  pendiente: "bg-amber-500",
+  rechazado: "bg-red-500",
+};
+const rsvpRing = (rsvp: string) => RSVP_RING[rsvp] ?? RSVP_RING.pendiente;
+
 const DRAG_GUEST = "application/x-guest-id";
 const DRAG_TABLE = "application/x-table-id";
 const DRAG_SEATED = "application/x-seated-guest-id";
@@ -264,8 +277,8 @@ function TableView({
                 e.stopPropagation();
                 onGuestTap(g.id);
               }}
-              className={`absolute z-10 max-w-[84px] -translate-x-1/2 -translate-y-1/2 cursor-grab truncate rounded-full px-2 py-0.5 text-center text-[10px] font-medium shadow-sm ring-1 transition-colors active:cursor-grabbing ${
-                picked ? "bg-clay-ink text-background ring-clay-ink" : "bg-white text-foreground ring-foreground/10 hover:ring-clay-ink"
+              className={`absolute z-10 max-w-[84px] -translate-x-1/2 -translate-y-1/2 cursor-grab truncate rounded-full px-2 py-0.5 text-center text-[10px] font-medium shadow-sm transition-colors active:cursor-grabbing ${
+                picked ? "bg-clay-ink text-background ring-1 ring-clay-ink" : `bg-white text-foreground ${rsvpRing(g.rsvp)}`
               }`}
               style={{ left: tableW / 2 + pt.x, top: tableH / 2 + pt.y }}
               title={g.companions > 0 ? `${g.name} (+${g.companions})` : g.name}
@@ -653,6 +666,16 @@ export function Mesas({
         </div>
       )}
 
+      {/* Leyenda de colores de los nombres sentados */}
+      <div className="mb-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-muted-foreground">
+        {(["confirmado", "pendiente", "rechazado"] as const).map((r) => (
+          <span key={r} className="inline-flex items-center gap-1.5">
+            <span className={`size-2.5 rounded-full ${RSVP_DOT[r]}`} aria-hidden />
+            {tr(RSVP_LABEL[r] ?? r)}
+          </span>
+        ))}
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
         {/* Salón: lienzo grande con scroll para que quepan muchas mesas */}
         <div className="relative max-h-[78vh] min-h-[520px] overflow-auto rounded-2xl ring-1 ring-foreground/10">
@@ -833,8 +856,9 @@ export function Mesas({
                         handleSeatedGuestDrop(g.id);
                       }}
                       className={`flex items-center gap-2 rounded-lg bg-background px-3 py-2 text-sm transition-colors ${
-                        dragOverGuestId === g.id ? "ring-2 ring-clay/50" : ""
+                        dragOverGuestId === g.id ? "ring-2 ring-clay/50" : rsvpRing(g.rsvp)
                       }`}
+                      title={tr(RSVP_LABEL[g.rsvp] ?? g.rsvp)}
                     >
                       <GripVertical className="size-3.5 shrink-0 cursor-grab text-muted-foreground/60" />
                       <span className="font-mono text-[9px] text-muted-foreground/50">{idx + 1}</span>
