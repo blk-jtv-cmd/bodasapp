@@ -1,18 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ChevronDown, ChevronUp, GripVertical, Move, Plus, Settings2, Sparkles, Trash2, UserPlus, Users, X } from "lucide-react";
+import { ChevronDown, ChevronUp, GripVertical, Minus, Move, Plus, Settings2, Sparkles, Trash2, UserPlus, X } from "lucide-react";
 import { t as tr, useI18n } from "@/i18n";
 
 export type MesaTable = {
   id: string;
   name: string;
   capacity: number;
-  shape: "round" | "rect";
+  /** round, rect y head son mesas con sillas; zone-rect y zone-circle son rincones (DJ, pista…), sin sillas. */
+  shape: TableShape;
   pos_x: number;
   pos_y: number;
   sort_order: number;
 };
+
+export type TableShape = "round" | "rect" | "head" | "zone-rect" | "zone-circle";
+export const isZone = (t: { shape: string }) => t.shape.startsWith("zone");
 
 export type MesaGuest = {
   id: string;
@@ -112,10 +116,58 @@ function MesasGuide() {
   );
 }
 
+/** Medidas en el plano. En los rincones, «capacity» guarda el tamaño: 1 pequeño, 2 mediano, 3 grande. */
+function dims(t: { shape: string; capacity: number }) {
+  const size = Math.min(3, Math.max(1, t.capacity || 2)) - 1;
+  switch (t.shape) {
+    case "round":
+      return { w: 112, h: 112 };
+    case "head":
+      return { w: 240, h: 62 };
+    case "zone-rect":
+      return { w: [150, 220, 300][size], h: [96, 140, 190][size] };
+    case "zone-circle":
+      return { w: [110, 150, 200][size], h: [110, 150, 200][size] };
+    default:
+      return { w: 150, h: 84 };
+  }
+}
+
+/** Icono de un rincón según su nombre. */
+const norm = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+const ZONE_ICONS: [RegExp, string][] = [
+  [/pista|baile|dance|ballo|piste|danse/, "💃"],
+  [/dj|musica|music|sonido|sound/, "🎧"],
+  [/banda|band|orquesta|orchest|grupo|groupe|concierto|musicos|musicien/, "🎸"],
+  [/foto|photo|video/, "📸"],
+  [/barra|bar\b|copas|cocktail|coctel/, "🍸"],
+  [/tarta|pastel|cake|torta|gateau|bolo/, "🎂"],
+  [/candy|dulce|chuche|doce|bonbon|dolci/, "🍬"],
+  [/altar|ceremon/, "💒"],
+  [/regalo|sobres|gift|cadeau|presente/, "🎁"],
+  [/niño|nino|infantil|kids|bambini|enfant|criança|crianca/, "🧸"],
+  [/flor|flower|fleur|fiori/, "💐"],
+  [/entrada|puerta|entrance|entree|ingresso/, "🚪"],
+  [/buffet|comida|quesos|jamon|food/, "🧀"],
+];
+const zoneIcon = (name: string) => ZONE_ICONS.find(([re]) => re.test(norm(name)))?.[1] ?? "✨";
+
 /** Puntos alrededor de la mesa (sillas o nombres); `spread` = distancia extra desde el borde. */
-function seatPoints(count: number, isRound: boolean, w: number, h: number, spread: number) {
+function seatPoints(count: number, isRound: boolean, w: number, h: number, spread: number, oneSide = false) {
   const points: { x: number; y: number }[] = [];
   if (count === 0) return points;
+  if (oneSide) {
+    // Mesa presidencial: todas las sillas en el mismo lado, mirando al salón.
+    const halfW = w / 2 - 16;
+    for (let i = 0; i < count; i++) {
+      points.push({ x: count > 1 ? (i / (count - 1)) * 2 * halfW - halfW : 0, y: -(h / 2 + spread) });
+    }
+    return points;
+  }
   if (isRound) {
     const radius = w / 2 + spread;
     for (let i = 0; i < count; i++) {
@@ -137,12 +189,12 @@ function seatPoints(count: number, isRound: boolean, w: number, h: number, sprea
   return points;
 }
 
-/** Fondo de cuadros rosa y crema del plano. */
+/** Suelo del salón: cuadros rosa y crema muy suaves, para que destaquen las mesas. */
 const CHECKER_BG = `url("data:image/svg+xml,${encodeURIComponent(
   "<svg xmlns='http://www.w3.org/2000/svg' width='112' height='112'>" +
-    "<rect width='112' height='112' fill='#FCF4E2'/>" +
-    "<rect x='2' y='2' width='52' height='52' rx='4' fill='#EEB3BA'/>" +
-    "<rect x='58' y='58' width='52' height='52' rx='4' fill='#EEB3BA'/>" +
+    "<rect width='112' height='112' fill='#FDF9F1'/>" +
+    "<rect x='2' y='2' width='52' height='52' rx='4' fill='#F9E8E6'/>" +
+    "<rect x='58' y='58' width='52' height='52' rx='4' fill='#F9E8E6'/>" +
     "</svg>",
 )}")`;
 
@@ -199,13 +251,13 @@ function TableView({
   const seatCount = seated.reduce((s, g) => s + 1 + g.companions, 0);
   const isFull = seatCount >= table.capacity;
   const isRound = table.shape === "round";
-  const tableW = isRound ? 112 : 150;
-  const tableH = isRound ? 112 : 84;
+  const isHead = table.shape === "head";
+  const { w: tableW, h: tableH } = dims(table);
   const chairs = Math.min(Math.max(table.capacity, seatCount), 20);
-  const chairPts = seatPoints(chairs, isRound, tableW, tableH, 13);
-  // En las rectangulares los nombres se escalonan para que no se pisen.
-  const labelPts = seatPoints(chairs, isRound, tableW, tableH, isRound ? 44 : 32).map((pt, i) =>
-    isRound || Math.floor(i / 2) % 2 === 0 ? pt : { x: pt.x, y: pt.y + Math.sign(pt.y) * 20 },
+  const chairPts = seatPoints(chairs, isRound, tableW, tableH, 13, isHead);
+  // En las rectangulares y la presidencial los nombres se escalonan para que no se pisen.
+  const labelPts = seatPoints(chairs, isRound, tableW, tableH, isRound ? 44 : 32, isHead).map((pt, i) =>
+    isRound || (isHead ? i % 2 === 0 : Math.floor(i / 2) % 2 === 0) ? pt : { x: pt.x, y: pt.y + Math.sign(pt.y) * 20 },
   );
 
   // Cada invitado ocupa una silla, y sus acompañantes las siguientes.
@@ -232,7 +284,7 @@ function TableView({
           <span
             key={`c${i}`}
             className={`pointer-events-none absolute size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 shadow-sm ${
-              i < seatCount ? "border-clay-ink bg-clay" : "border-white bg-white/90"
+              i < seatCount ? "border-clay-ink bg-clay" : "border-clay/50 bg-white"
             }`}
             style={{ left: tableW / 2 + pt.x, top: tableH / 2 + pt.y }}
           />
@@ -240,16 +292,19 @@ function TableView({
 
         {/* La mesa */}
         <div
-          className={`relative flex h-full w-full flex-col items-center justify-center border-2 p-2 text-center shadow-md transition-colors ${
-            isRound ? "rounded-full" : "rounded-2xl"
+          className={`relative flex h-full w-full flex-col items-center justify-center border-2 p-2 text-center shadow-[0_10px_24px_-12px_rgba(120,60,70,0.45)] transition-colors ${
+            isRound ? "rounded-full" : isHead ? "rounded-xl" : "rounded-2xl"
           } ${
             isDragOver
               ? "border-clay-ink bg-clay-soft"
               : isSelected
-                ? "border-clay-ink bg-white"
-                : "border-white bg-white hover:border-clay"
+                ? "border-clay-ink bg-white ring-4 ring-clay/30"
+                : "border-clay/70 bg-white hover:border-clay-ink"
           }`}
         >
+          {isHead && (
+            <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-clay-ink">{tr("Presidencial")}</span>
+          )}
           <span className="max-w-full truncate font-display text-base font-semibold leading-tight">{table.name}</span>
           <span className="font-mono text-[10px] text-muted-foreground">
             {seatCount}/{table.capacity}
@@ -293,6 +348,84 @@ function TableView({
   );
 }
 
+/** Un rincón del salón (pista de baile, DJ, banda…): sin sillas, solo forma y nombre. */
+function ZoneView({
+  zone,
+  isSelected,
+  isDragging,
+  position,
+  onClick,
+  onPointerDown,
+}: {
+  zone: MesaTable;
+  isSelected: boolean;
+  isDragging: boolean;
+  position: { x: number; y: number };
+  onClick: () => void;
+  onPointerDown: (e: React.PointerEvent) => void;
+}) {
+  const { w, h } = dims(zone);
+  const round = zone.shape === "zone-circle";
+  return (
+    <div
+      onClick={onClick}
+      onPointerDown={onPointerDown}
+      className={`absolute touch-none cursor-move select-none transition-opacity ${isDragging ? "opacity-40" : ""}`}
+      style={{ left: position.x, top: position.y, width: w, height: h }}
+    >
+      <div
+        className={`flex h-full w-full flex-col items-center justify-center gap-1 border-2 border-dashed p-2 text-center transition-colors ${
+          round ? "rounded-full" : "rounded-2xl"
+        } ${isSelected ? "border-clay-ink bg-clay-soft ring-4 ring-clay/30" : "border-amber-400/70 bg-amber-50/90 hover:border-clay-ink"}`}
+      >
+        <span className="text-2xl leading-none" aria-hidden>
+          {zoneIcon(zone.name)}
+        </span>
+        <span className="max-w-full truncate font-display text-sm font-semibold leading-tight">{zone.name}</span>
+      </div>
+    </div>
+  );
+}
+
+/** Dibujo pequeño de cada pieza para la barra de herramientas. */
+/** Mini plano de cada distribución inicial. */
+function LayoutPreview({ kind }: { kind: "pista" | "cuadricula" | "largas" }) {
+  const t = "fill-white stroke-clay-ink";
+  return (
+    <svg viewBox="0 0 80 56" className="h-14 w-20" aria-hidden>
+      <rect x="25" y="3" width="30" height="6" rx="2" className={t} strokeWidth="1.2" />
+      {kind === "pista" && (
+        <>
+          <rect x="28" y="22" width="24" height="16" rx="2" className="fill-amber-50 stroke-amber-400" strokeDasharray="2 2" strokeWidth="1.2" />
+          {[
+            [12, 18],
+            [68, 18],
+            [10, 34],
+            [70, 34],
+            [22, 48],
+            [40, 50],
+            [58, 48],
+          ].map(([x, y], i) => (
+            <circle key={i} cx={x} cy={y} r="5" className={t} strokeWidth="1.2" />
+          ))}
+        </>
+      )}
+      {kind === "cuadricula" &&
+        [0, 1, 2].flatMap((r) => [0, 1, 2, 3].map((c) => <circle key={`${r}${c}`} cx={13 + c * 18} cy={20 + r * 14} r="5" className={t} strokeWidth="1.2" />))}
+      {kind === "largas" &&
+        [0, 1].flatMap((r) => [0, 1, 2].map((c) => <rect key={`${r}${c}`} x={6 + c * 25} y={18 + r * 18} width="19" height="9" rx="1.5" className={t} strokeWidth="1.2" />))}
+    </svg>
+  );
+}
+
+function ShapeIcon({ shape }: { shape: TableShape }) {
+  const zone = shape.startsWith("zone");
+  const cls = zone ? "border-2 border-dashed border-amber-400 bg-amber-50" : "border-2 border-clay bg-white";
+  if (shape === "round" || shape === "zone-circle") return <span className={`block size-8 rounded-full ${cls}`} />;
+  if (shape === "head") return <span className={`block h-4 w-12 rounded-md ${cls}`} />;
+  return <span className={`block h-7 w-11 rounded-lg ${cls}`} />;
+}
+
 export function Mesas({
   tables,
   guests,
@@ -309,11 +442,10 @@ export function Mesas({
   const { t: tr } = useI18n();
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [dragOverTableId, setDragOverTableId] = useState<string | null>(null);
-  const [addingTable, setAddingTable] = useState(false);
-  const [newTableName, setNewTableName] = useState("");
-  const [newTableCapacity, setNewTableCapacity] = useState("8");
-  const [newTableShape, setNewTableShape] = useState<"round" | "rect">("round");
+  // Plazas con las que se crean las mesas desde la barra de herramientas.
+  const [caps, setCaps] = useState<Record<"round" | "rect" | "head", number>>({ round: 8, rect: 10, head: 6 });
   const canvasRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [draggingTableId, setDraggingTableId] = useState<string | null>(null);
   const [tableDragOffset, setTableDragOffset] = useState({ x: 0, y: 0 });
   const [dragOverGuestId, setDragOverGuestId] = useState<string | null>(null);
@@ -351,27 +483,101 @@ export function Mesas({
   const selectedTable = tables.find((t) => t.id === selectedTableId) ?? null;
   const selectedGuests = selectedTableId ? guestsByTable.get(selectedTableId) ?? [] : [];
 
-  async function addTable(e: React.FormEvent) {
-    e.preventDefault();
-    const name = newTableName.trim() || tr("Mesa {n}", { n: tables.length + 1 });
-    const capacity = Math.max(1, Number(newTableCapacity) || 8);
-    const { error } = await supabase.from("wedding_tables").insert({
-      wedding_id: wedding.id,
-      user_id: userId,
-      name,
-      capacity,
-      shape: newTableShape,
-      sort_order: tables.length,
-      pos_x: 90 + (tables.length % 5) * 250,
-      pos_y: 90 + Math.floor(tables.length / 5) * 250,
-    });
+  const seatingTables = tables.filter((t) => !isZone(t));
+
+  /** Añade una mesa o un rincón en la parte del salón que se está viendo, sin pisar lo que ya hay. */
+  async function addPiece(shape: TableShape, opts: { name?: string; capacity?: number } = {}) {
+    const zone = shape.startsWith("zone");
+    const capacity = opts.capacity ?? (zone ? 2 : caps[shape as "round" | "rect" | "head"] ?? 8);
+    const name = opts.name ?? (zone ? tr("Rincón") : tr("Mesa {n}", { n: seatingTables.length + 1 }));
+    const view = scrollRef.current;
+    const ox = (view?.scrollLeft ?? 0) + 70;
+    const oy = (view?.scrollTop ?? 0) + 70;
+    const { w, h } = dims({ shape, capacity });
+    // Busca el primer hueco libre en una cuadrícula desde la esquina visible.
+    const taken = tables.map((t) => ({ ...(moved[t.id] ?? { x: t.pos_x, y: t.pos_y }), ...dims(t) }));
+    let pos = { x: ox, y: oy };
+    search: for (let row = 0; row < 12; row++) {
+      for (let col = 0; col < 6; col++) {
+        const c = { x: ox + col * 240, y: oy + row * 230 };
+        const free = taken.every((t) => c.x + w + 60 < t.x || t.x + t.w + 60 < c.x || c.y + h + 60 < t.y || t.y + t.h + 60 < c.y);
+        if (free) {
+          pos = c;
+          break search;
+        }
+      }
+    }
+    const { data, error } = await supabase
+      .from("wedding_tables")
+      .insert({
+        wedding_id: wedding.id,
+        user_id: userId,
+        name,
+        capacity,
+        shape,
+        sort_order: tables.length,
+        pos_x: Math.round(pos.x),
+        pos_y: Math.round(pos.y),
+      })
+      .select("id")
+      .single();
     if (error) {
       toast.error(tr("No se ha podido crear la mesa"));
       return;
     }
-    setNewTableName("");
-    setNewTableCapacity("8");
-    setAddingTable(false);
+    await reload();
+    if (data?.id) setSelectedTableId(data.id);
+  }
+
+  /** Plazas que hacen falta: invitados que no han dicho que no, con sus acompañantes. */
+  const seatsNeeded = guests.filter((g) => g.rsvp !== "rechazado").reduce((n, g) => n + 1 + g.companions, 0);
+
+  /** Distribuciones para empezar (solo con el salón vacío). */
+  const LAYOUTS = [
+    { key: "pista", title: "Redondas alrededor de la pista", sub: (n: number) => tr("{n} mesas redondas de 8", { n }) },
+    { key: "cuadricula", title: "Cuadrícula de redondas", sub: (n: number) => tr("{n} mesas redondas de 8", { n }) },
+    { key: "largas", title: "Mesas largas en filas", sub: (n: number) => tr("{n} mesas rectangulares de 10", { n }) },
+  ] as const;
+  const roundsNeeded = Math.max(4, Math.ceil(seatsNeeded / 8));
+  const longNeeded = Math.max(3, Math.ceil(seatsNeeded / 10));
+
+  async function applyLayout(key: (typeof LAYOUTS)[number]["key"]) {
+    type New = { name: string; capacity: number; shape: TableShape; pos_x: number; pos_y: number };
+    const rows: New[] = [{ name: tr("Presidencial"), capacity: 6, shape: "head", pos_x: 0, pos_y: 70 }];
+    let n = 0;
+    const mesa = () => tr("Mesa {n}", { n: ++n });
+    if (key === "pista") {
+      const R = Math.max(380, (roundsNeeded * 230) / (2 * Math.PI));
+      const cx = 160 + R;
+      const cy = 300 + R;
+      rows[0].pos_x = cx - 120;
+      rows.push({ name: tr("Pista de baile"), capacity: 3, shape: "zone-rect", pos_x: cx - 150, pos_y: cy - 95 });
+      for (let i = 0; i < roundsNeeded; i++) {
+        // Repartidas en círculo, dejando libre el lado de arriba (donde está la presidencial).
+        const ang = -Math.PI / 2 + Math.PI * 0.35 + (Math.PI * 1.3 * i) / Math.max(1, roundsNeeded - 1);
+        rows.push({ name: mesa(), capacity: 8, shape: "round", pos_x: Math.round(cx + Math.cos(ang) * R - 56), pos_y: Math.round(cy + Math.sin(ang) * R - 56) });
+      }
+    } else if (key === "cuadricula") {
+      const cols = 5;
+      rows[0].pos_x = 120 + ((cols - 1) * 250) / 2 - 64;
+      for (let i = 0; i < roundsNeeded; i++) {
+        rows.push({ name: mesa(), capacity: 8, shape: "round", pos_x: 120 + (i % cols) * 250, pos_y: 300 + Math.floor(i / cols) * 250 });
+      }
+    } else {
+      const cols = 3;
+      rows[0].pos_x = 120 + ((cols - 1) * 300) / 2 - 45;
+      for (let i = 0; i < longNeeded; i++) {
+        rows.push({ name: mesa(), capacity: 10, shape: "rect", pos_x: 120 + (i % cols) * 300, pos_y: 300 + Math.floor(i / cols) * 260 });
+      }
+    }
+    const { error } = await supabase.from("wedding_tables").insert(
+      rows.map((r, i) => ({ ...r, pos_x: Math.max(40, Math.round(r.pos_x)), pos_y: Math.max(40, Math.round(r.pos_y)), sort_order: i, wedding_id: wedding.id, user_id: userId })),
+    );
+    if (error) {
+      toast.error(tr("No se ha podido crear la mesa"));
+      return;
+    }
+    toast.success(tr("Distribución creada. Ahora podéis mover, añadir o quitar lo que queráis."));
     await reload();
   }
 
@@ -426,7 +632,7 @@ export function Mesas({
   /** Sienta a un invitado si cabe en la mesa; avisa si está llena. */
   function trySeat(guestId: string, tableId: string) {
     const table = tables.find((t) => t.id === tableId);
-    if (!table) return;
+    if (!table || isZone(table)) return;
     const guest = guests.find((g) => g.id === guestId);
     if (guest?.table_number === tableId) return; // ya está en esa mesa
     const current = (guestsByTable.get(tableId) ?? []).filter((g) => g.id !== guestId);
@@ -439,7 +645,8 @@ export function Mesas({
   }
 
   function onTableTap(tableId: string) {
-    if (pickedGuestId) {
+    const target = tables.find((t) => t.id === tableId);
+    if (pickedGuestId && target && !isZone(target)) {
       trySeat(pickedGuestId, tableId);
       setPickedGuestId(null);
       return;
@@ -572,84 +779,120 @@ export function Mesas({
     return () => window.removeEventListener("dragend", handleDragEnd);
   }, []);
 
-  const totalSeats = tables.reduce((s, t) => s + t.capacity, 0);
+  const totalSeats = seatingTables.reduce((s, t) => s + t.capacity, 0);
   // El salón crece si las mesas se colocan más lejos; siempre deja sitio para añadir más.
   const canvasSize = {
-    w: Math.max(1500, ...tables.map((t) => t.pos_x + 360)),
-    h: Math.max(1100, ...tables.map((t) => t.pos_y + 360)),
+    w: Math.max(1500, ...tables.map((t) => t.pos_x + dims(t).w + 260)),
+    h: Math.max(1100, ...tables.map((t) => t.pos_y + dims(t).h + 260)),
   };
   const seatedCount = guests.filter((g) => g.table_number).length;
 
   return (
     <div>
-      <div className="mb-8 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-semibold">{tr("Mesas")}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {tr("{a} mesas · {b} plazas · {c} invitados sentados", { a: tables.length, b: totalSeats, c: seatedCount })}
-          </p>
-        </div>
-        <button
-          onClick={() => setAddingTable((v) => !v)}
-          className="flex items-center gap-2 rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-clay-ink hover:text-background"
-        >
-          <Plus className="size-4" /> {tr("Mesa")}
-        </button>
+      <div className="mb-6">
+        <h1 className="font-display text-3xl font-semibold">{tr("Mesas")}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {tr("{a} mesas · {b} plazas · {c} invitados sentados", { a: seatingTables.length, b: totalSeats, c: seatedCount })}
+        </p>
       </div>
 
-      {addingTable && (
-        <form
-          onSubmit={addTable}
-          className="mb-6 flex flex-wrap items-end gap-3 rounded-2xl bg-panel p-5 ring-1 ring-foreground/5"
-        >
-          <label className="flex flex-col gap-1">
-            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              {tr("Nombre")}
-            </span>
-            <input
-              value={newTableName}
-              onChange={(e) => setNewTableName(e.target.value)}
-              placeholder={tr("Mesa {n}", { n: tables.length + 1 })}
-              className={`${inputClass} w-40`}
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              {tr("Plazas")}
-            </span>
-            <input
-              type="number"
-              min={1}
-              value={newTableCapacity}
-              onChange={(e) => setNewTableCapacity(e.target.value)}
-              className={`${inputClass} w-20`}
-            />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-              {tr("Forma")}
-            </span>
-            <select
-              value={newTableShape}
-              onChange={(e) => setNewTableShape(e.target.value as "round" | "rect")}
-              className={inputClass}
-            >
-              <option value="round">{tr("Redonda")}</option>
-              <option value="rect">{tr("Rectangular")}</option>
-            </select>
-          </label>
-          <button className="rounded-full bg-clay px-5 py-2 text-sm font-medium text-foreground hover:bg-clay-ink hover:text-background">
-            {tr("Crear")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setAddingTable(false)}
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            {tr("Cancelar")}
-          </button>
-        </form>
-      )}
+      {/* Barra de herramientas: mesas para invitados y rincones a vuestro aire */}
+      <div className="mb-6 overflow-x-auto rounded-3xl bg-panel p-4 ring-1 ring-foreground/5">
+        <div className="flex min-w-max gap-6">
+          <div>
+            <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">{tr("Mesas para invitados")}</p>
+            <div className="flex gap-2">
+              {(
+                [
+                  { shape: "round", label: "Redonda" },
+                  { shape: "rect", label: "Rectangular" },
+                  { shape: "head", label: "Presidencial" },
+                ] as const
+              ).map((it) => (
+                <div key={it.shape} className="flex items-center gap-2 rounded-2xl bg-background px-3 py-2 ring-1 ring-line">
+                  <button
+                    type="button"
+                    onClick={() => addPiece(it.shape)}
+                    className="flex flex-col items-center gap-1 rounded-xl px-1 py-0.5 hover:bg-clay-soft/60"
+                    title={tr("Añadir")}
+                  >
+                    <span className="grid h-8 place-items-center">
+                      <ShapeIcon shape={it.shape} />
+                    </span>
+                    <span className="text-[11px]">{tr(it.label)}</span>
+                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setCaps((c) => ({ ...c, [it.shape]: Math.max(1, c[it.shape] - 1) }))}
+                      className="grid size-6 place-items-center rounded-full ring-1 ring-line hover:ring-clay-ink"
+                      aria-label={tr("Menos plazas")}
+                    >
+                      <Minus className="size-3" />
+                    </button>
+                    <span className="w-5 text-center font-mono text-xs font-semibold">{caps[it.shape]}</span>
+                    <button
+                      type="button"
+                      onClick={() => setCaps((c) => ({ ...c, [it.shape]: Math.min(20, c[it.shape] + 1) }))}
+                      className="grid size-6 place-items-center rounded-full ring-1 ring-line hover:ring-clay-ink"
+                      aria-label={tr("Más plazas")}
+                    >
+                      <Plus className="size-3" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-clay-ink">✨ {tr("Rincones a vuestro aire")}</p>
+            <div className="flex gap-2">
+              {(
+                [
+                  { shape: "zone-rect", label: "Rectángulo" },
+                  { shape: "zone-circle", label: "Círculo" },
+                ] as const
+              ).map((it) => (
+                <button
+                  key={it.shape}
+                  type="button"
+                  onClick={() => addPiece(it.shape)}
+                  className="flex flex-col items-center gap-1 rounded-2xl bg-background px-3 py-2 ring-1 ring-line hover:ring-clay-ink"
+                >
+                  <span className="grid h-8 place-items-center">
+                    <ShapeIcon shape={it.shape} />
+                  </span>
+                  <span className="text-[11px]">{tr(it.label)}</span>
+                </button>
+              ))}
+              {(
+                [
+                  { name: "Pista de baile", shape: "zone-rect", size: 3 },
+                  { name: "DJ", shape: "zone-rect", size: 1 },
+                  { name: "Banda", shape: "zone-rect", size: 2 },
+                  { name: "Photocall", shape: "zone-rect", size: 1 },
+                  { name: "Barra", shape: "zone-rect", size: 2 },
+                  { name: "Tarta", shape: "zone-circle", size: 1 },
+                  { name: "Candy bar", shape: "zone-rect", size: 1 },
+                ] as const
+              ).map((it) => (
+                <button
+                  key={it.name}
+                  type="button"
+                  onClick={() => addPiece(it.shape, { name: tr(it.name), capacity: it.size })}
+                  className="flex flex-col items-center gap-1 rounded-2xl bg-background px-3 py-2 ring-1 ring-line hover:ring-clay-ink"
+                >
+                  <span className="grid h-8 place-items-center text-2xl leading-none" aria-hidden>
+                    {zoneIcon(it.name)}
+                  </span>
+                  <span className="whitespace-nowrap text-[11px]">{tr(it.name)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
 
       <MesasGuide />
 
@@ -678,7 +921,7 @@ export function Mesas({
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
         {/* Salón: lienzo grande con scroll para que quepan muchas mesas */}
-        <div className="relative max-h-[78vh] min-h-[520px] overflow-auto rounded-2xl ring-1 ring-foreground/10">
+        <div ref={scrollRef} className="relative max-h-[78vh] min-h-[520px] overflow-auto rounded-2xl ring-1 ring-foreground/10">
         <div
           ref={canvasRef}
           onDragOver={(e) => {
@@ -698,15 +941,56 @@ export function Mesas({
           }}
         >
           {tables.length === 0 && (
-            <div className="absolute left-6 top-6 max-w-sm rounded-2xl bg-white/95 p-6 text-center shadow-md">
-              <Users className="mx-auto mb-3 size-10 text-muted-foreground/40" />
-              <p className="text-sm text-muted-foreground">
-                {tr("Cread vuestra primera mesa para empezar a colocar invitados.")}
-              </p>
+            <div className="sticky left-0 top-0 w-full max-w-[min(100vw-3rem,56rem)] p-4 sm:p-8">
+              <div className="rounded-3xl bg-white/95 p-5 text-center shadow-md sm:p-7">
+                <h3 className="font-display text-2xl font-semibold">{tr("Empezad con una distribución")}</h3>
+                <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
+                  {tr("Pensada para vuestros {n} invitados. Luego podéis mover, añadir o quitar lo que queráis.", { n: seatsNeeded })}
+                </p>
+                <div className="mt-5 grid gap-3 sm:grid-cols-4">
+                  <button
+                    type="button"
+                    onClick={() => addPiece("round")}
+                    className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-clay/60 bg-background p-4 hover:border-clay-ink"
+                  >
+                    <Plus className="size-6 text-clay-ink" />
+                    <span className="font-display text-base font-semibold">{tr("Desde cero")}</span>
+                    <span className="text-[11px] text-muted-foreground">{tr("Salón vacío")}</span>
+                  </button>
+                  {LAYOUTS.map((l) => (
+                    <button
+                      key={l.key}
+                      type="button"
+                      onClick={() => applyLayout(l.key)}
+                      className="flex flex-col items-center gap-2 rounded-2xl bg-background p-4 text-center ring-1 ring-line hover:ring-clay-ink"
+                    >
+                      <LayoutPreview kind={l.key} />
+                      <span className="font-display text-base font-semibold leading-tight">{tr(l.title)}</span>
+                      <span className="text-[11px] text-muted-foreground">{l.sub(l.key === "largas" ? longNeeded : roundsNeeded)}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
-          {tables.map((table) => {
+          {/* Rincones (debajo de las mesas) */}
+          {tables.filter(isZone).map((zone) => (
+            <ZoneView
+              key={zone.id}
+              zone={zone}
+              isSelected={selectedTableId === zone.id}
+              isDragging={draggingTableId === zone.id}
+              position={livePos?.id === zone.id ? { x: livePos.x, y: livePos.y } : moved[zone.id] ?? { x: zone.pos_x, y: zone.pos_y }}
+              onPointerDown={(e) => startTouchDrag(e, zone)}
+              onClick={() => {
+                if (Date.now() - lastTouchEnd.current < 600) return;
+                setSelectedTableId(zone.id);
+              }}
+            />
+          ))}
+
+          {seatingTables.map((table) => {
             const seated = guestsByTable.get(table.id) ?? [];
             const isDragging = draggingTableId === table.id;
             const isDragOver = dragOverTableId === table.id;
@@ -757,8 +1041,82 @@ export function Mesas({
         {/* Sidebar: unseated guests + selected table detail */}
         <div className="space-y-6">
           {/* Selected table detail */}
-          {selectedTable && (
-            <div className="rounded-2xl bg-panel p-5 ring-1 ring-foreground/5">
+          {selectedTable && isZone(selectedTable) && (
+            <div key={selectedTable.id} className="rounded-2xl bg-panel p-5 ring-1 ring-foreground/5">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="flex items-center gap-2 font-display text-lg font-semibold">
+                  <span aria-hidden>{zoneIcon(selectedTable.name)}</span> {selectedTable.name}
+                </h3>
+                <button onClick={() => setSelectedTableId(null)} className="text-muted-foreground hover:text-foreground">
+                  <X className="size-4" />
+                </button>
+              </div>
+              <label className="mb-4 flex flex-col gap-1">
+                <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{tr("Nombre")}</span>
+                <input
+                  defaultValue={selectedTable.name}
+                  placeholder={tr("DJ, fotógrafo, banda, barra…")}
+                  onBlur={(e) => {
+                    const v = e.target.value.trim();
+                    if (v && v !== selectedTable.name) void updateTable(selectedTable.id, { name: v });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                  }}
+                  className={inputClass}
+                />
+              </label>
+              <div className="mb-4">
+                <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{tr("Forma")}</span>
+                <div className="mt-1 grid grid-cols-2 gap-2">
+                  {(
+                    [
+                      { v: "zone-rect", label: "Rectángulo" },
+                      { v: "zone-circle", label: "Círculo" },
+                    ] as const
+                  ).map((o) => (
+                    <button
+                      key={o.v}
+                      type="button"
+                      onClick={() => selectedTable.shape !== o.v && void updateTable(selectedTable.id, { shape: o.v })}
+                      className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm ring-1 ${
+                        selectedTable.shape === o.v ? "bg-clay-soft ring-clay-ink" : "bg-background ring-line hover:ring-clay-ink"
+                      }`}
+                    >
+                      <ShapeIcon shape={o.v} /> {tr(o.label)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="mb-5">
+                <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{tr("Tamaño")}</span>
+                <div className="mt-1 grid grid-cols-3 gap-2">
+                  {(["Pequeño", "Mediano", "Grande"] as const).map((label, i) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => selectedTable.capacity !== i + 1 && void updateTable(selectedTable.id, { capacity: i + 1 })}
+                      className={`rounded-xl px-2 py-2 text-sm ring-1 ${
+                        selectedTable.capacity === i + 1 ? "bg-clay-soft ring-clay-ink" : "bg-background ring-line hover:ring-clay-ink"
+                      }`}
+                    >
+                      {tr(label)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className="mb-4 text-xs text-muted-foreground">{tr("Arrastradlo por el salón para colocarlo donde vaya a estar.")}</p>
+              <button
+                onClick={() => deleteTable(selectedTable.id)}
+                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="size-3.5" /> {tr("Quitar del salón")}
+              </button>
+            </div>
+          )}
+
+          {selectedTable && !isZone(selectedTable) && (
+            <div key={selectedTable.id} className="rounded-2xl bg-panel p-5 ring-1 ring-foreground/5">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="font-display text-lg font-semibold">{selectedTable.name}</h3>
                 <button
@@ -810,7 +1168,7 @@ export function Mesas({
                   <select
                     defaultValue={selectedTable.shape}
                     onChange={(e) => {
-                      const v = e.target.value as "round" | "rect";
+                      const v = e.target.value as TableShape;
                       if (v !== selectedTable.shape)
                         void updateTable(selectedTable.id, { shape: v });
                     }}
@@ -818,6 +1176,7 @@ export function Mesas({
                   >
                     <option value="round">{tr("Redonda")}</option>
                     <option value="rect">{tr("Rectangular")}</option>
+                    <option value="head">{tr("Presidencial (un solo lado)")}</option>
                   </select>
                 </label>
               </div>
